@@ -1,0 +1,21 @@
+@media (max-width: 2560px) {
+
+}
+@media (max-width: 1440px){
+    
+}
+@media (max-width: 1024px){
+    .top, .bottom{padding: 10px 60px;}
+    .first, .second, .third{padding: 10px 60px;}
+    .first .inside div h1{
+        font-size: 45px;
+    }
+}
+@media (max-width: 768px) {
+    
+}
+@media (max-width: 425px) {
+  
+}
+
+
