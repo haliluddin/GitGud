@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 13, 2025 at 05:10 PM
+-- Generation Time: Mar 14, 2025 at 07:21 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -77,10 +77,8 @@ CREATE TABLE `cart` (
 --
 
 INSERT INTO `cart` (`id`, `user_id`, `product_id`, `variation_option_id`, `request`, `quantity`, `created_at`, `updated_at`, `price`) VALUES
-(246, 3, 29, 44, '', 2, '2025-03-13 14:15:57', '2025-03-13 14:15:57', 110.00),
-(247, 3, 29, 47, '', 2, '2025-03-13 14:15:57', '2025-03-13 14:15:57', 110.00),
-(248, 3, 30, NULL, '', 1, '2025-03-13 14:16:30', '2025-03-13 14:16:30', 54.99),
-(249, 3, 33, NULL, '', 2, '2025-03-13 14:16:41', '2025-03-13 14:16:41', 33.00);
+(255, 3, 29, 44, '', 1, '2025-03-14 16:51:23', '2025-03-14 16:51:23', 110.00),
+(256, 3, 29, 47, '', 1, '2025-03-14 16:51:23', '2025-03-14 16:51:23', 110.00);
 
 -- --------------------------------------------------------
 
@@ -162,28 +160,6 @@ CREATE TABLE `notifications` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `notifications`
---
-
-INSERT INTO `notifications` (`id`, `user_id`, `order_id`, `stall_id`, `message`, `status`, `created_at`) VALUES
-(9, 1, 68, 111, 'Order ID 0068: Preparing Order', 'Read', '2025-02-24 03:56:00'),
-(10, 1, 68, 111, 'Order ID 0068: Payment Confirmed!', 'Read', '2025-02-24 03:56:00'),
-(11, 1, 68, 111, 'Order ID 0068: Ready to pickup!', 'Read', '2025-02-24 03:56:46'),
-(13, 1, 68, 111, 'Order ID 0068: Pending Payment', 'Unread', '2025-02-24 04:18:37'),
-(14, 1, 69, 111, 'Order ID 0069: Preparing Order', 'Unread', '2025-03-03 03:52:40'),
-(15, 1, 69, 111, 'Order ID 0069: Payment Confirmed!', 'Unread', '2025-03-03 03:52:40'),
-(16, 1, 69, 111, 'Order ID 0069: Ready to pickup!', 'Unread', '2025-03-03 03:52:53'),
-(17, 1, 70, 111, 'Order ID 0070: Preparing Order', 'Unread', '2025-03-03 04:34:16'),
-(18, 1, 70, 111, 'Order ID 0070: Payment Confirmed!', 'Unread', '2025-03-03 04:34:16'),
-(19, 1, 72, 111, 'Order ID 0072: Preparing Order', 'Unread', '2025-03-03 05:24:09'),
-(20, 1, 72, 111, 'Order ID 0072: Payment Confirmed!', 'Unread', '2025-03-03 05:24:09'),
-(21, 1, 71, 111, 'Order ID 0071: Preparing Order', 'Unread', '2025-03-03 05:24:13'),
-(22, 1, 71, 111, 'Order ID 0071: Payment Confirmed!', 'Unread', '2025-03-03 05:24:13'),
-(23, 1, 73, 111, 'Order ID 0073: Preparing Order', 'Unread', '2025-03-03 12:31:45'),
-(24, 1, 73, 111, 'Order ID 0073: Payment Confirmed!', 'Unread', '2025-03-03 12:31:45'),
-(25, 1, 73, 111, 'Order ID 0073: Ready to pickup!', 'Unread', '2025-03-03 13:25:17');
-
 -- --------------------------------------------------------
 
 --
@@ -220,23 +196,15 @@ CREATE TABLE `orders` (
   `total_price` decimal(10,2) NOT NULL,
   `payment_method` enum('Cash','GCash') NOT NULL,
   `order_type` enum('Dine In','Take Out') NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `order_class` enum('Immediately','Scheduled') NOT NULL DEFAULT 'Immediately',
-  `scheduled_time` datetime DEFAULT NULL
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `orders`
 --
 
-INSERT INTO `orders` (`id`, `user_id`, `total_price`, `payment_method`, `order_type`, `created_at`, `order_class`, `scheduled_time`) VALUES
-(68, 1, 220.00, 'Cash', 'Dine In', '2025-02-24 02:59:27', 'Immediately', NULL),
-(69, 1, 320.00, 'Cash', 'Take Out', '2025-03-03 03:50:55', 'Immediately', NULL),
-(70, 1, 320.00, 'Cash', 'Dine In', '2025-03-03 04:33:37', 'Immediately', NULL),
-(71, 1, 320.00, 'Cash', 'Dine In', '2025-03-03 04:50:14', 'Immediately', NULL),
-(72, 1, 320.00, 'Cash', 'Dine In', '2025-03-03 04:51:17', 'Immediately', NULL),
-(73, 1, 320.00, 'GCash', 'Take Out', '2025-03-03 12:29:22', 'Immediately', NULL),
-(74, 3, 220.00, 'Cash', 'Dine In', '2025-03-03 14:17:01', 'Immediately', NULL);
+INSERT INTO `orders` (`id`, `user_id`, `total_price`, `payment_method`, `order_type`, `created_at`) VALUES
+(75, 3, 220.00, 'Cash', 'Dine In', '2025-03-14 18:08:16');
 
 -- --------------------------------------------------------
 
@@ -261,15 +229,7 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`id`, `order_stall_id`, `product_id`, `quantity`, `price`, `subtotal`, `created_at`, `variations`, `request`) VALUES
-(161, 108, 28, 1, 100.00, 100.00, '2025-03-03 04:33:37', NULL, ''),
-(162, 108, 29, 1, 220.00, 220.00, '2025-03-03 04:33:37', 'Option 1, Option 1 lol', ''),
-(163, 109, 28, 1, 100.00, 100.00, '2025-03-03 04:50:14', NULL, ''),
-(164, 109, 29, 1, 220.00, 220.00, '2025-03-03 04:50:14', 'Option 1, Option 1 lol', ''),
-(165, 110, 28, 1, 100.00, 100.00, '2025-03-03 04:51:17', NULL, ''),
-(166, 110, 29, 1, 220.00, 220.00, '2025-03-03 04:51:17', 'Option 1, Option 1 lol', ''),
-(167, 111, 28, 1, 100.00, 100.00, '2025-03-03 12:29:22', NULL, ''),
-(168, 111, 29, 1, 220.00, 220.00, '2025-03-03 12:29:23', 'Option 1, Option 1 lol', ''),
-(169, 112, 29, 1, 220.00, 220.00, '2025-03-03 14:17:01', 'Option 1, Option 1 lol', '');
+(170, 113, 29, 1, 220.00, 220.00, '2025-03-14 18:08:16', 'Option 1, Option 1 lol', '');
 
 -- --------------------------------------------------------
 
@@ -294,11 +254,7 @@ CREATE TABLE `order_stalls` (
 --
 
 INSERT INTO `order_stalls` (`id`, `order_id`, `stall_id`, `subtotal`, `status`, `created_at`, `queue_number`, `cancellation_reason`, `updated_at`) VALUES
-(108, 70, 111, 320.00, 'Canceled', '2025-03-03 04:33:37', NULL, 'Need to modify order', '2025-03-03 13:23:03'),
-(109, 71, 111, 320.00, 'Preparing', '2025-03-03 04:50:14', 2, NULL, '2025-03-03 13:23:03'),
-(110, 72, 111, 320.00, 'Preparing', '2025-03-03 04:51:17', 1, NULL, '2025-03-03 13:23:03'),
-(111, 73, 111, 320.00, 'Ready', '2025-03-03 12:29:22', 3, NULL, '2025-03-03 13:25:17'),
-(112, 74, 111, 220.00, 'Canceled', '2025-03-03 14:17:01', NULL, 'Need to modify order', '2025-03-12 02:25:15');
+(113, 75, 111, 220.00, 'Pending', '2025-03-14 18:08:16', NULL, NULL, '2025-03-14 18:08:16');
 
 -- --------------------------------------------------------
 
@@ -421,6 +377,13 @@ CREATE TABLE `stall_likes` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `stall_likes`
+--
+
+INSERT INTO `stall_likes` (`id`, `user_id`, `stall_id`, `created_at`) VALUES
+(19, 3, 110, '2025-03-14 12:25:21');
+
 -- --------------------------------------------------------
 
 --
@@ -486,8 +449,8 @@ CREATE TABLE `stocks` (
 --
 
 INSERT INTO `stocks` (`id`, `product_id`, `variation_option_id`, `quantity`) VALUES
-(39, 29, 44, 2),
-(40, 29, 47, 2),
+(39, 29, 44, 1),
+(40, 29, 47, 1),
 (41, 30, NULL, 1),
 (42, 33, NULL, 3);
 
@@ -747,7 +710,7 @@ ALTER TABLE `business`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=250;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=257;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -777,19 +740,19 @@ ALTER TABLE `operating_hours`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=171;
 
 --
 -- AUTO_INCREMENT for table `order_stalls`
 --
 ALTER TABLE `order_stalls`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
 
 --
 -- AUTO_INCREMENT for table `products`
@@ -819,7 +782,7 @@ ALTER TABLE `stall_categories`
 -- AUTO_INCREMENT for table `stall_likes`
 --
 ALTER TABLE `stall_likes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `stall_operating_hours`

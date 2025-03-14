@@ -3,6 +3,7 @@
     include_once 'links.php'; 
     include_once 'nav.php';
     include_once 'bootstrap.php'; 
+    include_once 'modals.php'; 
 ?>
 
 <style>
