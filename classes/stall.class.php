@@ -260,10 +260,10 @@ class Stall {
         return $stmt->fetchAll();
     }
 
-    public function createNotification($user_id, $order_id, $stall_id, $message) {
-        $sql = "INSERT INTO notifications (user_id, order_id, stall_id, message) VALUES (?, ?, ?, ?)";
+    public function createNotification($user_id, $order_id, $stall_id, $title, $message) {
+        $sql = "INSERT INTO notifications (user_id, order_id, stall_id, title, message) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->db->connect()->prepare($sql);
-        return $stmt->execute([$user_id, $order_id, $stall_id, $message]);
+        return $stmt->execute([$user_id, $order_id, $stall_id, $title, $message]);
     }
 
     public function getNotifications($user_id, $park_id){
