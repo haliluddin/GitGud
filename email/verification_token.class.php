@@ -23,7 +23,7 @@ class Verification {
         $token = urlencode($token);
         
         // TEMPORARY LINK
-        $verificationLink = "http://localhost/GitGudPark/email/verify.php?token={$token}&id={$user_id}";
+        $verificationLink = "http://localhost/GitGud/email/verify.php?token={$token}&id={$user_id}";
         
         $mail = new PHPMailer(true);
         try {
