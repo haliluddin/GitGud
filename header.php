@@ -27,7 +27,7 @@ if (isset($_SESSION['user'])) {
 
     $nav_links = [
         'account.php' => ['label' => 'Account', 'icon' => 'fa-solid fa-user'],
-        'favorites.php' => ['label' => 'Favorites', 'icon' => 'fa-solid fa-heart'],
+        //'favorites.php' => ['label' => 'Favorites', 'icon' => 'fa-solid fa-heart'],
         'purchase.php' => ['label' => 'Purchase', 'icon' => 'fa-solid fa-shopping-bag'],
     ];
 
@@ -50,6 +50,7 @@ if (isset($_SESSION['user'])) {
 } else {
     if (isset($_SESSION['current_park_id'])) {
         $park_id = $_SESSION['current_park_id'];
+        $park_name = $_SESSION['current_park_name'];
     }
 }
 ?>
@@ -71,11 +72,11 @@ if (isset($_SESSION['user'])) {
         transform: scale(1.20);
     }
 </style>
-<div class="d-flex justify-content-between align-items-center border-bottom" style="padding: 20px 120px;">
+<div class="d-flex justify-content-between align-items-center border-bottom" style="padding: 15px 120px;">
     <a href="park.php"><img src="assets/images/logo.png" width="150"></a>
     <div class="d-flex gap-2 align-items-center">
         <i class="fa-solid fa-location-crosshairs"></i>
-        <h5 class="m-0"><?= htmlspecialchars($park_name) ?></h5>
+        <h6 class="m-0"><?= htmlspecialchars($park_name) ?></h6>
     </div>
     <div class="d-flex gap-3 align-items-center nav">
         <?php if ($user): ?>
@@ -96,8 +97,8 @@ if (isset($_SESSION['user'])) {
                 </div>
             </div>
         <?php else: ?>
-            <a href="signin.php">Sign In</a>
-            <a href="signup.php">Sign Up</a>
+            <button onclick="window.location.href='signin.php';" class="rounded-3 bg-white py-1 px-3 inupbtn">Sign in</button>
+            <button onclick="window.location.href='signup.php';" class="rounded-3 py-1 px-3 text-white border-0 inupbtn" style="background: #CD5C08;">Sign Up</button>
         <?php endif; ?>
     </div>
 </div>

@@ -56,56 +56,61 @@ function getNextOpening($operatingHoursArray) {
         <span class="text-muted small">GITGUD</span>
     </form>
 
+    <section id="searchResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none; ">
+        <h3 id="searchHeader" class="mb-3"></h3>
+        <div id="searchResultsContainer" class="row row-cols-1 row-cols-md-3 g-3"></div>
+    </section>
+
     <section class="bg-white border rounded-2 px-5 py-4 mb-3">
         <h3 class="mb-3">Categories</h3>
         <div class="tpdiv position-relative">
             <i class="fa-solid fa-arrow-left scroll-arrow left-arrow" style="display: none;"></i>
             <div class="d-flex rightfilter gap-3">
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#" class="text-decoration-none text-center category-link" data-category="BBQ">
                     <img src="assets/images/BBQ.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">BBQ</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Seafood">
                     <img src="assets/images/Seafood.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Seafood</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Desserts">
                     <img src="assets/images/Desserts.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Desserts</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Snacks">
                     <img src="assets/images/Snacks.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Snacks</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Beverages">
                     <img src="assets/images/Beverages.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Beverages</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Vegan">
                     <img src="assets/images/Vegan.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Vegan</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Asian">
                     <img src="assets/images/Asian.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Asian</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Burgers">
                     <img src="assets/images/Burgers.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Burgers</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Tacos">
                     <img src="assets/images/Tacos.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Tacos</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Fusion">
                     <img src="assets/images/Fusion.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Fusion</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Pasta">
                     <img src="assets/images/Pasta.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Pasta</span>
                 </a>
-                <a href="#" class="text-decoration-none text-center">
+                <a href="#"class="text-decoration-none text-center category-link" data-category="Salads">
                     <img src="assets/images/Salads.jpg" width="110px" height="110px" class="rounded-2">
                     <span class="text-dark d-block mt-1">Salads</span>
                 </a>
@@ -116,6 +121,8 @@ function getNextOpening($operatingHoursArray) {
         </div>
 
     </section>
+
+    <section id="filterResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none;"></section>
 
     <!-- Popular Section -->
     <?php if (!empty($popularStalls)) { ?>
@@ -369,4 +376,49 @@ function getNextOpening($operatingHoursArray) {
             }
         });
     });
+</script>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const searchResultsSection = document.getElementById('searchResultsSection');
+    const searchHeader = document.getElementById('searchHeader');
+    const searchResultsContainer = document.getElementById('searchResultsContainer');
+
+    searchInput.addEventListener('keyup', function(){
+        const term = this.value.trim();
+        if(term.length === 0){
+            searchResultsSection.style.display = 'none';
+            return;
+        }
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "search_stalls.php?park_id=<?= $park_id; ?>&search=" + encodeURIComponent(term), true);
+        xhr.onreadystatechange = function(){
+            if(xhr.readyState === 4 && xhr.status === 200){
+                searchResultsContainer.innerHTML = xhr.responseText;
+                searchResultsSection.style.display = 'block';
+                const numResults = searchResultsContainer.querySelectorAll('.col').length;
+                searchHeader.innerHTML = `We found ${numResults} result${numResults !== 1 ? 's' : ''} for "<strong>${term}</strong>"`;
+            }
+        };
+        xhr.send();
+    });
+
+    document.querySelectorAll('.category-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const category = this.dataset.category;
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "filter_stalls.php?park_id=<?= $park_id; ?>&category=" + encodeURIComponent(category), true);
+            xhr.onreadystatechange = function(){
+                if(xhr.readyState === 4 && xhr.status === 200){
+                    // For example, insert into a dedicated section for filtered stalls:
+                    document.getElementById('filterResultsSection').innerHTML = xhr.responseText;
+                    document.getElementById('filterResultsSection').style.display = 'block';
+                }
+            };
+            xhr.send();
+        });
+    });
+
+
 </script>

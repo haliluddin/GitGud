@@ -1455,6 +1455,15 @@ padding: 20px;
   background-position: center;
   transition: 0.1s;
 }
+.inupbtn{
+  all: unset;
+  border: 1px gray solid;
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+.inupbtn:hover{
+  transform: scale(1.1);
+}
 .logo i{
   background-color: white;
   border-radius: 50%;

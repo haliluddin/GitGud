@@ -337,6 +337,68 @@ class Park {
         return $query->fetch(PDO::FETCH_ASSOC);
     }
     
+    public function searchStalls($parkId, $searchTerm) {
+        $sql = "
+            SELECT 
+                stalls.*, 
+                CONCAT(users.first_name, ' ', users.last_name) AS owner_name,
+                users.email,
+                users.profile_img,
+                GROUP_CONCAT(DISTINCT CONCAT(stall_operating_hours.days, '<br>', stall_operating_hours.open_time, ' - ', stall_operating_hours.close_time) SEPARATOR '; ') AS stall_operating_hours,
+                GROUP_CONCAT(DISTINCT stall_categories.name SEPARATOR ', ') AS stall_categories,
+                GROUP_CONCAT(DISTINCT stall_payment_methods.method SEPARATOR ', ') AS stall_payment_methods
+            FROM stalls
+            JOIN users ON stalls.user_id = users.id
+            LEFT JOIN stall_operating_hours ON stalls.id = stall_operating_hours.stall_id
+            LEFT JOIN stall_categories ON stalls.id = stall_categories.stall_id
+            LEFT JOIN stall_payment_methods ON stalls.id = stall_payment_methods.stall_id
+            WHERE stalls.park_id = :park_id
+              AND stalls.name LIKE :search
+            GROUP BY stalls.id
+        ";
+        
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute(array(
+            ':park_id' => $parkId,
+            ':search'  => "%$searchTerm%"
+        ));
+        
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+
+    public function filterStallsByCategory($parkId, $category) {
+        $sql = "
+            SELECT 
+                stalls.*, 
+                CONCAT(users.first_name, ' ', users.last_name) AS owner_name,
+                users.email,
+                users.profile_img,
+                GROUP_CONCAT(DISTINCT CONCAT(stall_operating_hours.days, '<br>', stall_operating_hours.open_time, ' - ', stall_operating_hours.close_time) SEPARATOR '; ') AS stall_operating_hours,
+                GROUP_CONCAT(DISTINCT stall_categories.name SEPARATOR ', ') AS stall_categories,
+                GROUP_CONCAT(DISTINCT stall_payment_methods.method SEPARATOR ', ') AS stall_payment_methods
+            FROM stalls
+            JOIN users ON stalls.user_id = users.id
+            LEFT JOIN stall_operating_hours ON stalls.id = stall_operating_hours.stall_id
+            LEFT JOIN stall_categories ON stalls.id = stall_categories.stall_id
+            LEFT JOIN stall_payment_methods ON stalls.id = stall_payment_methods.stall_id
+            WHERE stalls.park_id = :park_id
+              AND EXISTS (
+                  SELECT 1 FROM stall_categories sc 
+                  WHERE sc.stall_id = stalls.id 
+                    AND sc.name = :category
+              )
+            GROUP BY stalls.id
+        ";
+    
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute([
+            ':park_id' => $parkId,
+            ':category' => $category
+        ]);
+        
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    }
     
     
     

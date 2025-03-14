@@ -1,70 +1,76 @@
 <?php
-    include_once 'links.php'; 
-    require_once __DIR__ . '/classes/db.class.php';
-    $userObj = new User();
+include_once 'links.php'; 
+require_once __DIR__ . '/classes/db.class.php';
+require_once __DIR__ . '/classes/park.class.php';
 
-    if (isset($_SESSION['user']['id'])) {
-        if ($userObj->isVerified($_SESSION['user']['id']) == 0) {
-            header('Location: ./email/verify_email.php');
-            exit();
+$user = null;
+$nav_links = [];
+
+if (isset($_SESSION['user'])) {
+    $userObj = new User();
+    $user = $userObj->getUser($_SESSION['user']['id']);
+
+    if (isset($_SESSION['current_park_id'])) {
+        $park_id = $_SESSION['current_park_id'];
+        $park_name = $_SESSION['current_park_name'];
+
+        $parkObj = new Park();
+        $is_food_park_owner = $parkObj->isOwner($_SESSION['user']['id'], $park_id);
+        $is_stall_owner = $parkObj->isStallOwner($_SESSION['user']['id'], $park_id);
+
+        $nav_links = [
+            'account.php' => 'ACCOUNT',
+            'purchase.php'  => 'PURCHASE'
+        ];
+
+        if ($is_stall_owner) {
+            $nav_links += [
+                'orders.php'     => 'ORDERS',
+                'managemenu.php' => 'MANAGE MENU',
+                'sales.php'      => 'SALES'
+            ];
         }
 
-        $user = $userObj->getUser($_SESSION['user']['id']);
-    } else {
-        header('Location: ./signin.php');
-        exit();
+        if ($is_food_park_owner) {
+            $nav_links += [
+                'managestall.php' => 'MANAGE STALL',
+                'dashboard.php'   => 'DASHBOARD'
+            ];
+        }
     }
-    
-    $user = $userObj->getUser($_SESSION['user']['id']);
-    $current_page = basename($_SERVER['PHP_SELF']);
+}
+
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
+
 <style>
     .indicator {
         display: flex;
         justify-content: center;
         gap: 50px;
         padding: 0 120px;
+        border-bottom: 1px solid #ccc;
     }
     .indicator a {
         color: #bbbbbb;
         padding: 18px 5px;
         font-size: 15px;
         text-decoration: none;
+        transition: color 0.2s, border-bottom 0.2s;
     }
     .indicator a:hover {
         color: black;
     }
     .indicator a.active {
         color: black;
-        border-bottom: 2px black solid;
+        border-bottom: 2px solid black;
     }
 </style>
-<nav class="indicator border-bottom">
-    <?php
-        switch ($user['role']) {
-            case 'Customer':
-                echo '<a href="purchase.php" class="' . ($current_page == "purchase.php" ? "active" : "") . '">PURCHASE</a>';
-                echo '<a href="favorites.php" class="' . ($current_page == "favorites.php" ? "active" : "") . '">FAVORITES</a>';
-                echo '<a href="account.php" class="' . ($current_page == "account.php" ? "active" : "") . '">ACCOUNT</a>';
-                break;
-            case 'Stall Owner':
-                echo '<a href="purchase.php" class="' . ($current_page == "purchase.php" ? "active" : "") . '">PURCHASE</a>';
-                echo '<a href="favorites.php" class="' . ($current_page == "favorites.php" ? "active" : "") . '">FAVORITES</a>';
-                echo '<a href="account.php" class="' . ($current_page == "account.php" ? "active" : "") . '">ACCOUNT</a>';
-                echo '<a href="orders.php" class="' . ($current_page == "orders.php" ? "active" : "") . '">ORDERS</a>';
-                echo '<a href="managemenu.php" class="' . ($current_page == "managemenu.php" ? "active" : "") . '">MANAGE MENU</a>';
-                echo '<a href="stallpage.php" class="' . ($current_page == "stallpage.php" ? "active" : "") . '">STALL PAGE</a>';
-                echo '<a href="sales.php" class="' . ($current_page == "sales.php" ? "active" : "") . '">SALES</a>';
-                break;
-            case 'Park Owner':
-                echo '<a href="purchase.php" class="' . ($current_page == "purchase.php" ? "active" : "") . '">PURCHASE</a>';
-                echo '<a href="favorites.php" class="' . ($current_page == "favorites.php" ? "active" : "") . '">FAVORITES</a>';
-                echo '<a href="account.php" class="' . ($current_page == "account.php" ? "active" : "") . '">ACCOUNT</a>';
-                echo '<a href="managestall.php" class="' . ($current_page == "managestall.php" ? "active" : "") . '">MANAGE STALL</a>';
-                echo '<a href="dashboard.php" class="' . ($current_page == "dashboard.php" ? "active" : "") . '">DASHBOARD</a>';
-                echo '<a href="centralized.php" class="' . ($current_page == "centralized.php" ? "active" : "") . '">CENTRALIZED</a>';
-                break;
-        }
-    ?>
-</nav>
 
+<nav class="indicator">
+    <?php foreach ($nav_links as $link => $label): ?>
+        <a href="<?= $link; ?>" class="<?= ($current_page == $link ? 'active' : ''); ?>">
+            <?= $label; ?>
+        </a>
+    <?php endforeach; ?>
+</nav>

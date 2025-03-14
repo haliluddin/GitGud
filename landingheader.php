@@ -9,15 +9,10 @@
     }
 ?>
 <style>
-    .inupbtn{
-        all: unset;
-        border: 1px gray solid;
-        transition: transform 0.2s ease-in-out;
-        cursor: pointer;
-    }
-    .inupbtn:hover{
-        transform: scale(1.1);
-    }
+   .dropdown img{
+        height: 30px !important;
+        width: 30px !important;
+   }
 </style>
 
 <div class="bottom d-flex justify-content-between align-items-center py-3">

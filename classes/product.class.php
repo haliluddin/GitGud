@@ -221,10 +221,6 @@ class Product {
         $stmt->execute([':stall_id' => $stall_id, ':search' => "%$searchTerm%"]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
-
-
-
 
 
     /*function getProducts($stallId) {
