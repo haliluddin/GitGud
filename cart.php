@@ -4,7 +4,8 @@ include_once 'header.php';
 require_once __DIR__ . '/classes/cart.class.php';
 
 $cartObj = new Cart();
-$cartGrouped = $cartObj->getCartGroupedItems($user_id, $park_id);
+if (isset($user_id) && isset($park_id))
+    $cartGrouped = $cartObj->getCartGroupedItems($user_id, $park_id);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $payment_method = $_POST['payment_method'] ?? null; 
@@ -29,10 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         <button data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">Delete all items</button>
     </div>
 
-    <?php foreach ($cartGrouped as $stallName => $items): 
-            $stall_id = $items[0]['stall_id'] ?? 0;
-            $supportedMethods = $items[0]['supported_methods'] ?? 'cash,gcash'; 
-    ?>
+    
+        <?php 
+        if (isset($cartGrouped) && !empty($cartGrouped))
+            foreach ($cartGrouped as $stallName => $items): 
+                $stall_id = $items[0]['stall_id'] ?? 0;
+                $supportedMethods = $items[0]['supported_methods'] ?? 'cash,gcash'; 
+        ?>
         <div class="border py-3 px-4 rounded-2 bg-white mb-3 stall-group" 
              data-stall-id="<?= htmlspecialchars($stall_id) ?>" 
              data-supported-methods="<?= htmlspecialchars($supportedMethods) ?>">

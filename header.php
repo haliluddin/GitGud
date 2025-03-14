@@ -73,11 +73,24 @@ if (isset($_SESSION['user'])) {
     }
 </style>
 <div class="d-flex justify-content-between align-items-center border-bottom" style="padding: 15px 120px;">
-    <a href="park.php"><img src="assets/images/logo.png" width="150"></a>
-    <div class="d-flex gap-2 align-items-center">
-        <i class="fa-solid fa-location-crosshairs"></i>
-        <h6 class="m-0"><?= htmlspecialchars($park_name) ?></h6>
-    </div>
+    <?php
+        if (isset($park_name)) {
+            ?>
+            
+            <div class="d-flex gap-2 align-items-center">
+                <i class="fa-solid fa-location-crosshairs"></i>
+                <h6 class="m-0"><?= htmlspecialchars($park_name) ?></h6>
+            </div>
+        <?php
+        } else {
+            ?>
+            <a href="park.php"><img src="assets/images/logo.png" width="150"></a>
+            <div class="d-flex gap-2 align-items-center">
+                <i class="fa-solid"></i>
+            </div>
+        <?php
+        }
+        ?>
     <div class="d-flex gap-3 align-items-center nav">
         <?php if ($user): ?>
             <a href="cart.php" class="rounded-5 cbu"><i class="fa-solid fa-cart-shopping"></i></a>
