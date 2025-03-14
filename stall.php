@@ -68,6 +68,19 @@ if (!empty($stall['stall_operating_hours'])) {
       color: gray;
       pointer-events: none;
   }
+  .variationitem-disabled {
+    pointer-events: none;
+}
+.variationitem-disabled img {
+    opacity: 0.5;
+}
+.variationitem-disabled span {
+    color: #6c757d;
+}
+.variationitem-disabled:hover {
+    background-color: #FFF5E4;
+}
+
 </style>
 <main>
     <div class="pageinfo pb-4">
@@ -126,10 +139,10 @@ if (!empty($stall['stall_operating_hours'])) {
 
     <div class="d-flex pagefilter align-items-center gap-3">
         <div class="d-flex align-items-center gap-3 leftfilter">
-            <form id="searchForm" action="#" method="get" class="searchmenu">
-                <button type="submit"><i class="fas fa-search fa-lg"></i></button>
+            <div id="searchForm" action="#" method="get" class="searchmenu">
+                <button><i class="fas fa-search fa-lg"></i></button>
                 <input type="text" name="search" id="searchInput" placeholder="Search in menu">
-            </form>
+            </div>
             <?php if (!empty($popularProducts)): ?>
                 <a href="#popular" class="nav-link"><i class="fa-solid fa-fire-flame-curved"></i> Popular</a>
             <?php endif; ?>
@@ -535,7 +548,7 @@ if (!empty($stall['stall_operating_hours'])) {
                                                                         <?php foreach ($stallObj->getVariationOptions($variation['id']) as $option):
                                                                             $optionStock = $stallObj->getStock($product['id'], $option['id']);
                                                                         ?>
-                                                                            <div class="d-flex align-items-center justify-content-between variationitem mb-2" onclick="if(!this.querySelector('input').disabled){ document.getElementById('variation<?= $option['id']; ?>').click(); }">
+                                                                            <div class="d-flex align-items-center justify-content-between variationitem mb-2 <?= ($optionStock <= 0 ? 'variationitem-disabled' : ''); ?>" onclick="if(!this.querySelector('input').disabled){ document.getElementById('variation<?= $option['id']; ?>').click(); }">
                                                                                 <div class="form-check d-flex gap-2 align-items-center">
                                                                                     <input 
                                                                                         class="form-check-input" 
@@ -842,46 +855,10 @@ if (!empty($stall['stall_operating_hours'])) {
             xhr.open("GET", "search_products.php?stall_id=<?= $stall_id; ?>&search=" + encodeURIComponent(term), true);
             xhr.onreadystatechange = function(){
                 if(xhr.readyState === 4 && xhr.status === 200){
-                    const results = JSON.parse(xhr.responseText);
-                    searchHeader.innerHTML = `We found ${results.length} result${results.length !== 1 ? 's' : ''} for "<strong>${term}</strong>"`;
-                    let html = '';
-                    results.forEach(product => {
-                        html += `
-                        <div class="col">
-                            <a href="#" class="card-link text-decoration-none" data-bs-toggle="modal" data-bs-target="#menumodal${product.id}">
-                                <div class="card position-relative">
-                                    <img src="${product.image}" class="card-img-top" alt="${product.name}">
-                                    <button class="addtocart position-absolute fw-bold d-flex justify-content-center align-items-center">+</button>
-                                    <div class="card-body">
-                                        <p class="card-text text-muted m-0">${product.category_name}</p>
-                                        <h5 class="card-title my-2">${product.name}</h5>
-                                        <p class="card-text text-muted m-0">${product.description}</p>
-                                        <div class="d-flex align-items-center justify-content-between my-3">
-                                            <div>
-                                                <span class="proprice">₱${parseFloat(product.base_price).toFixed(2)}</span>
-                                                <span class="pricebefore small">₱${parseFloat(product.base_price).toFixed(2)}</span>
-                                            </div>
-                                            <span class="prolikes small"><i class="fa-solid fa-heart"></i> 189</span>
-                                        </div>                          
-                                        <div class="m-0">
-                                            <?php if(in_array($product['id'], $popularProdIds)) { ?>
-                                                <span class="opennow">Popular</span>
-                                            <?php } ?>
-                                            <?php if(in_array($product['id'], $promoProdIds)) { ?>
-                                                <span class="discount">With Promo</span>
-                                            <?php } ?>
-                                            <?php if(in_array($product['id'], $newProdIds)) { ?>
-                                                <span class="newopen">New</span>
-                                            <?php } ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        `;
-                    });
-                    searchResultsContainer.innerHTML = html;
+                    searchResultsContainer.innerHTML = xhr.responseText;
                     searchResultsSection.style.display = 'block';
+                    const numResults = searchResultsContainer.querySelectorAll('.col').length;
+                    searchHeader.innerHTML = `We found ${numResults} result${numResults !== 1 ? 's' : ''} for "<strong>${term}</strong>"`;
                 }
             };
             xhr.send();

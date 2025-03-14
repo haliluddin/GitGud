@@ -75,7 +75,7 @@ nav ul li a{text-decoration: none;}
   background-color: white;
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 4;
+  z-index: 999;
   margin-top: 5px;
   right: 0;
 }
@@ -90,12 +90,6 @@ nav ul li a{text-decoration: none;}
 .dropdown-content a:hover {
   background-color: #f1f1f1;
   color: black;
-}
-
-.dropdown a img {
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
 }
 
 /* FOOTER */
