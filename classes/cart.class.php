@@ -171,7 +171,7 @@ class Cart {
     public function createOrder($user_id, $total, $payment_method, $order_type) { 
         $conn = $this->db->connect();
         $sql = "INSERT INTO orders (user_id, total_price, payment_method, order_type)
-                VALUES (?, ?, ?, ?, ?, ?)";
+                VALUES (?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->execute([$user_id, $total, $payment_method, $order_type]);
         return $conn->lastInsertId();
