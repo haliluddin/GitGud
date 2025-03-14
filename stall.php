@@ -9,7 +9,7 @@ $stallObj   = new Stall();
 $productObj = new Product();
 
 if (isset($_GET['id'])) {
-    $stall_id = decrypt($_GET['id']);
+    $stall_id = decrypt(urldecode($_GET['id']));
     
     $stall = $parkObj->getStall($stall_id); 
     $products = $stallObj->getProducts($stall_id);

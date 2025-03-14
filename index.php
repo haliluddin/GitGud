@@ -157,7 +157,7 @@
                     ?>
                     <div class="col">
                         <div class="card">
-                            <a href="enter_park.php?id=<?= encrypt($park['id']) ?>" class="card-link text-decoration-none" target="_blank">
+                            <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none" target="_blank">
                                 <img src="<?= $park['business_logo'] ?>" class="card-img-top" alt="...">
                                 <div class="card-body">
                                     <h5 class="card-title text-dark"><?= $park['business_name'] ?></h5>
