@@ -80,7 +80,6 @@ if (!empty($stall['stall_operating_hours'])) {
 .variationitem-disabled:hover {
     background-color: #FFF5E4;
 }
-
 </style>
 <main>
     <div class="pageinfo pb-4">

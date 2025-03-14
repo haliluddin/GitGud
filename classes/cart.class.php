@@ -168,12 +168,12 @@ class Cart {
         return $finalCart;
     }
     
-    public function createOrder($user_id, $total, $payment_method, $order_type, $order_class, $scheduled_time) { 
+    public function createOrder($user_id, $total, $payment_method, $order_type) { 
         $conn = $this->db->connect();
-        $sql = "INSERT INTO orders (user_id, total_price, payment_method, order_type, order_class, scheduled_time)
+        $sql = "INSERT INTO orders (user_id, total_price, payment_method, order_type)
                 VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$user_id, $total, $payment_method, $order_type, $order_class, $scheduled_time]);
+        $stmt->execute([$user_id, $total, $payment_method, $order_type]);
         return $conn->lastInsertId();
     }
     
@@ -194,7 +194,7 @@ class Cart {
         $stmt->execute([$order_stall_id, $product_id, $variations, $request, $quantity, $price, $subtotal]);
     }
     
-    public function placeOrder($user_id, $payment_method, $order_type, $order_class, $scheduled_time, $cartGrouped) {
+    public function placeOrder($user_id, $payment_method, $order_type, $cartGrouped) {
         $conn = $this->db->connect();
         $total_order = 0;
         $stallSubtotals = [];  
@@ -214,7 +214,7 @@ class Cart {
         
         $conn->beginTransaction();
         try {
-            $order_id = $this->createOrder($user_id, $total_order, $payment_method, $order_type, $order_class, $scheduled_time);
+            $order_id = $this->createOrder($user_id, $total_order, $payment_method, $order_type);
         
             foreach ($cartGrouped as $stallName => $items) {
                 $stall_id = $items[0]['stall_id'];
@@ -258,6 +258,28 @@ class Cart {
             $conn->rollBack();
             throw $e;
         }
+    }
+    
+    public function deleteAllItems($user_id, $park_id) {
+        $sql = "DELETE c FROM cart c 
+                JOIN products p ON c.product_id = p.id 
+                JOIN stalls s ON p.stall_id = s.id 
+                WHERE c.user_id = ? AND s.park_id = ?";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$user_id, $park_id]);
+    }
+
+    public function deleteCartItem($user_id, $park_id, $product_id, $request = '') {
+        $sql = "DELETE c 
+                FROM cart c
+                JOIN products p ON c.product_id = p.id
+                JOIN stalls s ON p.stall_id = s.id
+                WHERE c.user_id = ? 
+                  AND p.id = ?
+                  AND s.park_id = ? 
+                  AND (c.request = ? OR (c.request IS NULL AND ? = ''))";
+        $stmt = $this->db->connect()->prepare($sql);
+        return $stmt->execute([$user_id, $product_id, $park_id, $request, $request]);
     }
     
     
