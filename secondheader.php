@@ -12,7 +12,7 @@
     }
 </style>
 <div class="bottom d-flex justify-content-between align-items-center">
-    <a href="/GitGudPark/index.php"><i class="fa-solid fa-arrow-left-from-bracket"></i> 
+    <a href="/GitGud/index.php"><i class="fa-solid fa-arrow-left-from-bracket"></i> 
         <?php
             $currentDir = dirname($_SERVER['SCRIPT_NAME']);
             if (strpos($currentDir, 'email') !== false) {
@@ -26,6 +26,6 @@
         if (isset($_SESSION['user']['id']))
             echo '<a href="../logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>';
         else
-            echo '<a href="/GitGudPark/index.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Back</a>';
+            echo '<a href="/GitGud/index.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Back</a>';
     ?>
 </div> 
