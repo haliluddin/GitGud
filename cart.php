@@ -7,6 +7,11 @@ $cartObj = new Cart();
 if (isset($user_id) && isset($park_id))
     $cartGrouped = $cartObj->getCartGroupedItems($user_id, $park_id);
 
+if (isset($cartGrouped) && !empty($cartGrouped))
+    $cartExists = true;
+else
+    $cartExists = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $payment_method = $_POST['payment_method'] ?? null; 
     $order_type     = $_POST['order_type'] ?? null;     
@@ -27,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 
     <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3 carttop">
         <h4 class="fw-bold mb-0">My Cart</h4>
-        <button data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">Delete all items</button>
+        <button data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" <?php echo $cartExists ? '' : 'disabled'; ?>>Delete all items</button>
     </div>
 
     
@@ -98,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                 </div>
                 <div class="d-flex align-items-center mb-4">
                     <label class="form-label w-25 mb-0 fw-bold">Payment Method</label>
-                    <select class="form-select w-75" id="paymentMethod" name="payment_method" onchange="validatePaymentMethods()" required>
+                    <select class="form-select w-75" id="paymentMethod" name="payment_method" onchange="validatePaymentMethods()" required <?php echo $cartExists ? '' : 'disabled'; ?>>
                         <option value="" disabled selected>Select</option>
                         <option value="Cash">Cash</option>
                         <option value="GCash">GCash</option>
@@ -107,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                 <input type="hidden" id="order_type" name="order_type" value="Dine In">
                 <div class="d-flex align-items-center">
                     <div class="w-25"></div>
-                    <button type="submit" name="place_order" id="placeOrderButton" class="btn btn-primary rounded-5" style="width: 250px;">Place Order</button>
+                    <button type="submit" name="place_order" id="placeOrderButton" class="btn <?php echo $cartExists ? 'btn-primary' : 'btn-secondary'; ?> rounded-5" style="width: 250px;" <?php echo $cartExists ? '' : 'disabled'; ?>>Place Order</button>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-4">
