@@ -76,7 +76,7 @@ if (isset($_SESSION['user'])) {
     <?php
         if (isset($park_name)) {
             ?>
-            
+            <a href="index.php"><img src="assets/images/logo.png" width="150"></a>
             <div class="d-flex gap-2 align-items-center">
                 <i class="fa-solid fa-location-crosshairs"></i>
                 <h6 class="m-0"><?= htmlspecialchars($park_name) ?></h6>
@@ -84,7 +84,7 @@ if (isset($_SESSION['user'])) {
         <?php
         } else {
             ?>
-            <a href="park.php"><img src="assets/images/logo.png" width="150"></a>
+            <a href="index.php"><img src="assets/images/logo.png" width="150"></a>
             <div class="d-flex gap-2 align-items-center">
                 <i class="fa-solid"></i>
             </div>
