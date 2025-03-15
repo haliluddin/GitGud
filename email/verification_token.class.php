@@ -12,6 +12,8 @@ if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+require_once(__DIR__ . '/../classes/encdec.class.php');
+
 class Verification {
     protected $db;
 
@@ -20,7 +22,8 @@ class Verification {
     }
 
     function sendEmail($user_id, $email, $first_name, $token) {
-        $token = urlencode($token);
+        $token = urlencode(encrypt($token));
+        $user_id = urlencode(encrypt($user_id));
         
         // TEMPORARY LINK
         $verificationLink = "http://localhost/GitGud/email/verify.php?token={$token}&id={$user_id}";

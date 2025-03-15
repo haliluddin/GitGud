@@ -1,5 +1,9 @@
 <?php  
-    include_once 'header.php'; 
+    include_once 'header.php';
+
+    // if (isset($user) && $user['role'] !== 'Park Owner')
+    //     exit(header("Location: index.php"));
+
     include_once 'links.php'; 
     include_once 'nav.php';
     include_once 'bootstrap.php'; 
