@@ -12,7 +12,7 @@ if ($conn->connect_error) {
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
-$sql = "SELECT id, email, profile_img FROM users WHERE email LIKE ? LIMIT 10"; // Fetch user ID as well
+$sql = "SELECT id, email, profile_img FROM users JOIN verification ON users.id = verification.user_id WHERE email LIKE ? AND role != 'Park Owner' AND role != 'Stall Owner' AND verification.is_verified = 1 LIMIT 10"; // Exclude park owners and stall owners
 $stmt = $conn->prepare($sql);
 $searchTerm = "%" . $search . "%";
 $stmt->bind_param("s", $searchTerm);

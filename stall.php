@@ -9,7 +9,7 @@ $stallObj   = new Stall();
 $productObj = new Product();
 
 if (isset($_GET['id'])) {
-    $stall_id = decrypt($_GET['id']);
+    $stall_id = decrypt(urldecode($_GET['id']));
     
     $stall = $parkObj->getStall($stall_id); 
     $products = $stallObj->getProducts($stall_id);
@@ -17,7 +17,11 @@ if (isset($_GET['id'])) {
     $totalProducts = $stallObj->getTotalProducts($stall_id);
     
     $likeCount = $productObj->getStallLikes($stall_id);
-    $likedByUser = $productObj->isStallLiked($stall_id, $user_id);
+    
+    if (isset($user_id))
+        $likedByUser = $productObj->isStallLiked($stall_id, $user_id);
+    else
+        $likedByUser = false;
     
     $popularProducts = $productObj->getPopularProducts($stall_id);
     $promoProducts   = $productObj->getPromoProducts($stall_id);
@@ -126,7 +130,7 @@ if (!empty($stall['stall_operating_hours'])) {
                     </div>
                 </div>
             </div>
-            <?php if ($user_id == $stall['user_id']): ?>
+            <?php if (isset($user_id) && $user_id == $stall['user_id']): ?>
                 <button class="pagelike" onclick="window.location.href='editpage.php?id=<?= $stall['id'] ?>';">Edit Page</button>
             <?php else: ?>
                 <button id="likeBtn" class="pagelike <?= $likedByUser ? 'liked' : ''; ?>">

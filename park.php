@@ -132,7 +132,7 @@ function getNextOpening($operatingHoursArray) {
                 <i class="fa-solid fa-arrow-left scroll-arrow left-arrow" style="display: none;"></i>
                 <div class="d-flex rightfilter gap-3">
                     <?php foreach ($popularStalls as $stall) { ?>
-                        <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
+                        <a href="stall.php?id=<?= urlencode(encrypt($stall['id'])) ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
                             <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
                             <div class="p-3" style="width:400px;">
                                 <div class="d-flex gap-2 align-items-center">

@@ -1,13 +1,14 @@
 <?php
     session_start();
 
-    require_once 'verification_token.class.php';
+    require_once __DIR__ . '/../email/verification_token.class.php';
+    require_once __DIR__ . '/../classes/encdec.class.php';
 
     $verificationObj = new Verification();
 
     if (isset($_GET['token']) && isset($_GET['id'])) {
-        $token = $_GET['token'];
-        $user_id = $_GET['id'];
+        $token = decrypt(urldecode($_GET['token']));
+        $user_id = decrypt(urldecode($_GET['id']));
 
         $isVerified = $verificationObj->verifyEmail($token, $user_id);
 

@@ -20,6 +20,11 @@ foreach ($cartGrouped as $stallName => $items) {
     }
 }
 
+if (isset($cartGrouped) && !empty($cartGrouped))
+    $cartExists = true;
+else
+    $cartExists = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $payment_method = $_POST['payment_method'] ?? null; 
     $order_type     = $_POST['order_type'] ?? null;     

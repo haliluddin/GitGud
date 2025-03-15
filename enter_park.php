@@ -7,7 +7,7 @@ require_once __DIR__ . '/classes/encdec.class.php';
 $parkObj = new Park();
 
 if (isset($_GET['id'])) {
-    $park_id = decrypt($_GET['id']);
+    $park_id = decrypt(urldecode($_GET['id']));
     $park = $parkObj->getPark($park_id);
 
     if ($park) {
