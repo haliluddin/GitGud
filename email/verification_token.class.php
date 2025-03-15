@@ -84,7 +84,7 @@ class Verification {
                         }
                         .verify-button {
                             display: inline-block;
-                            background-color: #007BFF;
+                            background-color: #CD5C08;
                             color: #ffffff;
                             padding: 12px 24px;
                             border-radius: 5px;
