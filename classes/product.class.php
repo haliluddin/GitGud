@@ -170,9 +170,12 @@ class Product {
         $avgStmt->execute([':stall_id' => $stall_id]);
         $avgResult = $avgStmt->fetch(PDO::FETCH_ASSOC);
         $avgOrders = $avgResult ? $avgResult['avg_orders'] : 0;
-
+    
         $sql = "
-            SELECT p.*, c.name AS category_name, COUNT(oi.id) AS order_count
+            SELECT p.*, 
+                   c.name AS category_name, 
+                   COUNT(oi.id) AS order_count,
+                   (SELECT COALESCE(SUM(s.quantity), 0) FROM stocks s WHERE s.product_id = p.id) AS stock
             FROM products p
             JOIN categories c ON p.category_id = c.id
             LEFT JOIN order_items oi ON p.id = oi.product_id
@@ -186,11 +189,13 @@ class Product {
             ':avg_orders' => $avgOrders
         ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    }    
 
     public function getPromoProducts($stall_id) {
         $sql = "
-            SELECT p.*, c.name AS category_name
+            SELECT p.*, 
+                   c.name AS category_name,
+                   (SELECT COALESCE(SUM(s.quantity), 0) FROM stocks s WHERE s.product_id = p.id) AS stock
             FROM products p
             JOIN categories c ON p.category_id = c.id
             WHERE p.stall_id = :stall_id AND p.discount > 0
@@ -200,14 +205,16 @@ class Product {
         $stmt->execute([':stall_id' => $stall_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
+    
     public function getNewProducts($stall_id) {
         $sql = "
-            SELECT p.*, c.name AS category_name
+            SELECT p.*, 
+                   c.name AS category_name,
+                   (SELECT COALESCE(SUM(s.quantity), 0) FROM stocks s WHERE s.product_id = p.id) AS stock
             FROM products p
             JOIN categories c ON p.category_id = c.id
             WHERE p.stall_id = :stall_id 
-            AND p.created_at >= (NOW() - INTERVAL 30 DAY)
+              AND p.created_at >= (NOW() - INTERVAL 30 DAY)
             GROUP BY p.id
         ";
         $stmt = $this->db->connect()->prepare($sql);
@@ -215,12 +222,18 @@ class Product {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function searchProducts($stall_id, $searchTerm){
-        $sql = "SELECT * FROM products WHERE stall_id = :stall_id AND name LIKE :search";
+    public function searchProducts($stall_id, $searchTerm) {
+        $sql = "
+            SELECT p.*,
+                   (SELECT COALESCE(SUM(s.quantity), 0) FROM stocks s WHERE s.product_id = p.id) AS stock
+            FROM products p 
+            WHERE p.stall_id = :stall_id AND p.name LIKE :search
+        ";
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->execute([':stall_id' => $stall_id, ':search' => "%$searchTerm%"]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    
 
 
     /*function getProducts($stallId) {

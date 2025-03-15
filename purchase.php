@@ -121,11 +121,11 @@ $statusMapping = [
                                 <span class="dot text-muted"></span>
                             <?php endif; ?>
                             <?php if($status == 'Completed'): ?>
-                                <button class="likeorder rounded-2"><i class="fa-regular fa-heart me-2"></i>Like</button>                             
+                                <button class="preparing rounded-2">Completed</button>                             
                                 <span class="dot text-muted"></span>
                             <?php endif; ?>
                             <?php if($status == 'Canceled'): ?>
-                                <button class="likeorder rounded-2"><i class="fa-regular fa-heart me-2"></i>Like</button>                               
+                                <button class="preparing rounded-2">Canceled</button>                               
                                 <span class="dot text-muted"></span>
                             <?php endif; ?>
                             <div class="d-flex gap-3 align-items-center">
@@ -212,11 +212,11 @@ $statusMapping = [
                                 <span class="dot text-muted"></span>
                             <?php endif; ?>
                             <?php if($status == 'Completed'): ?>
-                                <button class="likeorder rounded-2"><i class="fa-regular fa-heart me-2"></i>Like</button>                             
+                                <button class="preparing rounded-2">Completed</button>                             
                                 <span class="dot text-muted"></span>
                             <?php endif; ?>
                             <?php if($status == 'Canceled'): ?>
-                                <button class="likeorder rounded-2"><i class="fa-regular fa-heart me-2"></i>Like</button>                               
+                                <button class="preparing rounded-2">Canceled</button>                               
                                 <span class="dot text-muted"></span>
                             <?php endif; ?>
                             <div class="d-flex gap-3 align-items-center">

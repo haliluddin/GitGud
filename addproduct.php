@@ -104,7 +104,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         }
     }
+} elseif ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['new_category'])) {
+    $newCategory = trim($_POST['new_category']);
+    $productObj->addCategory($stall_id, $newCategory);
 }
+
 ob_end_flush();
 ?>
 
@@ -180,12 +184,7 @@ ob_end_flush();
                 <input type="productname" name="productname" id="productname" placeholder="Enter product name"/>     
                 <span class="errormessage"><?php echo $productNameErr; ?></span>       
             </div>
-            <div class="d-flex gap-3">
-                <!-- <div class="input-group m-0 mb-4">
-                    <label for="productcode">Product Code</label>
-                    <input type="productcode" name="productcode" id="productcode" placeholder="Enter product code"/>  
-                    <span class="errormessage"><?php echo $productCodeErr; ?></span>                
-                </div> -->
+            <div class="d-flex gap-3 align-items-center">
                 <div class="input-group m-0 mb-4">
                     <label for="category">Category</label>
                     <select name="category" id="category" style="padding: 10.5px 0.75rem">
@@ -198,6 +197,7 @@ ob_end_flush();
                     </select>
                     <span class="errormessage"><?php echo $categoryErr; ?></span>
                 </div>
+                <button type="button" class="variation-btn addvar flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addcategory">+ Add Category</button>
             </div>
             <div class="input-group m-0 mb-4">
                 <label for="description">Description</label>
@@ -244,7 +244,32 @@ ob_end_flush();
             <button type="submit" class="btn btn-primary send px-5 mt-3">ADD PRODUCT</button><br><br><br><br>
         </div>
     </form>
+    
 </main>
 <?php
     include_once './footer.php'; 
 ?>
+<div class="modal fade" id="addcategory" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="" method="post">
+                    <div class="modal-body">
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="fw-bold mb-4">Add Category</h4>
+                            <div class="form-floating m-0">
+                                <input type="text" name="new_category" class="form-control" placeholder="Category" id="new_category">
+                                <label for="new_category">Category</label>
+                            </div>
+                            <div class="mt-5 mb-3">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>

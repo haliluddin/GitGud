@@ -89,7 +89,10 @@ class Cart {
                         'request'           => $request,
                         'stall_id'          => $row['stall_id'],
                         'supported_methods' => $row['supported_methods'],
-                        'variation_names'   => []  
+                        'variation_names'   => [],
+                        // For non-variation items, if you already join stocks (or update later), you can set stock here.
+                        // Otherwise, you may retrieve stock elsewhere.
+                        'stock'             => 0 
                     ];
                 } else {
                     $tempCart[$stallName][$productId][$request]['non_var']['quantity'] += (int)$row['quantity'];
@@ -107,7 +110,8 @@ class Cart {
                         'stall_id'          => $row['stall_id'],
                         'supported_methods' => $row['supported_methods'],
                         'variation_names'   => !empty($row['variation_name']) ? [$row['variation_name']] : [],
-                        'variation_option_ids' => !empty($row['variation_option_id']) ? [$row['variation_option_id']] : []
+                        'variation_option_ids' => !empty($row['variation_option_id']) ? [$row['variation_option_id']] : [],
+                        'stock'             => 0 // We'll update stock below.
                     ];
                 } else {
                     $tempCart[$stallName][$productId][$request]['var'][$batchKey]['unit_price'] += floatval($row['price']);
@@ -130,11 +134,35 @@ class Cart {
             foreach ($products as $productId => $requests) {
                 foreach ($requests as $request => $data) {
                     if ($data['non_var'] !== null) {
+                        // For non-variation items, get their stock via a query
+                        $sqlStock = "SELECT COALESCE(SUM(quantity), 0) AS stock 
+                                     FROM stocks 
+                                     WHERE product_id = ? 
+                                     AND variation_option_id IS NULL";
+                        $stmtStock = $this->db->connect()->prepare($sqlStock);
+                        $stmtStock->execute([$productId]);
+                        $stockData = $stmtStock->fetch(PDO::FETCH_ASSOC);
+                        $data['non_var']['stock'] = $stockData ? (int)$stockData['stock'] : 0;
+                        
                         $finalCart[$stallName][] = $data['non_var'];
                     }
                     if (!empty($data['var'])) {
                         if ($request !== '') {
                             foreach ($data['var'] as $batch) {
+                                // Compute minimum stock for the variation options in this batch
+                                $minStock = PHP_INT_MAX;
+                                foreach ($batch['variation_option_ids'] as $varOptId) {
+                                    $sql = "SELECT quantity FROM stocks 
+                                            WHERE product_id = ? AND variation_option_id = ?";
+                                    $stmt = $this->db->connect()->prepare($sql);
+                                    $stmt->execute([$productId, $varOptId]);
+                                    $rowStock = $stmt->fetch(PDO::FETCH_ASSOC);
+                                    $quantity = $rowStock ? (int)$rowStock['quantity'] : 0;
+                                    if ($quantity < $minStock) {
+                                        $minStock = $quantity;
+                                    }
+                                }
+                                $batch['stock'] = ($minStock === PHP_INT_MAX ? 0 : $minStock);
                                 $finalCart[$stallName][] = $batch;
                             }
                         } else {
@@ -153,6 +181,20 @@ class Cart {
                                 }
                             }
                             foreach ($mergedBatches as $batch) {
+                                // For merged batches, also determine the minimum stock across the variation options
+                                $minStock = PHP_INT_MAX;
+                                foreach ($batch['variation_option_ids'] as $varOptId) {
+                                    $sql = "SELECT quantity FROM stocks 
+                                            WHERE product_id = ? AND variation_option_id = ?";
+                                    $stmt = $this->db->connect()->prepare($sql);
+                                    $stmt->execute([$productId, $varOptId]);
+                                    $rowStock = $stmt->fetch(PDO::FETCH_ASSOC);
+                                    $quantity = $rowStock ? (int)$rowStock['quantity'] : 0;
+                                    if ($quantity < $minStock) {
+                                        $minStock = $quantity;
+                                    }
+                                }
+                                $batch['stock'] = ($minStock === PHP_INT_MAX ? 0 : $minStock);
                                 $finalCart[$stallName][] = $batch;
                             }
                         }
@@ -281,6 +323,7 @@ class Cart {
         $stmt = $this->db->connect()->prepare($sql);
         return $stmt->execute([$user_id, $product_id, $park_id, $request, $request]);
     }
+    
     
     
     

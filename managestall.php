@@ -55,24 +55,7 @@
 </style>
 
 <main>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="d-flex gap-3 align-items-center">
-            <select name="sortOptions" id="sortOptions" class="border-0 text-muted small py-1 px-2 bg-white">
-                <option value="all">All</option>
-            </select>
-            <select name="sortOptions" id="sortOptions" class="border-0 text-muted small py-1 px-2 bg-white">
-                <option value="all">All</option>
-            </select>
-            <i class="fa-regular fa-circle-down rename bg-white"></i>
-            <div class="d-flex gap-2 align-items-center small rename py-1 px-2 bg-white">
-                <span style="cursor: context-menu;">47s</span>
-                <i class="fa-solid fa-arrow-rotate-left"></i>
-            </div>
-            <form action="#" method="get" class="searchmenu bg-white">
-                <button type="submit"><i class="fas fa-search fa-lg small"></i></button>
-                <input type="text" name="search" placeholder="Search">
-            </form>
-        </div>
+    <div class="d-flex justify-content-end mb-3">
         <button class="addpro" type="button" data-bs-toggle="modal" data-bs-target="#invitestall">+ Add Stall</button>
     </div>
     <div class="row row-cols-1 row-cols-md-3 g-3">
@@ -108,11 +91,8 @@
                     <div class="card h-100">
                         <div class="position-relative">
                             <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="Stall Logo">
-                            <div class="position-absolute rentstatus paid">
-                                <i class="fa-solid fa-circle-check"></i> Paid: Rent for this period has been fully settled
-                            </div>
                             <div class="position-absolute d-flex gap-2 smaction">
-                                <i class="fa-solid fa-sack-dollar" onclick="window.location.href='rent.php';"></i>
+                                <!--<i class="fa-solid fa-sack-dollar" onclick="window.location.href='rent.php';"></i>-->
                                 <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= $stall['id'] ?>';"></i>
                                 <i class="fa-solid fa-trash-can" data-bs-toggle="modal" data-bs-target="#deletestall"></i>
                             </div>
