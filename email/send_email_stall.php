@@ -22,11 +22,12 @@ class StallInvitation {
     }
 
     function sendInvitationEmail($owner_email, $owner_id, $park_id, $user_id, $email, $first_name, $token) {
-        $token = urlencode(encrypt($token));
-        $owner_email = urlencode(encrypt($owner_email));
-        $owner_id = urlencode(encrypt($owner_id));
-        $park_id = urlencode(encrypt($park_id));
-        $user_id = urlencode(encrypt($user_id));
+        // Make sure all parameters are strings before encrypting
+        $token = urlencode(encrypt((string)$token));
+        $owner_email = urlencode(encrypt((string)$owner_email));
+        $owner_id = urlencode(encrypt((string)$owner_id));
+        $park_id = urlencode(encrypt((string)$park_id));
+        $user_id = urlencode(encrypt((string)$user_id));
 
         
         // Redirect to stallregistration.php with necessary parameters
@@ -146,7 +147,7 @@ class StallInvitation {
             $current_time = time();
             $last_sent = $invitation['last_sent'];
             $difference = $current_time - $last_sent;
-            $cd = 180; // 3 minutes cooldown
+            $cd = 300; // 5 minutes cooldown
 
             if ($difference < $cd) {
                 return ['cd' => $cd - $difference, 'message' => 'cooldown'];

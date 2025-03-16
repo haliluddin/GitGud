@@ -287,12 +287,12 @@
             </div>
             <div class="modal-footer pt-0 border-0">
                 <button type="button" class="btn btn-primary send p-2" id="createStallBtn">Create Stall Page</button>
-                <button type="button" class="btn btn-primary send p-2">Send Invitation Link</button>
+                <button type="button" class="btn btn-primary send p-2" id="sendInviteBtn">Send Invitation Link</button>
             </div>
         </div>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
 $(document).ready(function () {
@@ -321,7 +321,6 @@ $(document).ready(function () {
             },
             cache: true
         }
-
     });
 
     // Format items in dropdown with an image
@@ -375,8 +374,84 @@ $(document).ready(function () {
         });
     });
 
+    $('#sendInviteBtn').click(function () {
+        var selectedEmails = $('#emailSelect').val();
+        if (selectedEmails.length === 0) {
+            alert('Please select at least one email.');
+            return;
+        }
 
+        // Show loading indicator
+        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
+        $(this).prop('disabled', true);
+        
+        // Store button reference
+        var $button = $(this);
 
+        $.ajax({
+            url: './email/send_invite.php',
+            type: 'POST',
+            data: { emails: selectedEmails },
+            dataType: 'json',
+            success: function (response) {
+                // Reset button state
+                $button.html('Send Invitation Link');
+                $button.prop('disabled', false);
+                
+                if (response.status === 'success') {
+                    // Show success message
+                    // alert('Invitation links sent successfully!');
+                    Swal.fire({
+                        title: "Success!",
+                        text: "Invitation links sent successfully!",
+                        icon: "success"
+                    });
+                    
+                    // Reset the select2 dropdown
+                    $("#emailSelect").val(null).trigger("change");
+                    
+                    // Close the modal
+                    $('#invitestall').modal('hide');
+                } else if (response.status === 'warning') {
+                    // Show warning message with details
+                    var message = 'Some invitations could not be sent:\n';
+                    response.results.forEach(function(result) {
+                        message += '- ' + result.email + ': ' + result.message + '\n';
+                    });
+                    // alert(message);
+                    Swal.fire({
+                        title: 'Failed!',
+                        text: message,
+                        icon: 'error',
+                        confirmButtonText: 'I understand'
+                    })
+                } else {
+                    // Show error message
+                    // alert('Failed to send some invitation links. Please try again.');
+                    Swal.fire({
+                        title: 'Failed!',
+                        text: 'Failed to send some invitation links. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'I understand'
+                    })
+                }
+            },
+            error: function (xhr, status, error) {
+                // Reset button state
+                $button.html('Send Invitation Link');
+                $button.prop('disabled', false);
+                
+                // Show error message
+                // alert('An error occurred while sending invitations: ' + error);
+                Swal.fire({
+                    title: 'Failed!',
+                    text: 'An error occurred while sending invitations: ' + error,
+                    icon: 'error',
+                    confirmButtonText: 'I understand'
+                })
+            }
+        });
+    });
 
 });
 
