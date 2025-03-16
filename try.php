@@ -340,7 +340,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                     $variationsText = '<span class="small text-muted">Variation: ' . htmlspecialchars(implode(', ', $item['variation_names'])) . '</span><br>';
                 }
             ?>
-            <div class="d-flex border-bottom py-2 cart-item">
+            <div class="d-flex border-bottom py-2 cart-item" data-stock="<?= htmlspecialchars($item['stock']) ?>" 
+                data-product-id="<?= htmlspecialchars($item['product_id']) ?>" 
+                data-request="<?= urlencode($item['request']) ?>">
                 <div class="d-flex gap-3 align-items-center" style="width: 70%">
                     <img src="<?= htmlspecialchars($item['product_image']) ?>" width="80px" height="80px" class="border rounded-2">
                     <div>
@@ -353,19 +355,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                 </div>
                 <div class="d-flex align-items-center justify-content-between" style="width: 30%" data-unit-price="<?= $item['unit_price'] ?>">
                     <div class="d-flex align-items-center hlq">
-                        <i class="fa-solid fa-minus" onclick="updateCartQuantity(this, -1, '<?= $item['product_id'] ?>', '<?= urlencode($item['request']) ?>')"></i>
+                        <i class="fa-solid fa-minus" onclick="updateCartQuantity(this, -1)"></i>
                         <span class="ordquanum"><?= htmlspecialchars($item['quantity']) ?></span>
-                        <i class="fa-solid fa-plus" onclick="updateCartQuantity(this, 1, '<?= $item['product_id'] ?>', '<?= urlencode($item['request']) ?>')"></i>
+                        <i class="fa-solid fa-plus" onclick="updateCartQuantity(this, 1)"></i>
                     </div>
                     <div class="fw-bold fs-5">₱<?= number_format($totalPrice, 2) ?></div>
                     <div class="carttop">
-                        <button class="carttop" onclick="deleteCartItem('<?= $item['product_id'] ?>', '<?= urlencode($item['request']) ?>')">
-                            Delete
-                        </button>
+                        <button class="carttop" onclick="deleteCartItem('<?= $item['product_id'] ?>', '<?= urlencode($item['request']) ?>')">Delete</button>
                     </div>
                 </div>
+                <!-- Hidden input for quantity -->
+                <input type="hidden" class="hidden-quantity" 
+                    name="cartQuantities[<?= $item['product_id'] ?>][<?= urlencode($item['request']) ?>]" 
+                    value="<?= $item['quantity'] ?>">
             </div>
             <?php endforeach; ?>
+
         </div>
     <?php endforeach; ?>
 
@@ -448,20 +453,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     </div>
 </div>
 <script>
-    function updateCartQuantity(button, change, productId, request) {
-        const quantitySpan = button.parentElement.querySelector('.ordquanum');
-        let quantity = parseInt(quantitySpan.innerText);
-        quantity = Math.max(1, quantity + change);
-        quantitySpan.innerText = quantity;
-
-        const parentContainer = button.closest('[data-unit-price]');
-        const unitPrice = parseFloat(parentContainer.getAttribute('data-unit-price'));
-        const totalDiv = parentContainer.querySelector('.fw-bold.fs-5');
-        const newTotal = unitPrice * quantity;
-        totalDiv.innerText = '₱' + newTotal.toFixed(2);
-
-        updateGrandTotal();
+    function updateCartQuantity(button, change) {
+    const cartItemDiv = button.closest('.cart-item');
+    const quantitySpan = cartItemDiv.querySelector('.ordquanum');
+    let currentQuantity = parseInt(quantitySpan.innerText);
+    const stock = parseInt(cartItemDiv.getAttribute('data-stock')) || 0;
+    
+    let newQuantity = currentQuantity + change;
+    newQuantity = Math.max(1, newQuantity);
+    if(newQuantity > stock){
+        newQuantity = stock;
     }
+    quantitySpan.innerText = newQuantity;
+    
+    // Update hidden input
+    const hiddenInput = cartItemDiv.querySelector('.hidden-quantity');
+    if (hiddenInput) {
+        hiddenInput.value = newQuantity;
+    }
+    
+    const parentContainer = button.closest('[data-unit-price]');
+    const unitPrice = parseFloat(parentContainer.getAttribute('data-unit-price'));
+    const totalDiv = parentContainer.querySelector('.fw-bold.fs-5');
+    const newTotal = unitPrice * newQuantity;
+    totalDiv.innerText = '₱' + newTotal.toFixed(2);
+    
+    updateGrandTotal();
+    
+    const plusBtn = parentContainer.querySelector('.fa-plus');
+    if(newQuantity >= stock) {
+        plusBtn.classList.add('disabled-plus');
+    } else {
+        plusBtn.classList.remove('disabled-plus');
+    }
+}
+
 
     function deleteCartItem(productId, request) {
         var xhr = new XMLHttpRequest();

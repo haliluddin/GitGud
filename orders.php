@@ -241,7 +241,9 @@ $statusMapping = [
                 <?php 
             }
         } else {
-            echo "<p>No orders in this section.</p>";
+            echo '<div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">
+                No orders in this section.
+            </div>';
         }
         echo '</div>';
     }
@@ -354,6 +356,7 @@ $statusMapping = [
             </div>
         </div>
     </div>
+    <br><br><br><br>
 </main>
 
 <script>

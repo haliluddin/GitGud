@@ -323,8 +323,39 @@ class Cart {
         $stmt = $this->db->connect()->prepare($sql);
         return $stmt->execute([$user_id, $product_id, $park_id, $request, $request]);
     }
+
+    public function removeCartItems($user_id, $park_id, $availableCart) {
+        $conn = $this->db->connect();
     
-    
+        foreach ($availableCart as $stallName => $items) {
+            foreach ($items as $item) {
+                // If the product has variation_option_ids, remove all rows with matching product and request.
+                if (!empty($item['variation_option_ids']) && is_array($item['variation_option_ids'])) {
+                    // Build a placeholder list for the IN clause
+                    $placeholders = implode(',', array_fill(0, count($item['variation_option_ids']), '?'));
+                    $sql = "DELETE FROM cart 
+                            WHERE user_id = ? 
+                              AND product_id = ? 
+                              AND request = ? 
+                              AND variation_option_id IN ($placeholders)";
+                    
+                    $params = array_merge([$user_id, $item['product_id'], $item['request']], $item['variation_option_ids']);
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute($params);
+                } else {
+                    // For non-variation items, or if variation data isn't available, delete using variation_option_id IS NULL.
+                    $sql = "DELETE FROM cart 
+                            WHERE user_id = ? 
+                              AND product_id = ? 
+                              AND variation_option_id IS NULL 
+                              AND request = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute([$user_id, $item['product_id'], $item['request']]);
+                }
+            }
+        }
+    }
+
     
     
 }

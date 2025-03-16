@@ -71,13 +71,19 @@ if (isset($_SESSION['user'])) {
     .cbu:hover{
         transform: scale(1.20);
     }
+    .parkhead:hover{
+        cursor: pointer;
+        background-color: #f4f4f4;
+        padding: 10px;
+        border-radius: 5px;
+    }
 </style>
 <div class="d-flex justify-content-between align-items-center border-bottom" style="padding: 15px 120px;">
     <?php
         if (isset($park_name)) {
             ?>
             <a href="index.php"><img src="assets/images/logo.png" width="150"></a>
-            <div class="d-flex gap-2 align-items-center">
+            <div class="d-flex gap-2 align-items-center parkhead" onclick="window.location.href='park.php'">
                 <i class="fa-solid fa-location-crosshairs"></i>
                 <h6 class="m-0"><?= htmlspecialchars($park_name) ?></h6>
             </div>
