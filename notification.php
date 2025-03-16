@@ -18,7 +18,9 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
 <main>
     <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3 carttop">
         <h4 class="fw-bold mb-0">Notifications</h4>
-        <button id="markAllReadBtn">Mark all as read</button>
+        <?php if(count($notifications) > 0): ?>
+            <button id="markAllReadBtn">Mark all as read</button>
+        <?php endif; ?>
     </div>
     
     <?php if(count($notifications) > 0): ?>
@@ -85,8 +87,11 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
             <?php endif; ?>
         <?php endforeach; ?>
     <?php else: ?>
-        <p>No notifications found.</p>
+        <div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">
+            No notification found.
+        </div>
     <?php endif; ?>
+    <br><br><br><br><br>
 </main>
 
 <script>

@@ -216,7 +216,12 @@ if (!empty($stall['stall_operating_hours'])) {
                                         <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                         <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                         <?php
-                                            $today = date('Y-m-d');
+                                             $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
                                             if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                 $today >= $product['start_date'] && $today <= $product['end_date']) {
                                                 $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
@@ -235,7 +240,12 @@ if (!empty($stall['stall_operating_hours'])) {
                                                 <span class="opennow">Popular</span>
                                             <?php } ?>
                                             <?php if (in_array($product['id'], $promoProdIds)) { 
-                                                $today = date('Y-m-d');
+                                                 $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
                                                 if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                     $today >= $product['start_date'] && $today <= $product['end_date']) { ?>
                                                     <span class="discount"><?= intval($product['discount']); ?>% off</span>
@@ -296,7 +306,12 @@ if (!empty($stall['stall_operating_hours'])) {
                                         <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                         <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                         <?php
-                                            $today = date('Y-m-d');
+                                             $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
                                             if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                 $today >= $product['start_date'] && $today <= $product['end_date']) {
                                                 $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
@@ -315,7 +330,12 @@ if (!empty($stall['stall_operating_hours'])) {
                                                 <span class="opennow">Popular</span>
                                             <?php } ?>
                                             <?php if (in_array($product['id'], $promoProdIds)) { 
-                                                $today = date('Y-m-d');
+                                                 $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
                                                 if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                     $today >= $product['start_date'] && $today <= $product['end_date']) { ?>
                                                     <span class="discount"><?= intval($product['discount']); ?>% off</span>
@@ -376,7 +396,12 @@ if (!empty($stall['stall_operating_hours'])) {
                                         <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                         <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                         <?php
-                                            $today = date('Y-m-d');
+                                             $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
                                             if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                 $today >= $product['start_date'] && $today <= $product['end_date']) {
                                                 $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
@@ -395,7 +420,12 @@ if (!empty($stall['stall_operating_hours'])) {
                                                 <span class="opennow">Popular</span>
                                             <?php } ?>
                                             <?php if (in_array($product['id'], $promoProdIds)) { 
-                                                $today = date('Y-m-d');
+                                                 $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
                                                 if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                     $today >= $product['start_date'] && $today <= $product['end_date']) { ?>
                                                     <span class="discount"><?= intval($product['discount']); ?>% off</span>
@@ -460,7 +490,17 @@ if (!empty($stall['stall_operating_hours'])) {
                                                 <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                                 <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                                 <?php
-                                                    $today = date('Y-m-d');
+                                                     $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    }                                                    
                                                     if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                         $today >= $product['start_date'] && $today <= $product['end_date']) {
                                                         $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
@@ -479,7 +519,12 @@ if (!empty($stall['stall_operating_hours'])) {
                                                         <span class="opennow">Popular</span>
                                                     <?php } ?>
                                                     <?php if (in_array($product['id'], $promoProdIds)) { 
-                                                        $today = date('Y-m-d');
+                                                         $today = date('Y-m-d');
+                                                        if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                            $product['discount'] = 0.00;
+                                                            $product['start_date'] = null;
+                                                            $product['end_date'] = null;
+                                                        } 
                                                         if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                             $today >= $product['start_date'] && $today <= $product['end_date']) { ?>
                                                             <span class="discount"><?= intval($product['discount']); ?>% off</span>
@@ -505,7 +550,12 @@ if (!empty($stall['stall_operating_hours'])) {
                                                     <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                                     <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                                     <?php
-                                                        $today = date('Y-m-d');
+                                                         $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
                                                         if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                             $today >= $product['start_date'] && $today <= $product['end_date']) {
                                                             $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
@@ -524,7 +574,12 @@ if (!empty($stall['stall_operating_hours'])) {
                                                             <span class="opennow">Popular</span>
                                                         <?php } ?>
                                                         <?php if (in_array($product['id'], $promoProdIds)) { 
-                                                            $today = date('Y-m-d');
+                                                             $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
                                                             if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
                                                                 $today >= $product['start_date'] && $today <= $product['end_date']) { ?>
                                                                 <span class="discount"><?= intval($product['discount']); ?>% off</span>

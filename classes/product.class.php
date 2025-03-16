@@ -31,8 +31,7 @@ class Product {
         }
         
         return false;
-    }
-    
+    } 
     
     function addVariations($productId, $variationName) {
         $db = $this->db->connect();  
@@ -91,6 +90,20 @@ class Product {
         $stmt->bindValue(':name', $name, PDO::PARAM_STR);
         return $stmt->execute();
     }
+
+    public function updateCategory($categoryId, $name) {
+        $sql = "UPDATE categories SET name = :name WHERE id = :categoryId";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':name', $name, PDO::PARAM_STR);
+        $stmt->bindValue(':categoryId', $categoryId, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+    
+    
+    
+    
+    
+    
     
     public function getCategories($stall_id) {
         $sql = "SELECT * FROM categories WHERE stall_id = :stall_id";

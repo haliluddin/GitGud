@@ -760,11 +760,12 @@ h6{margin:0;}
   position: relative;
 }
 .variationimage .overlay, .choice-group-image .overlay{
-  position: absolute;
-  top: 8px;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 7px;
+}
+.overlay i{
+    align-self: center;
 }
 .productimage i, .variationimage i, .choice-group-image i{
   background-color: #bbbbbb;
@@ -810,7 +811,7 @@ h6{margin:0;}
 }
 .variation-row, .variation-header, .choice-group-row, .choice-group-header{
   display: flex;
-  gap: 15px;
+  gap: 10px;
   align-items: center;
 }
 .variation-row:first-child,.choice-group-row:first-child  {
@@ -849,14 +850,15 @@ h6{margin:0;}
   padding: 5px 7px;
   color: gray;
 }
+.inst{
+  width: 90px !important;
+}
 .rename {
   font-size: small;
   padding: 8px;
   color: gray;
   border-radius: 50px;
 }
-
-
 
 .prohelp{
   border-bottom: 1px #ddd solid;

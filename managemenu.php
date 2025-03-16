@@ -2,7 +2,6 @@
     include_once 'header.php'; 
     include_once 'links.php'; 
     include_once 'nav.php';
-    include_once 'modals.php';
     require_once __DIR__ . '/classes/stall.class.php';
     require_once __DIR__ . '/classes/product.class.php';
 
@@ -16,10 +15,14 @@
         $productObj->addCategory($stallId, $newCategory);
     }
 
-    $products = $stallObj->getProducts($stallId);
-    
-    $categories = $productObj->getCategories($stallId);
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_category'])) {
+        $categoryId = $_POST['category_id'];
+        $newName    = trim($_POST['category_name']);
+        $productObj->updateCategory($categoryId, $newName);
+    }
 
+    $products   = $stallObj->getProducts($stallId);
+    $categories = $productObj->getCategories($stallId);
 ?>
 <style>
     main{ 
@@ -47,7 +50,7 @@
                             aria-expanded="true" 
                             aria-controls="collapse<?= $category['id']; ?>">
                         <p class="m-0 fw-bold"><?= htmlspecialchars($category['name']); ?></p>
-                        <span class="editcategory" data-bs-toggle="modal" data-bs-target="#editcategory">Edit Category</span>  
+                        <span class="editcategory" data-bs-toggle="modal" data-bs-target="#editcategory" onclick="event.stopPropagation(); setEditCategory(<?= $category['id']; ?>, '<?= htmlspecialchars($category['name'], ENT_QUOTES); ?>')">Edit Category</span>  
                     </button>
                 </h2>
                 <div id="collapse<?= $category['id']; ?>" class="accordion-collapse collapse show">
@@ -56,12 +59,12 @@
                             <?php 
                             $hasProducts = false;
                             foreach ($products as $product):
-                                if ($product['category_id'] == $category['id']): 
+                                if ($product['category_id'] == $category['id']):
                                     $hasProducts = true;
 
                                     $hasStock = false;
                                     $lowStock = false;
-                                    $noStock = true; 
+                                    $noStock  = true; 
 
                                     $variations = $stallObj->getProductVariations($product['id']);
 
@@ -117,13 +120,33 @@
                                                 </div>
                                                 <h5 class="fw-bold my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                                 <span class="small"><?= htmlspecialchars($product['description']); ?></span>
-                                                <div class="d-flex gap-5 align-items-center propl">
-                                                    <span class="proprice">P<?= number_format($product['base_price'], 2); ?></span>
-                                                    <span class="prolikes small"><i class="fa-solid fa-heart"></i> 189</span>
-                                                </div>
-                                                <button class="moreinfo" data-bs-toggle="modal" data-bs-target="#moreinfoproduct<?= $product['id']; ?>">
-                                                    <i class="fa-solid fa-circle-info"></i> More info
-                                                </button>
+                                                
+                                                <?php
+                                                    $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount'] = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date'] = null;
+                                                    } 
+                                                    if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
+                                                        $today >= $product['start_date'] && $today <= $product['end_date']) {
+                                                        $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
+                                                ?>
+                                                        <div class="my-3">
+                                                            <span class="proprice">₱<?= number_format($discountedPrice, 2); ?></span>
+                                                            <span class="pricebefore small">₱<?= number_format($product['base_price'], 2); ?></span>
+                                                        </div>
+                                                <?php } else { ?>
+                                                        <div class="my-3">
+                                                            <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
+                                                        </div>
+                                                <?php } ?>
+
+                                                <?php if (!empty($variations)): ?>
+                                                    <button class="moreinfo" data-bs-toggle="modal" data-bs-target="#moreinfoproduct<?= $product['id']; ?>">
+                                                        <i class="fa-solid fa-circle-info"></i> More info
+                                                    </button>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                         <div class="proaction d-flex gap-2 mt-3">
@@ -133,6 +156,7 @@
                                         </div>
                                     </div>
 
+                                    <?php if (!empty($variations)): ?>
                                     <div class="modal fade" id="moreinfoproduct<?= $product['id']; ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content h-75 overflow-auto">
@@ -141,45 +165,42 @@
                                                         <h4 class="fw-bold m-0"><?= htmlspecialchars($product['name']); ?></h4>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
-                                                    <?php if (!empty($variations)): ?>
-                                                        <?php foreach ($variations as $variation): ?>
-                                                            <div class="p-3 rounded-2 border invvar mb-3">
-                                                                <div class="mb-2">
-                                                                    <h5 class="fw-bold mb-1"><?= htmlspecialchars($variation['name']); ?></h5>
-                                                                    <span class="small text-muted">Customer is required to select one option</span>
-                                                                </div>
-                                                                <?php foreach ($stallObj->getVariationOptions($variation['id']) as $option): ?>
-                                                                    <div class="d-flex justify-content-between py-2 border-bottom align-items-center">
-                                                                        <div class="d-flex gap-2 align-items-center">
-                                                                            <img src="<?= htmlspecialchars($option['image']); ?>" alt="" width="45px" height="45px" class="rounded-2 border">
-                                                                            <span><?= htmlspecialchars($option['name']); ?></span>
-                                                                        </div>
-                                                                        <span class="ip">
-                                                                            <?= ($option['add_price'] > 0) ? '+ ₱' . number_format($option['add_price'], 2) : (($option['subtract_price'] > 0) ? '- ₱' . number_format($option['subtract_price'], 2) : 'Free'); ?>
-                                                                        </span>
-                                                                        <span class="stock-status">
-                                                                            <?php 
-                                                                            $optionStock = $stallObj->getStock($product['id'], $option['id']);
-                                                                            if ($optionStock == 0) {
-                                                                                echo '<span class="text-danger">NO STOCK</span>';
-                                                                            } elseif ($optionStock <= 5) {
-                                                                                echo '<span class="text-warning">LOW STOCK</span>';
-                                                                            } else {
-                                                                                echo '<span class="text-success">IN STOCK</span>';
-                                                                            }
-                                                                            ?>
-                                                                        </span>
-                                                                    </div>
-                                                                <?php endforeach; ?>
+                                                    <?php foreach ($variations as $variation): ?>
+                                                        <div class="p-3 rounded-2 border invvar mb-3">
+                                                            <div class="mb-2">
+                                                                <h5 class="fw-bold mb-1"><?= htmlspecialchars($variation['name']); ?></h5>
+                                                                <span class="small text-muted">Customer is required to select one option</span>
                                                             </div>
-                                                        <?php endforeach; ?>
-                                                    <?php else: ?>
-                                                        <p class="text-center text-muted">This product has no variations.</p>
-                                                    <?php endif; ?>
+                                                            <?php foreach ($stallObj->getVariationOptions($variation['id']) as $option): ?>
+                                                                <div class="d-flex justify-content-between py-2 border-bottom align-items-center">
+                                                                    <div class="d-flex gap-2 align-items-center">
+                                                                        <img src="<?= htmlspecialchars($option['image']); ?>" alt="" width="45px" height="45px" class="rounded-2 border">
+                                                                        <span><?= htmlspecialchars($option['name']); ?></span>
+                                                                    </div>
+                                                                    <span class="ip">
+                                                                        <?= ($option['add_price'] > 0) ? '+ ₱' . number_format($option['add_price'], 2) : (($option['subtract_price'] > 0) ? '- ₱' . number_format($option['subtract_price'], 2) : 'Free'); ?>
+                                                                    </span>
+                                                                    <span class="stock-status">
+                                                                        <?php 
+                                                                        $optionStock = $stallObj->getStock($product['id'], $option['id']);
+                                                                        if ($optionStock == 0) {
+                                                                            echo '<span class="text-danger">NO STOCK</span>';
+                                                                        } elseif ($optionStock <= 5) {
+                                                                            echo '<span class="text-warning">LOW STOCK</span>';
+                                                                        } else {
+                                                                            echo '<span class="text-success">IN STOCK</span>';
+                                                                        }
+                                                                        ?>
+                                                                    </span>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    <?php endforeach; ?>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <?php endif; ?>
 
                             <?php endif; endforeach; ?>
 
@@ -194,6 +215,7 @@
     </div>
     <br><br><br><br><br><br>
 
+    <!-- Add Category Modal -->
     <div class="modal fade" id="addcategory" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -219,11 +241,41 @@
         </div>
     </div>
 
-
+    <!-- Edit Category Modal -->
+    <div class="modal fade" id="editcategory" tabindex="-1" aria-labelledby="editCategoryLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="" method="post">
+                    <div class="modal-body">
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="fw-bold mb-4">Edit Category</h4>
+                            <input type="hidden" name="category_id" id="editCategoryId" value="">
+                            <div class="form-floating m-0">
+                                <input type="text" name="category_name" class="form-control" id="editCategoryName" placeholder="Category">
+                                <label for="editCategoryName">Category</label>
+                            </div>
+                            <div class="mt-5 mb-3">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" name="edit_category" class="btn btn-primary">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </main>
+
+<script>
+    function setEditCategory(categoryId, categoryName) {
+        document.getElementById('editCategoryId').value = categoryId;
+        document.getElementById('editCategoryName').value = categoryName;
+    }
+</script>
 
 <?php
     include_once './footer.php'; 
 ?>
-
-

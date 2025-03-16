@@ -7,7 +7,7 @@ function addVariationForm() {
     variationForm.id = `variation-form-${variationFormCount}`;
 
     variationForm.innerHTML = `
-        <div class="variation-header">
+        <div class="variation-header"> 
             <span id="variation-title-${variationFormCount}" class="fw-bold fs-5">Variation ${variationFormCount}</span>
             <button type="button" class="variation-btn rename" onclick="renameVariation(${variationFormCount})">
                 <i class="fa-solid fa-pen"></i>
@@ -40,8 +40,10 @@ function createVariationRow(variationFormId, rowId = Date.now()) {
                 <input type="file" name="variationimage_${variationFormId}[]" id="variationimage-${variationFormId}-${rowId}" accept="image/jpeg, image/png, image/jpg" style="display:none;" onchange="displaySelectedImage(${variationFormId}, ${rowId})">
             </div>
 
-            <input type="text" name="variation_name_${variationFormId}[]" placeholder="Variation Name">
+            <input type="text" name="variation_name_${variationFormId}[]" placeholder="Option Name">
             
+            <input type="text" placeholder="Initial Stock" class="inst">
+
             <div class="d-flex align-items-center addpeso">
                 <input type="number" name="variation_additional_price_${variationFormId}[]" placeholder="0.00" min="0" step="0.01">
             </div>

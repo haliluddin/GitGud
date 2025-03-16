@@ -1,571 +1,456 @@
-<?php  
+<?php
+ob_start();
 include_once 'links.php'; 
-include_once 'header.php';
-require_once __DIR__ . '/classes/cart.class.php';
+include_once 'header.php'; 
+require_once __DIR__ . '/classes/product.class.php';
+require_once __DIR__ . '/classes/stall.class.php';
 
-$cartObj = new Cart();
-$cartGrouped = $cartObj->getCartGroupedItems($user_id, $park_id);
+$productObj = new Product();
+$stallObj   = new Stall();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
-    $payment_method = $_POST['payment_method'] ?? null; 
-    $order_type     = $_POST['order_type'] ?? null;     
-    $order_class    = $_POST['order_class'] ?? 'Immediately';  
-    $schedule_date  = $_POST['schedule_date'] ?? null;  
-    $schedule_time  = $_POST['schedule_time'] ?? null;  
+$productName = $productCode = $category = $description = $basePrice = $discount = $startDate = $endDate = $imagePath = $initialStock = '';
+$imagePathErr       = $productNameErr = $productCodeErr = $categoryErr = $descriptionErr = $basePriceErr = $startDateErr = $endDateErr = $discountErr = $initialStockErr = '';
+$variationStockErr  = '';
 
-    if ($order_class === "Scheduled" && !empty($schedule_date) && !empty($schedule_time)) {
-        $scheduled_time = $schedule_date . ' ' . $schedule_time;
+$stall_id = $stallObj->getStallId($_SESSION['user']['id']);
+$selectCategories = $productObj->getCategories($stall_id);
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    if (isset($_POST['new_category'])) {
+        $newCategory = trim($_POST['new_category']);
+        if (!empty($newCategory)) {
+            $productObj->addCategory($stall_id, $newCategory);
+        }
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     } else {
-        $scheduled_time = null; 
-    }
 
-    // Get the price from the cart items then pass it to paymongo
-    // require_once __DIR__ . '/classes/paymongo.class.php';
-    // $payMongo = new PayMongoHandler();
+        $productName = clean_input($_POST['productname']);
+        $productCode = uniqid();
+        $category    = isset($_POST['category']) ? clean_input($_POST['category']) : '';
+        $description = clean_input($_POST['description']);
+        $basePrice   = clean_input($_POST['sellingPrice']);
+        $discount    = clean_input($_POST['discount'] ?? 0);
+        $startDate   = !empty($_POST['startDate']) ? clean_input($_POST['startDate']) : NULL;
+        $endDate     = !empty($_POST['endDate']) ? clean_input($_POST['endDate']) : NULL;
+        $initialStock = clean_input($_POST['initialStock'] ?? '');
 
-    // if ($payment_method === 'GCash') {
-    //     $checkout_url = $payMongo->createPaymentLink(30000, 'Payment', ['order_id' => $order_id]);
-    // }
+        if (empty($productName)) {
+            $productNameErr = 'Product name is required.';
+        }
+        if ($productObj->isProductCodeExists($productCode)) {
+            $productCodeErr = 'Product code already exists. Choose a different one.';
+        }
+        if (empty($category)) {
+            $categoryErr = 'Category is required.';
+        }
+        if (empty($description)) {
+            $descriptionErr = 'Description is required.';
+        }
+        if (empty($basePrice) || !is_numeric($basePrice) || $basePrice <= 0) {
+            $basePriceErr = 'Selling price must be a positive number.';
+        }
+        if (!empty($discount) && (!is_numeric($discount) || $discount < 0)) {
+            $discountErr = 'Discount must be a non-negative number.';
+        }
 
-    $order_id = $cartObj->placeOrder($user_id, $payment_method, $order_type, $order_class, $scheduled_time, $cartGrouped);
-
-    echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                document.getElementById('orderIdDisplay').innerText = '$order_id';
-                var cashModal = new bootstrap.Modal(document.getElementById('ifcash'));
-                cashModal.show();
-            });
-          </script>";
-}
-?>
-
-<main style="padding: 20px 120px;">
-
-    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3 carttop">
-        <h4 class="fw-bold mb-0">My Cart</h4>
-        <button>Delete all items</button>
-    </div>
-
-    <?php foreach ($cartGrouped as $stallName => $items): 
-            $stall_id = $items[0]['stall_id'] ?? 0;
-            $supportedMethods = $items[0]['supported_methods'] ?? 'cash,gcash'; 
-    ?>
-        <div class="border py-3 px-4 rounded-2 bg-white mb-3 stall-group" 
-             data-stall-id="<?= htmlspecialchars($stall_id) ?>" 
-             data-supported-methods="<?= htmlspecialchars($supportedMethods) ?>">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 stall-header">
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="fw-bold"><?= htmlspecialchars($stallName) ?></span> 
-                    <button class="viewstall border bg-white small px-2" onclick="window.location.href='';">View Stall</button>
-                </div>
-                <span class="stall-error text-danger" style="font-size: 13px; display:none;">
-                    <i class="fa-solid fa-circle-exclamation me-2"></i>
-                    This stall does not offer <span class="error-method"></span> payment
-                </span>
-            </div>
-            <?php foreach ($items as $item): 
-                $totalPrice = $item['quantity'] * $item['unit_price'];
-                $variationsText = '';
-                if (!empty($item['variation_names'])) {
-                    $variationsText = '<span class="small text-muted">Variation: ' . htmlspecialchars(implode(', ', $item['variation_names'])) . '</span><br>';
-                }
-            ?>
-            <div class="d-flex border-bottom py-2 cart-item">
-                <div class="d-flex gap-3 align-items-center" style="width: 70%">
-                    <img src="<?= htmlspecialchars($item['product_image']) ?>" width="80px" height="80px" class="border rounded-2">
-                    <div>
-                        <span class="fs-5"><?= htmlspecialchars($item['product_name']) ?></span><br>
-                        <?= $variationsText ?>
-                        <?php if ($item['request']): ?>
-                            <span class="small text-muted">"<?= htmlspecialchars($item['request']) ?>"</span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center justify-content-between" style="width: 30%" data-unit-price="<?= $item['unit_price'] ?>">
-                    <div class="d-flex align-items-center hlq">
-                        <i class="fa-solid fa-minus" onclick="updateCartQuantity(this, -1, '<?= $item['product_id'] ?>', '<?= urlencode($item['request']) ?>')"></i>
-                        <span class="ordquanum"><?= htmlspecialchars($item['quantity']) ?></span>
-                        <i class="fa-solid fa-plus" onclick="updateCartQuantity(this, 1, '<?= $item['product_id'] ?>', '<?= urlencode($item['request']) ?>')"></i>
-                    </div>
-                    <div class="fw-bold fs-5">₱<?= number_format($totalPrice, 2) ?></div>
-                    <div class="carttop"><button class="carttop" onclick="deleteCartItem('<?= $item['product_id'] ?>', '<?= urlencode($item['request']) ?>')">Delete</button></div>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    <?php endforeach; ?>
-
-    <form method="POST">
-        <div class="d-flex justify-content-between align-items-start border py-3 px-4 rounded-2 bg-white">
-            <div style="width: 70%">
-                <div class="d-flex align-items-center mb-4">
-                    <label class="form-label w-25 mb-0 fw-bold">Order Type</label>
-                    <div class="cartot btn-group w-75" role="group">
-                        <button type="button" class="btn-toggle active rounded" id="dineIn" onclick="document.getElementById('order_type').value='Dine In'">Dine In</button>
-                        <button type="button" class="btn-toggle rounded" id="takeOut" onclick="document.getElementById('order_type').value='Take Out'">Take Out</button>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center mb-4">
-                    <label class="form-label w-25 mb-0 fw-bold">Payment Method</label>
-                    <select class="form-select w-75" id="paymentMethod" name="payment_method" onchange="validatePaymentMethods()" required>
-                        <option value="" disabled selected>Select</option>
-                        <option value="Cash">Cash</option>
-                        <option value="GCash">GCash</option>
-                    </select>
-                </div>
-                <div class="d-flex mb-4">
-                    <label class="form-label w-25 mb-0 fw-bold">Order</label>
-                    <div class="w-75">
-                        <div class="d-flex align-items-center mb-2">
-                            <input class="form-check-input me-3 m-0" type="radio" name="orderTime" id="immediately" checked onclick="document.getElementById('order_class').value='Immediately'">
-                            <label for="immediately" class="me-5">Immediately</label>
-
-                            <input class="form-check-input me-3 m-0" type="radio" name="orderTime" id="scheduleLater" onclick="document.getElementById('order_class').value='Scheduled'">
-                            <label for="scheduleLater">Schedule for later</label>
-                        </div>
-                        <div class="d-flex gap-3 cartdis">
-                            <input type="date" class="form-control" id="scheduleDate" name="schedule_date" disabled>
-                            <input type="time" class="form-control" id="scheduleTime" name="schedule_time" disabled>
-                        </div>
-                    </div>
-                </div>
-                <input type="hidden" id="order_type" name="order_type" value="Dine In">
-                <input type="hidden" id="order_class" name="order_class" value="Immediately">
-                <input type="hidden" id="scheduled_time" name="scheduled_time" value="">
-
-                <div class="d-flex align-items-center">
-                    <div class="w-25"></div>
-                    <button type="submit" name="place_order" id="placeOrderButton" class="btn btn-primary rounded-5" style="width: 250px;">Place Order</button>
-                </div>
-            </div>
-            <div class="d-flex align-items-center gap-4">
-                <p class="fw-bold fs-5 m-0">Total:</p>
-                <h2 class="fw-bold m-0" id="grandTotal" style="color: #CD5C08">₱0.00</h2>
-            </div>
-        </div>
-        <br><br><br><br><br><br>
-    </form>
-</main>
-<!-- Placed Order with Cash Paymenyt -->
-<div class="modal fade" id="ifcash" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="d-flex justify-content-end">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="text-center">
-                    <i class="fa-regular fa-face-smile mb-3" style="color: #CD5C08; font-size: 80px"></i><br>
-                    <span>Thank you for your order!</span>
-                    <h5 class="fw-bold mt-2 mb-4">
-                        Your Order ID is <span id="orderIdDisplay" style="color: #CD5C08;"></span>
-                    </h5>
-                    <p class="mb-3">Please proceed to each stall with this Order ID to complete your payment. Once payment is confirmed, your order will be in preparation queue. </p>
-                    <span>For more details about your order, go to Purchase.</span>
-                </div>
-                <div class="text-center mt-4">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="window.location.href='purchase.php';">Purchase</button>
-                </div>
-                <br>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    function updateCartQuantity(button, change, productId, request) {
-        const quantitySpan = button.parentElement.querySelector('.ordquanum');
-        let quantity = parseInt(quantitySpan.innerText);
-        quantity = Math.max(1, quantity + change);
-        quantitySpan.innerText = quantity;
-
-        const parentContainer = button.closest('[data-unit-price]');
-        const unitPrice = parseFloat(parentContainer.getAttribute('data-unit-price'));
-        const totalDiv = parentContainer.querySelector('.fw-bold.fs-5');
-        const newTotal = unitPrice * quantity;
-        totalDiv.innerText = '₱' + newTotal.toFixed(2);
-
-        updateGrandTotal();
-    }
-
-    function deleteCartItem(productId, request) {
-        alert('Delete cart item for product ' + productId + ' with request: ' + decodeURIComponent(request));
-    }
-
-    function updateGrandTotal() {
-        let grandTotal = 0;
-        document.querySelectorAll('.cart-item').forEach(cartItem => {
-            const priceContainer = cartItem.querySelector('[data-unit-price]');
-            const unitPrice = parseFloat(priceContainer.getAttribute('data-unit-price'));
-            const quantity = parseInt(cartItem.querySelector('.ordquanum').innerText);
-            grandTotal += unitPrice * quantity;
-        });
-        document.getElementById('grandTotal').innerText = '₱' + grandTotal.toFixed(2);
-    }
-
-    function validatePaymentMethods() {
-        const selectedMethod = document.getElementById('paymentMethod').value; // "Cash" or "GCash"
-        document.querySelectorAll('.stall-group').forEach(stall => {
-            const supportedMethods = stall.getAttribute('data-supported-methods')
-                .split(',')
-                .map(m => m.trim().toLowerCase());
-            const errorSpan = stall.querySelector('.stall-error');
-            if (!supportedMethods.includes(selectedMethod.toLowerCase())) {
-                errorSpan.style.display = 'inline';
-                errorSpan.querySelector('.error-method').innerText = selectedMethod;
-            } else {
-                errorSpan.style.display = 'none';
-            }
-        });
-        updateGrandTotal();
-    }
-
-    document.querySelectorAll('.btn-toggle').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
-    });
-
-    document.getElementById('scheduleLater').addEventListener('click', () => {
-        document.getElementById('scheduleDate').disabled = false;
-        document.getElementById('scheduleTime').disabled = false;
-    });
-
-    document.getElementById('immediately').addEventListener('click', () => {
-        document.getElementById('scheduleDate').disabled = true;
-        document.getElementById('scheduleTime').disabled = true;
-        document.getElementById('scheduleDate').value = ''; // Reset values
-        document.getElementById('scheduleTime').value = ''; 
-        document.getElementById('scheduled_time').value = ''; // Clear hidden input
-    });
-
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const orderClass = document.getElementById('order_class').value;
-
-        if (orderClass === 'Scheduled') {
-            const date = document.getElementById('scheduleDate').value;
-            const time = document.getElementById('scheduleTime').value;
-
-            if (date && time) {
-                document.getElementById('scheduled_time').value = date + ' ' + time;
-            } else {
-                alert('Please select a valid schedule date and time.');
-                e.preventDefault(); // Prevent form submission if schedule is missing
+        $hasVariations = false;
+        foreach ($_POST as $key => $value) {
+            if (strpos($key, 'variation_name_') !== false) {
+                $hasVariations = true;
+                break;
             }
         }
-    });
+        if (!$hasVariations) {
+            if (empty($initialStock)) {
+                $initialStockErr = 'Initial stock is required.';
+            } elseif (!is_numeric($initialStock) || $initialStock < 0) {
+                $initialStockErr = 'Initial stock must be a non-negative number.';
+            }
+        }
 
+        if (!empty($_FILES["productimage"]["name"])) {
+            $targetDir = "uploads/";
+            $imageFileType = strtolower(pathinfo($_FILES["productimage"]["name"], PATHINFO_EXTENSION));
+            $imageSize = $_FILES["productimage"]["size"];
+            if (!in_array($imageFileType, ["jpg", "jpeg", "png"])) {
+                $imagePathErr = "Only JPG, JPEG, and PNG formats are allowed.";
+            } elseif ($imageSize > 500000) { 
+                $imagePathErr = "Image size must be less than 500KB.";
+            } else {
+                $imagePath = $targetDir . basename($_FILES["productimage"]["name"]);
+                move_uploaded_file($_FILES["productimage"]["tmp_name"], $imagePath);
+            }
+        } else {
+            $imagePathErr = "Product image is required.";
+        }
 
-    
-    document.addEventListener('DOMContentLoaded', updateGrandTotal);
-</script>
-
-<?php 
-include_once 'footer.php'; 
-?> 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<?php  
-include_once 'links.php'; 
-include_once 'header.php';
-require_once __DIR__ . '/classes/cart.class.php';
-
-$cartObj = new Cart();
-$cartGrouped = $cartObj->getCartGroupedItems($user_id, $park_id);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
-    $payment_method = $_POST['payment_method'] ?? null; 
-    $order_type     = $_POST['order_type'] ?? null;     
-
-    $order_id = $cartObj->placeOrder($user_id, $payment_method, $order_type, $cartGrouped);
-
-    echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                document.getElementById('orderIdDisplay').innerText = '$order_id';
-                var cashModal = new bootstrap.Modal(document.getElementById('ifcash'));
-                cashModal.show();
-            });
-          </script>";
-}
-?>
-
-<main style="padding: 20px 120px;">
-
-    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3 carttop">
-        <h4 class="fw-bold mb-0">My Cart</h4>
-        <button data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">Delete all items</button>
-    </div>
-
-    <?php foreach ($cartGrouped as $stallName => $items): 
-            $stall_id = $items[0]['stall_id'] ?? 0;
-            $supportedMethods = $items[0]['supported_methods'] ?? 'cash,gcash'; 
-    ?>
-        <div class="border py-3 px-4 rounded-2 bg-white mb-3 stall-group" 
-             data-stall-id="<?= htmlspecialchars($stall_id) ?>" 
-             data-supported-methods="<?= htmlspecialchars($supportedMethods) ?>">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 stall-header">
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="fw-bold"><?= htmlspecialchars($stallName) ?></span> 
-                    <button class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php'">View Stall</button>
-                </div>
-                <span class="stall-error text-danger" style="font-size: 13px; display:none;">
-                    <i class="fa-solid fa-circle-exclamation me-2"></i>
-                    This stall does not offer <span class="error-method"></span> payment
-                </span>
-            </div>
-            <?php foreach ($items as $item): 
-                $totalPrice = $item['quantity'] * $item['unit_price'];
-                $variationsText = '';
-                if (!empty($item['variation_names'])) {
-                    $variationsText = '<span class="small text-muted">Variation: ' . htmlspecialchars(implode(', ', $item['variation_names'])) . '</span><br>';
-                }
-            ?>
-            <div class="d-flex border-bottom py-2 cart-item" data-stock="<?= htmlspecialchars($item['stock']) ?>" 
-                data-product-id="<?= htmlspecialchars($item['product_id']) ?>" 
-                data-request="<?= urlencode($item['request']) ?>">
-                <div class="d-flex gap-3 align-items-center" style="width: 70%">
-                    <img src="<?= htmlspecialchars($item['product_image']) ?>" width="80px" height="80px" class="border rounded-2">
-                    <div>
-                        <span class="fs-5"><?= htmlspecialchars($item['product_name']) ?></span><br>
-                        <?= $variationsText ?>
-                        <?php if ($item['request']): ?>
-                            <span class="small text-muted">"<?= htmlspecialchars($item['request']) ?>"</span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center justify-content-between" style="width: 30%" data-unit-price="<?= $item['unit_price'] ?>">
-                    <div class="d-flex align-items-center hlq">
-                        <i class="fa-solid fa-minus" onclick="updateCartQuantity(this, -1)"></i>
-                        <span class="ordquanum"><?= htmlspecialchars($item['quantity']) ?></span>
-                        <i class="fa-solid fa-plus" onclick="updateCartQuantity(this, 1)"></i>
-                    </div>
-                    <div class="fw-bold fs-5">₱<?= number_format($totalPrice, 2) ?></div>
-                    <div class="carttop">
-                        <button class="carttop" onclick="deleteCartItem('<?= $item['product_id'] ?>', '<?= urlencode($item['request']) ?>')">Delete</button>
-                    </div>
-                </div>
-                <!-- Hidden input for quantity -->
-                <input type="hidden" class="hidden-quantity" 
-                    name="cartQuantities[<?= $item['product_id'] ?>][<?= urlencode($item['request']) ?>]" 
-                    value="<?= $item['quantity'] ?>">
-            </div>
-            <?php endforeach; ?>
-
-        </div>
-    <?php endforeach; ?>
-
-    <form method="POST">
-        <div class="d-flex justify-content-between align-items-start border py-3 px-4 rounded-2 bg-white">
-            <div style="width: 70%">
-                <div class="d-flex align-items-center mb-4">
-                    <label class="form-label w-25 mb-0 fw-bold">Order Type</label>
-                    <div class="cartot btn-group w-75" role="group">
-                        <button type="button" class="btn-toggle active rounded" id="dineIn" onclick="document.getElementById('order_type').value='Dine In'">Dine In</button>
-                        <button type="button" class="btn-toggle rounded" id="takeOut" onclick="document.getElementById('order_type').value='Take Out'">Take Out</button>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center mb-4">
-                    <label class="form-label w-25 mb-0 fw-bold">Payment Method</label>
-                    <select class="form-select w-75" id="paymentMethod" name="payment_method" onchange="validatePaymentMethods()" required>
-                        <option value="" disabled selected>Select</option>
-                        <option value="Cash">Cash</option>
-                        <option value="GCash">GCash</option>
-                    </select>
-                </div>
-                <input type="hidden" id="order_type" name="order_type" value="Dine In">
-                <div class="d-flex align-items-center">
-                    <div class="w-25"></div>
-                    <button type="submit" name="place_order" id="placeOrderButton" class="btn btn-primary rounded-5" style="width: 250px;">Place Order</button>
-                </div>
-            </div>
-            <div class="d-flex align-items-center gap-4">
-                <p class="fw-bold fs-5 m-0">Total:</p>
-                <h2 class="fw-bold m-0" id="grandTotal" style="color: #CD5C08">₱0.00</h2>
-            </div>
-        </div>
-        <br><br><br><br><br><br>
-    </form>
-</main>
-
-<!-- Delete All Confirmation Modal -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Delete</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to delete all items in your cart?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" onclick="deleteAllCartItems()">Delete All</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<div class="modal fade" id="ifcash" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="d-flex justify-content-end">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="text-center">
-                    <i class="fa-regular fa-face-smile mb-3" style="color: #CD5C08; font-size: 80px"></i><br>
-                    <span>Thank you for your order!</span>
-                    <h5 class="fw-bold mt-2 mb-4">
-                        Your Order ID is <span id="orderIdDisplay" style="color: #CD5C08;"></span>
-                    </h5>
-                    <p class="mb-3">Please proceed to each stall with this Order ID to complete your payment. Once payment is confirmed, your order will be in preparation queue.</p>
-                    <span>For more details about your order, go to Purchase.</span>
-                </div>
-                <div class="text-center mt-4">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="window.location.href='purchase.php';">Purchase</button>
-                </div>
-                <br>
-            </div>
-        </div>
-    </div>
-</div>
-<script>
-    function updateCartQuantity(button, change) {
-    const cartItemDiv = button.closest('.cart-item');
-    const quantitySpan = cartItemDiv.querySelector('.ordquanum');
-    let currentQuantity = parseInt(quantitySpan.innerText);
-    const stock = parseInt(cartItemDiv.getAttribute('data-stock')) || 0;
-    
-    let newQuantity = currentQuantity + change;
-    newQuantity = Math.max(1, newQuantity);
-    if(newQuantity > stock){
-        newQuantity = stock;
-    }
-    quantitySpan.innerText = newQuantity;
-    
-    // Update hidden input
-    const hiddenInput = cartItemDiv.querySelector('.hidden-quantity');
-    if (hiddenInput) {
-        hiddenInput.value = newQuantity;
-    }
-    
-    const parentContainer = button.closest('[data-unit-price]');
-    const unitPrice = parseFloat(parentContainer.getAttribute('data-unit-price'));
-    const totalDiv = parentContainer.querySelector('.fw-bold.fs-5');
-    const newTotal = unitPrice * newQuantity;
-    totalDiv.innerText = '₱' + newTotal.toFixed(2);
-    
-    updateGrandTotal();
-    
-    const plusBtn = parentContainer.querySelector('.fa-plus');
-    if(newQuantity >= stock) {
-        plusBtn.classList.add('disabled-plus');
-    } else {
-        plusBtn.classList.remove('disabled-plus');
-    }
-}
-
-
-    function deleteCartItem(productId, request) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "delete_cart_item.php", true);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.onreadystatechange = function(){
-            if(xhr.readyState === 4){
-                if(xhr.status === 200){
-                    var cartItem = document.querySelector(`.cart-item [onclick*="deleteCartItem"][onclick*="'${productId}'"]`);
-                    if(cartItem) {
-                        var cartItemDiv = cartItem.closest('.cart-item');
-                        if(cartItemDiv) {
-                            cartItemDiv.remove();
+        if ($hasVariations) {
+            foreach ($_POST as $key => $value) {
+                if (strpos($key, 'variation_initial_stock_') !== false) {
+                    foreach ($value as $stock) {
+                        if (empty($initialStock)) {
+                            $variationStockErr = 'Required.';
+                        } elseif (!is_numeric($initialStock) || $initialStock < 0) {
+                            $variationStockErr = 'Non-negative.';
                         }
                     }
-                    updateGrandTotal();
-                } else {
-                    alert('Failed to delete item.');
                 }
             }
-        };
-        xhr.send("user_id=<?= $user_id; ?>&park_id=<?= $park_id; ?>&product_id=" + productId + "&request=" + encodeURIComponent(request));
-    }
+        }
 
-    function deleteAllCartItems() {
-        var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
-        confirmModal.hide();
+        // If no errors, add the product.
+        if (empty($productNameErr) && empty($productCodeErr) && empty($categoryErr) && empty($descriptionErr) &&
+            empty($basePriceErr) && empty($imagePathErr) && empty($initialStockErr) && empty($variationStockErr)) {
 
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "delete_all_cart.php", true);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.onreadystatechange = function(){
-            if(xhr.readyState === 4 && xhr.status === 200){
-                window.location.reload();
+            $productId = $productObj->addProduct($stall_id, $productName, $productCode, $category, $description, $basePrice, $discount, $startDate, $endDate, $imagePath);
+
+            if ($productId) {
+                if ($hasVariations && isset($_POST['variation_name_1'])) {
+                    foreach ($_POST as $key => $value) {
+                        if (strpos($key, 'variation_name_') !== false) {
+                            $parts = explode("_", $key);
+                            $variationIndex = $parts[2];
+                            $variationName = $_POST["variation_title_{$variationIndex}"] ?? "Variation {$variationIndex}";
+                            $variationId = $productObj->addVariations($productId, $variationName);
+
+                            foreach ($_POST["variation_name_{$variationIndex}"] as $optionIndex => $optionName) {
+                                $addPrice = $_POST["variation_additional_price_{$variationIndex}"][$optionIndex] ?? 0;
+                                $subtractPrice = $_POST["variation_subtract_price_{$variationIndex}"][$optionIndex] ?? 0;
+                                $optionStock = $_POST["variation_initial_stock_{$variationIndex}"][$optionIndex] ?? '';
+
+                                $variationImagePath = NULL;
+                                if (!empty($_FILES["variationimage_{$variationIndex}"]["name"][$optionIndex])) {
+                                    $variationImagePath = "uploads/" . basename($_FILES["variationimage_{$variationIndex}"]["name"][$optionIndex]);
+                                    move_uploaded_file($_FILES["variationimage_{$variationIndex}"]["tmp_name"][$optionIndex], $variationImagePath);
+                                }
+
+                                $variationOptionId = $productObj->addVariationOptions($variationId, $optionName, $addPrice, $subtractPrice, $variationImagePath);
+                                $addStockSuccess = $productObj->addStock($productId, $variationOptionId, $optionStock);
+                            }
+                        }
+                    }
+                } else {
+                    $productObj->addStock($productId, NULL, $initialStock);
+                }
+                header("Location: managemenu.php");
+                exit;
             }
-        };
-        xhr.send("user_id=<?= $user_id; ?>&park_id=<?= $park_id; ?>");
+        }
     }
+}
 
-    function updateGrandTotal() {
-        let grandTotal = 0;
-        document.querySelectorAll('.cart-item').forEach(cartItem => {
-            const priceContainer = cartItem.querySelector('[data-unit-price]');
-            const unitPrice = parseFloat(priceContainer.getAttribute('data-unit-price'));
-            const quantity = parseInt(cartItem.querySelector('.ordquanum').innerText);
-            grandTotal += unitPrice * quantity;
-        });
-        document.getElementById('grandTotal').innerText = '₱' + grandTotal.toFixed(2);
-    }
-
-    function validatePaymentMethods() {
-        const selectedMethod = document.getElementById('paymentMethod').value; // "Cash" or "GCash"
-        document.querySelectorAll('.stall-group').forEach(stall => {
-            const supportedMethods = stall.getAttribute('data-supported-methods')
-                .split(',')
-                .map(m => m.trim().toLowerCase());
-            const errorSpan = stall.querySelector('.stall-error');
-            if (!supportedMethods.includes(selectedMethod.toLowerCase())) {
-                errorSpan.style.display = 'inline';
-                errorSpan.querySelector('.error-method').innerText = selectedMethod;
-            } else {
-                errorSpan.style.display = 'none';
-            }
-        });
-        updateGrandTotal();
-    }
-
-    document.querySelectorAll('.btn-toggle').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', updateGrandTotal);
-
-</script>
-
-<?php 
-include_once 'footer.php'; 
+ob_end_flush();
 ?>
+
+    <style>
+        main {
+            padding: 40px 200px;
+        }
+        .getcg td {
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            line-height: 1.5;
+        }
+        .getcg .st {
+            vertical-align: top;
+        }
+        .addchogro {
+            text-decoration: none;
+            color: #CD5C08;
+            margin-top: 10px;
+        }
+        .addchogro:hover {
+            color: black;
+        }
+        .errormessage {
+            color: red;
+            font-size: small;
+        }
+        /* Style for disabled stock field */
+        .disabled-stock {
+            background-color: #e9ecef;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div class="prohelp d-flex align-items-center gap-4 justify-content-center">
+    <span class="helpspn">HELP</span>
+    <p class="m-0">Provide all the necessary information in the fields below to successfully add a new product to your inventory.</p>
+    <a href="">Terms and Conditions <i class="fa-solid fa-arrow-right"></i></a>
+</div>
+<main>
+    <form class="productcon" method="post" enctype="multipart/form-data">
+    <div>
+        <label for="productimage" class="mb-2">Product Image</label>
+        <div class="productimage text-center py-5 px-3 mb-3" id="productimageContainer" onclick="document.getElementById('productimage').click();">
+            <div id="placeholderContent">
+                <i class="fa-solid fa-arrow-up-long mb-3"></i>
+                <p class="small m-0">Select an image to upload. Or drag the image file here.</p>
+            </div>
+            <input type="file" id="productimage" name="productimage" accept="image/jpeg, image/png, image/jpg" style="display:none;" onchange="displayProductImage(event)">
+        </div>
+        <p class="text-muted pirem m-0 mb-3">
+            Recommended size is 160x151. Image must be less than 500kb. Only JPG, JPEG, and PNG formats are allowed. File name can only be in English letters and numbers.
+        </p>
+        <span class="errormessage"><?php echo $imagePathErr; ?></span>
+        <input type="hidden" name="tempImagePath" id="tempImagePath" value="<?php echo isset($_POST['tempImagePath']) ? htmlspecialchars($_POST['tempImagePath']) : ''; ?>">
+        
+        <script>
+            window.addEventListener('load', function() {
+                const tempPath = document.getElementById('tempImagePath').value;
+                if (tempPath) {
+                    const container = document.getElementById('productimageContainer');
+                    const placeholderContent = document.getElementById('placeholderContent');
+                    container.style.backgroundImage = "url(" + tempPath + ")";
+                    container.style.backgroundSize = 'cover';
+                    container.style.backgroundPosition = 'center';
+                    placeholderContent.style.display = 'none';
+                }
+            });
+
+            function displayProductImage(event) {
+                const file = event.target.files[0];
+                if (file && file.size <= 500 * 1024) { 
+                    const formData = new FormData();
+                    formData.append('productimage', file);
+                    fetch('upload_temp.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success){
+                            const productImageContainer = document.getElementById('productimageContainer');
+                            const placeholderContent = document.getElementById('placeholderContent');
+                            productImageContainer.style.backgroundImage = "url(" + data.filePath + ")";
+                            productImageContainer.style.backgroundSize = 'cover';
+                            productImageContainer.style.backgroundPosition = 'center';
+                            placeholderContent.style.display = 'none';
+                            document.getElementById('tempImagePath').value = data.filePath;
+                        } else {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                } else {
+                    alert('File is too large or not supported. Please select a JPG, JPEG, or PNG image under 500KB.');
+                }
+            }
+        </script>
+    </div>
+
+        <div class="flex-grow-1">
+            <div class="input-group m-0 mb-4">
+                <label for="productname">Product Name</label>
+                <input type="text" name="productname" id="productname" placeholder="Enter product name" value="<?php echo htmlspecialchars($productName); ?>"/>     
+                <span class="errormessage"><?php echo $productNameErr; ?></span>       
+            </div>
+            <div class="d-flex gap-3 align-items-center">
+                <div class="input-group m-0 mb-4">
+                    <label for="category">Category</label>
+                    <select name="category" id="category" style="padding: 10.5px 0.75rem">
+                        <option value="" disabled <?php echo empty($category) ? "selected" : ""; ?>>Select</option>
+                        <?php
+                            foreach ($selectCategories as $cat) {
+                                $selected = ($category == $cat['id']) ? "selected" : "";
+                                echo '<option value="'.$cat['id'].'" '.$selected.'>'.$cat['name'].'</option>';
+                            }
+                        ?>
+                    </select>
+                    <span class="errormessage"><?php echo $categoryErr; ?></span>
+                </div>
+                <button type="button" class="variation-btn addvar flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addcategory">+ Add Category</button>
+            </div>
+            <div class="input-group m-0 mb-4">
+                <label for="description">Description</label>
+                <textarea name="description" id="description" placeholder="Enter product description"><?php echo htmlspecialchars($description); ?></textarea>
+                <span class="errormessage"><?php echo $descriptionErr; ?></span>
+            </div>
+            
+            <div class="input-group m-0 mb-4">
+                <label for="sellingPrice">Selling Price</label>
+                <input type="number" name="sellingPrice" id="sellingPrice" placeholder="Enter selling price" step="0.01" value="<?php echo htmlspecialchars($basePrice); ?>"/>
+                <span class="errormessage"><?php echo $basePriceErr; ?></span>
+            </div>
+
+            <div class="input-group m-0 mb-4" id="initialStockContainer">
+                <label for="initialStock">Initial Stock</label>
+                <input type="number" name="initialStock" id="initialStock" placeholder="Enter initial stock" value="<?php echo htmlspecialchars($initialStock); ?>"/>
+                <span class="errormessage"><?php echo $initialStockErr; ?></span>
+            </div>
+
+            <div class="input-group m-0 mb-4">
+                <label for="">Variants (Optional)</label>
+                <div class="variation-container">
+                    <div class="d-flex justify-content-end pe-3">
+                        <button type="button" class="variation-btn addvar" onclick="addVariationForm()">+ Add Variation</button>
+                    </div>
+                    <div class="variation-forms-wrapper" id="variation-forms-list"></div>
+                </div>
+            </div>
+            <script>
+                let variationFormCount = 0;
+                function addVariationForm() {
+                    variationFormCount++;
+                    const variationForm = document.createElement("div");
+                    variationForm.className = "variation-form";
+                    variationForm.id = `variation-form-${variationFormCount}`;
+                    variationForm.innerHTML = `
+                        <div class="variation-header"> 
+                            <span id="variation-title-${variationFormCount}" class="fw-bold fs-5">Variation ${variationFormCount}</span>
+                            <button type="button" class="variation-btn rename" onclick="renameVariation(${variationFormCount})">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <input type="hidden" name="variation_title_${variationFormCount}" id="variation-input-${variationFormCount}" value="Variation ${variationFormCount}">
+                        </div>
+                        <div class="variation-rows-container my-2" id="variation-rows-container-${variationFormCount}">
+                            ${createVariationRow(variationFormCount, Date.now())}
+                            ${createVariationRow(variationFormCount, Date.now()+1)}
+                            ${createVariationRow(variationFormCount, Date.now()+2)}
+                        </div>
+                        <div class="variation-btn-group">
+                            <button type="button" class="variation-btn addrem" onclick="addVariationRow(${variationFormCount})">Add New Row</button>
+                            <button type="button" class="variation-btn addrem" onclick="removeVariationForm(${variationFormCount})">Remove Variation</button>
+                        </div>
+                    `;
+                    document.getElementById("variation-forms-list").appendChild(variationForm);
+                    document.getElementById("initialStock").disabled = true;
+                    document.getElementById("initialStockContainer").classList.add("disabled-stock");
+                }
+
+                function createVariationRow(variationFormId, rowId) {
+                    return `
+                        <div class="variation-row" id="variation-row-${variationFormId}-${rowId}">
+                            <div class="variationimage text-center" id="variationimageContainer-${variationFormId}-${rowId}" onclick="triggerFileInput(${variationFormId}, ${rowId})">
+                                <div class="overlay">
+                                    <i class="fa-solid fa-arrow-up-long mb-1"></i>
+                                    <span>Variation Image</span>
+                                </div>
+                                <input type="file" name="variationimage_${variationFormId}[]" id="variationimage-${variationFormId}-${rowId}" accept="image/jpeg, image/png, image/jpg" style="display:none;" onchange="displaySelectedImage(${variationFormId}, ${rowId})">
+                            </div>
+                            <input type="text" name="variation_name_${variationFormId}[]" placeholder="Option Name">
+                            <div>
+                                <input type="number" name="variation_initial_stock_${variationFormId}[]" placeholder="Stock" min="0" step="1" class="inst">
+                                <?php if (!empty($variationStockErr)): ?>
+                                    <span class="errormessage"><?php echo $variationStockErr; ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="d-flex align-items-center addpeso">
+                                <input type="number" name="variation_additional_price_${variationFormId}[]" placeholder="0.00" min="0" step="0.01">
+                            </div>
+                            <div class="d-flex align-items-center minuspeso">
+                                <input type="number" name="variation_subtract_price_${variationFormId}[]" placeholder="0.00" min="0" step="0.01">
+                            </div>
+                            <button type="button" class="variation-btn delete" onclick="removeVariationRow(this)">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                function triggerFileInput(variationFormId, rowId) {
+                    const inputFile = document.getElementById(`variationimage-${variationFormId}-${rowId}`);
+                    inputFile.value = ''; 
+                    inputFile.click();
+                }
+
+                function displaySelectedImage(variationFormId, rowId) {
+                    const inputFile = document.getElementById(`variationimage-${variationFormId}-${rowId}`);
+                    const imageContainer = document.getElementById(`variationimageContainer-${variationFormId}-${rowId}`);
+                    if (inputFile.files.length > 0) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            imageContainer.style.backgroundImage = "url(" + e.target.result + ")";
+                            imageContainer.querySelector('.overlay').style.display = 'none';
+                        };
+                        reader.readAsDataURL(inputFile.files[0]);
+                    } else {
+                        console.warn("No file selected!");
+                    }
+                }
+
+                function addVariationRow(variationFormId) {
+                    const rowId = Date.now();
+                    const variationRowsContainer = document.getElementById(`variation-rows-container-${variationFormId}`);
+                    variationRowsContainer.insertAdjacentHTML("beforeend", createVariationRow(variationFormId, rowId));
+                }
+
+                function removeVariationRow(button) {
+                    const variationRow = button.parentNode;
+                    variationRow.remove();
+                }
+
+                function removeVariationForm(variationFormId) {
+                    const variationForm = document.getElementById(`variation-form-${variationFormId}`);
+                    variationForm.remove();
+                    if (document.getElementById("variation-forms-list").childElementCount === 0) {
+                        document.getElementById("initialStock").disabled = false;
+                        document.getElementById("initialStockContainer").classList.remove("disabled-stock");
+                    }
+                }
+
+                function renameVariation(variationFormId) {
+                    const newTitle = prompt("Enter a new name for this variation:");
+                    if (newTitle && newTitle.trim()) {
+                        document.getElementById(`variation-title-${variationFormId}`).textContent = newTitle.trim();
+                        document.getElementById(`variation-input-${variationFormId}`).value = newTitle.trim();
+                    }
+                }
+            </script>
+
+            <div class="d-flex gap-3">
+                <div class="input-group w-50 m-0 mb-4">
+                    <label for="discount">Discount (Optional)</label>
+                    <input type="number" name="discount" id="discount" placeholder="Enter discount" step="0.01" value="<?php echo htmlspecialchars($discount); ?>"/>
+                    <span class="errormessage"><?php echo $discountErr; ?></span>
+                </div>
+                <div class="d-flex gap-2 w-50">
+                    <div class="input-group m-0 mb-4">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" name="startDate" id="startDate" value="<?php echo htmlspecialchars($startDate); ?>"/>
+                    </div>
+                    <div class="input-group m-0 mb-4">
+                        <label for="endDate">End Date</label>
+                        <input type="date" name="endDate" id="endDate" value="<?php echo htmlspecialchars($endDate); ?>"/>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <button type="submit" class="btn btn-primary send px-5 mt-3">ADD PRODUCT</button>
+            <br><br><br><br>
+        </div>
+    </form>
+</main>
+<?php include_once './footer.php'; ?>
+
+<!-- Category Modal -->
+<div class="modal fade" id="addcategory" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="" method="post">
+                <div class="modal-body">
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="fw-bold mb-4">Add Category</h4>
+                        <div class="form-floating m-0">
+                            <input type="text" name="new_category" class="form-control" placeholder="Category" id="new_category">
+                            <label for="new_category">Category</label>
+                        </div>
+                        <div class="mt-5 mb-3">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
