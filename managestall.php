@@ -358,7 +358,12 @@ $(document).ready(function () {
         let parkId = "<?php echo $_SESSION['current_park_id']; ?>"; // Get park ID
 
         if (!selectedUsers || selectedUsers.length === 0) {
-            alert("Please select at least one user!");
+            Swal.fire({
+                title: 'Hold up! ⚠️',
+                text: 'You haven’t selected any users yet. Let’s fix that and try again!',
+                icon: 'error',
+                confirmButtonText: 'Alright, selecting now!'
+            });
             return;
         }
 
@@ -377,7 +382,13 @@ $(document).ready(function () {
     $('#sendInviteBtn').click(function () {
         var selectedEmails = $('#emailSelect').val();
         if (selectedEmails.length === 0) {
-            alert('Please select at least one email.');
+            Swal.fire({
+                title: 'Hey, wait a sec! ✋',
+                text: 'You need to pick at least one email before we can send the invites.',
+                icon: 'error',
+                confirmButtonText: 'Got it, picking now!'
+            });
+
             return;
         }
 
@@ -402,10 +413,11 @@ $(document).ready(function () {
                     // Show success message
                     // alert('Invitation links sent successfully!');
                     Swal.fire({
-                        title: "Success!",
-                        text: "Invitation links sent successfully!",
+                        title: "Success! 🎉",
+                        text: "All invitation links were sent without a hitch! Check your inboxes. 📩",
                         icon: "success"
                     });
+
                     
                     // Reset the select2 dropdown
                     $("#emailSelect").val(null).trigger("change");
@@ -420,20 +432,20 @@ $(document).ready(function () {
                     });
                     // alert(message);
                     Swal.fire({
-                        title: 'Failed!',
-                        text: message,
+                        title: 'Yikes! 😬',
+                        text: message || 'Something went wrong. Let’s try that one more time!',
                         icon: 'error',
-                        confirmButtonText: 'I understand'
-                    })
+                        confirmButtonText: 'Got it!'
+                    });
                 } else {
                     // Show error message
                     // alert('Failed to send some invitation links. Please try again.');
                     Swal.fire({
-                        title: 'Failed!',
-                        text: 'Failed to send some invitation links. Please try again.',
+                        title: 'Oops! 🚧',
+                        text: 'Some invitations didn’t make it through. Maybe the internet gremlins are at it again? Give it another shot!',
                         icon: 'error',
-                        confirmButtonText: 'I understand'
-                    })
+                        confirmButtonText: 'Alright, I’ll try again!'
+                    });
                 }
             },
             error: function (xhr, status, error) {
@@ -444,10 +456,10 @@ $(document).ready(function () {
                 // Show error message
                 // alert('An error occurred while sending invitations: ' + error);
                 Swal.fire({
-                    title: 'Failed!',
-                    text: 'An error occurred while sending invitations: ' + error,
+                    title: 'Uh-oh! 😟',
+                    text: 'Something went wrong while sending the invitations. Maybe the internet took a coffee break? Try again! Error: ' + error,
                     icon: 'error',
-                    confirmButtonText: 'I understand'
+                    confirmButtonText: 'Got it, I’ll try again!'
                 })
             }
         });
