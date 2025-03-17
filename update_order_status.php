@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/classes/stall.class.php';
+require_once __DIR__ . '/classes/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
@@ -17,11 +18,9 @@ $action = isset($_POST['action']) ? $_POST['action'] : '';
 
 $stallObj = new Stall();
 
-$dsn = "mysql:host=localhost;dbname=gitgud;charset=utf8";
-$pdo = new PDO($dsn, 'root', '', [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-]);
+// Use Database class instead of direct PDO connection
+$database = new Database();
+$pdo = $database->connect();
 
 $pdo->beginTransaction();
 

@@ -130,7 +130,7 @@
                         <div class="position-relative">
                             <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="Stall Logo">
                             <div class="position-absolute d-flex gap-2 smaction">
-                                <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= $stall['id'] ?>"></i>
+                                <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= urlencode(encrypt($stall['id'])) ?>'"></i>
                                 <i class="fa-solid fa-trash-can" data-bs-toggle="modal" data-bs-target="#deletestall"></i>
                             </div>
                         </div>
