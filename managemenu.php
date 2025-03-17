@@ -4,6 +4,7 @@
     include_once 'nav.php';
     require_once __DIR__ . '/classes/stall.class.php';
     require_once __DIR__ . '/classes/product.class.php';
+    require_once __DIR__ . '/classes/encdec.class.php';
 
     $stallObj   = new Stall();
     $productObj = new Product();
@@ -177,7 +178,7 @@
                                             </div>
                                         </div>
                                         <div class="proaction d-flex gap-2 mt-3">
-                                            <i class="fa-solid fa-box" onclick="window.location.href='stocks.php?id=<?= $product['id'] ?>';"></i>
+                                            <i class="fa-solid fa-box" onclick="window.location.href='stocks.php?id=<?= urlencode(encrypt($product['id'])) ?>';"></i>
                                             <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editproduct.php?id=<?= $product['id']; ?>';"></i>
                                             <i class="fa-solid fa-trash" data-bs-toggle="modal" data-bs-target="#deleteproduct" data-product-id="<?= $product['id']; ?>"></i>
                                         </div>
