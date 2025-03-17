@@ -120,7 +120,7 @@
                                 <?php } else { ?>
                                     <div class="smclose">
                                         <i class="fa-solid fa-door-closed"></i>
-                                        <span>CLOSE</span>
+                                        <span>CLOSED</span>
                                     </div>
                                 <?php } ?>
                             </div>
