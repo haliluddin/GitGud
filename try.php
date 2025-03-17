@@ -1,456 +1,486 @@
-<?php
-ob_start();
-include_once 'links.php'; 
-include_once 'header.php'; 
-require_once __DIR__ . '/classes/product.class.php';
-require_once __DIR__ . '/classes/stall.class.php';
+<?php  
+    include_once 'header.php';
+    include_once 'links.php'; 
+    include_once 'nav.php';
+    include_once 'bootstrap.php'; 
+    include_once 'modals.php'; 
 
-$productObj = new Product();
-$stallObj   = new Stall();
-
-$productName = $productCode = $category = $description = $basePrice = $discount = $startDate = $endDate = $imagePath = $initialStock = '';
-$imagePathErr       = $productNameErr = $productCodeErr = $categoryErr = $descriptionErr = $basePriceErr = $startDateErr = $endDateErr = $discountErr = $initialStockErr = '';
-$variationStockErr  = '';
-
-$stall_id = $stallObj->getStallId($_SESSION['user']['id']);
-$selectCategories = $productObj->getCategories($stall_id);
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    if (isset($_POST['new_category'])) {
-        $newCategory = trim($_POST['new_category']);
-        if (!empty($newCategory)) {
-            $productObj->addCategory($stall_id, $newCategory);
-        }
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit;
-    } else {
-
-        $productName = clean_input($_POST['productname']);
-        $productCode = uniqid();
-        $category    = isset($_POST['category']) ? clean_input($_POST['category']) : '';
-        $description = clean_input($_POST['description']);
-        $basePrice   = clean_input($_POST['sellingPrice']);
-        $discount    = clean_input($_POST['discount'] ?? 0);
-        $startDate   = !empty($_POST['startDate']) ? clean_input($_POST['startDate']) : NULL;
-        $endDate     = !empty($_POST['endDate']) ? clean_input($_POST['endDate']) : NULL;
-        $initialStock = clean_input($_POST['initialStock'] ?? '');
-
-        if (empty($productName)) {
-            $productNameErr = 'Product name is required.';
-        }
-        if ($productObj->isProductCodeExists($productCode)) {
-            $productCodeErr = 'Product code already exists. Choose a different one.';
-        }
-        if (empty($category)) {
-            $categoryErr = 'Category is required.';
-        }
-        if (empty($description)) {
-            $descriptionErr = 'Description is required.';
-        }
-        if (empty($basePrice) || !is_numeric($basePrice) || $basePrice <= 0) {
-            $basePriceErr = 'Selling price must be a positive number.';
-        }
-        if (!empty($discount) && (!is_numeric($discount) || $discount < 0)) {
-            $discountErr = 'Discount must be a non-negative number.';
-        }
-
-        $hasVariations = false;
-        foreach ($_POST as $key => $value) {
-            if (strpos($key, 'variation_name_') !== false) {
-                $hasVariations = true;
-                break;
-            }
-        }
-        if (!$hasVariations) {
-            if (empty($initialStock)) {
-                $initialStockErr = 'Initial stock is required.';
-            } elseif (!is_numeric($initialStock) || $initialStock < 0) {
-                $initialStockErr = 'Initial stock must be a non-negative number.';
-            }
-        }
-
-        if (!empty($_FILES["productimage"]["name"])) {
-            $targetDir = "uploads/";
-            $imageFileType = strtolower(pathinfo($_FILES["productimage"]["name"], PATHINFO_EXTENSION));
-            $imageSize = $_FILES["productimage"]["size"];
-            if (!in_array($imageFileType, ["jpg", "jpeg", "png"])) {
-                $imagePathErr = "Only JPG, JPEG, and PNG formats are allowed.";
-            } elseif ($imageSize > 500000) { 
-                $imagePathErr = "Image size must be less than 500KB.";
-            } else {
-                $imagePath = $targetDir . basename($_FILES["productimage"]["name"]);
-                move_uploaded_file($_FILES["productimage"]["tmp_name"], $imagePath);
-            }
-        } else {
-            $imagePathErr = "Product image is required.";
-        }
-
-        if ($hasVariations) {
-            foreach ($_POST as $key => $value) {
-                if (strpos($key, 'variation_initial_stock_') !== false) {
-                    foreach ($value as $stock) {
-                        if (empty($initialStock)) {
-                            $variationStockErr = 'Required.';
-                        } elseif (!is_numeric($initialStock) || $initialStock < 0) {
-                            $variationStockErr = 'Non-negative.';
-                        }
-                    }
-                }
-            }
-        }
-
-        // If no errors, add the product.
-        if (empty($productNameErr) && empty($productCodeErr) && empty($categoryErr) && empty($descriptionErr) &&
-            empty($basePriceErr) && empty($imagePathErr) && empty($initialStockErr) && empty($variationStockErr)) {
-
-            $productId = $productObj->addProduct($stall_id, $productName, $productCode, $category, $description, $basePrice, $discount, $startDate, $endDate, $imagePath);
-
-            if ($productId) {
-                if ($hasVariations && isset($_POST['variation_name_1'])) {
-                    foreach ($_POST as $key => $value) {
-                        if (strpos($key, 'variation_name_') !== false) {
-                            $parts = explode("_", $key);
-                            $variationIndex = $parts[2];
-                            $variationName = $_POST["variation_title_{$variationIndex}"] ?? "Variation {$variationIndex}";
-                            $variationId = $productObj->addVariations($productId, $variationName);
-
-                            foreach ($_POST["variation_name_{$variationIndex}"] as $optionIndex => $optionName) {
-                                $addPrice = $_POST["variation_additional_price_{$variationIndex}"][$optionIndex] ?? 0;
-                                $subtractPrice = $_POST["variation_subtract_price_{$variationIndex}"][$optionIndex] ?? 0;
-                                $optionStock = $_POST["variation_initial_stock_{$variationIndex}"][$optionIndex] ?? '';
-
-                                $variationImagePath = NULL;
-                                if (!empty($_FILES["variationimage_{$variationIndex}"]["name"][$optionIndex])) {
-                                    $variationImagePath = "uploads/" . basename($_FILES["variationimage_{$variationIndex}"]["name"][$optionIndex]);
-                                    move_uploaded_file($_FILES["variationimage_{$variationIndex}"]["tmp_name"][$optionIndex], $variationImagePath);
-                                }
-
-                                $variationOptionId = $productObj->addVariationOptions($variationId, $optionName, $addPrice, $subtractPrice, $variationImagePath);
-                                $addStockSuccess = $productObj->addStock($productId, $variationOptionId, $optionStock);
-                            }
-                        }
-                    }
-                } else {
-                    $productObj->addStock($productId, NULL, $initialStock);
-                }
-                header("Location: managemenu.php");
-                exit;
-            }
-        }
-    }
-}
-
-ob_end_flush();
+    $park = $parkObj->getPark($park_id);
 ?>
 
-    <style>
-        main {
-            padding: 40px 200px;
-        }
-        .getcg td {
-            padding: 20px;
-            border-bottom: 1px solid #ddd;
-            line-height: 1.5;
-        }
-        .getcg .st {
-            vertical-align: top;
-        }
-        .addchogro {
-            text-decoration: none;
-            color: #CD5C08;
-            margin-top: 10px;
-        }
-        .addchogro:hover {
-            color: black;
-        }
-        .errormessage {
-            color: red;
-            font-size: small;
-        }
-        /* Style for disabled stock field */
-        .disabled-stock {
-            background-color: #e9ecef;
-            pointer-events: none;
-        }
-    </style>
-</head>
-<body>
-<div class="prohelp d-flex align-items-center gap-4 justify-content-center">
-    <span class="helpspn">HELP</span>
-    <p class="m-0">Provide all the necessary information in the fields below to successfully add a new product to your inventory.</p>
-    <a href="">Terms and Conditions <i class="fa-solid fa-arrow-right"></i></a>
-</div>
-<main>
-    <form class="productcon" method="post" enctype="multipart/form-data">
-    <div>
-        <label for="productimage" class="mb-2">Product Image</label>
-        <div class="productimage text-center py-5 px-3 mb-3" id="productimageContainer" onclick="document.getElementById('productimage').click();">
-            <div id="placeholderContent">
-                <i class="fa-solid fa-arrow-up-long mb-3"></i>
-                <p class="small m-0">Select an image to upload. Or drag the image file here.</p>
-            </div>
-            <input type="file" id="productimage" name="productimage" accept="image/jpeg, image/png, image/jpg" style="display:none;" onchange="displayProductImage(event)">
-        </div>
-        <p class="text-muted pirem m-0 mb-3">
-            Recommended size is 160x151. Image must be less than 500kb. Only JPG, JPEG, and PNG formats are allowed. File name can only be in English letters and numbers.
-        </p>
-        <span class="errormessage"><?php echo $imagePathErr; ?></span>
-        <input type="hidden" name="tempImagePath" id="tempImagePath" value="<?php echo isset($_POST['tempImagePath']) ? htmlspecialchars($_POST['tempImagePath']) : ''; ?>">
-        
-        <script>
-            window.addEventListener('load', function() {
-                const tempPath = document.getElementById('tempImagePath').value;
-                if (tempPath) {
-                    const container = document.getElementById('productimageContainer');
-                    const placeholderContent = document.getElementById('placeholderContent');
-                    container.style.backgroundImage = "url(" + tempPath + ")";
-                    container.style.backgroundSize = 'cover';
-                    container.style.backgroundPosition = 'center';
-                    placeholderContent.style.display = 'none';
-                }
-            });
+<style>
+     main{
+        padding: 20px 120px;
+    }
+    .btn{
+        width: 150px;
+    }
+    .ip{
+        color: #CD5C08;
+        font-weight: bold;
+    }
+    .select2-selection__choice {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        padding: 5px 10px !important;
+        background-color: #f8f8f8 !important; 
+        border: 1px solid #ccc !important; 
+        padding: 0 10px !important;
+        border-radius: 30px !important; 
+        margin: 4px !important;
+    }
+    .select2-selection__choice__remove {
+        font-size: 20px !important;
+        margin-left: auto !important; 
+        order: 2 !important; 
+    }
+    .select2-selection {
+        padding: 10px !important;
+    }
+    .select2-selection__choice img {
+        width: 25px !important;
+        height: 25px !important;
+        border-radius: 50% !important;
+    }
+    .select2-results__option{
+        padding: 7px 15px !important;
+        background-color: white !important;
+        color: black !important;
+    }
+    .select2-results__option--highlighted{
+        background-color: #e0e0e0 !important;
+    }
+</style>
 
-            function displayProductImage(event) {
-                const file = event.target.files[0];
-                if (file && file.size <= 500 * 1024) { 
-                    const formData = new FormData();
-                    formData.append('productimage', file);
-                    fetch('upload_temp.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if(data.success){
-                            const productImageContainer = document.getElementById('productimageContainer');
-                            const placeholderContent = document.getElementById('placeholderContent');
-                            productImageContainer.style.backgroundImage = "url(" + data.filePath + ")";
-                            productImageContainer.style.backgroundSize = 'cover';
-                            productImageContainer.style.backgroundPosition = 'center';
-                            placeholderContent.style.display = 'none';
-                            document.getElementById('tempImagePath').value = data.filePath;
-                        } else {
-                            alert(data.error);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-                } else {
-                    alert('File is too large or not supported. Please select a JPG, JPEG, or PNG image under 500KB.');
-                }
-            }
-        </script>
+<main>
+    <div class="d-flex mb-3 align-items-center gap-3">
+        <div class="py-2 px-3 rounded-2 border w-100 bg-white d-flex align-items-center justify-content-between" data-bs-toggle="offcanvas" data-bs-target="#foodparkbranch" aria-controls="foodparkbranch" style="cursor: pointer;">
+            <div class="d-flex align-items-center gap-3">
+                <img src="<?= $park['business_logo'] ?>" width="50px" height="50px" class="rounded-5">
+                <div>
+                    <p class="m-0 fw-bold"><?= $park['business_name'] ?></p>
+                    <span class="text-muted small"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City</span>
+                </div>
+            </div>
+            <i class="fa-solid fa-angle-down"></i>
+        </div>
+        <button class="addpro flex-shrink-0" type="button" data-bs-toggle="modal" data-bs-target="#invitestall">+ Add Stall</button>
+    </div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="foodparkbranch" aria-labelledby="foodparkbranchLabel" style="width: 40%;">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="foodparkbranchLabel">Manage Food Park</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="text-center mb-4 border-bottom pb-3">
+                <div class="profile-picture" data-bs-toggle="modal" data-bs-target="#editfoodpark">
+                    <img src="<?= $park['business_logo'] ?>" alt="Profile Picture" class="profile-img rounded-5">
+                    <div class="camera-overlay">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold m-0 mb-1 mt-3"><?= $park['business_name'] ?></h4>
+                <span class="text-muted mb-1"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City, Philippines</span>
+                <div class="d-flex gap-2 text-muted align-items-center justify-content-center mb-1">
+                    <span><i class="fa-solid fa-envelope"></i> <?= $park['business_email'] ?></span>
+                    <span class="dot"></span>
+                    <span><i class="fa-solid fa-phone small"></i> +63<?= $park['business_phone'] ?></span>
+                </div>
+                <button class="variation-btn addrem m-2" data-bs-toggle="modal" data-bs-target="#editfoodpark">Edit Park</button>
+                <button class="variation-btn addrem" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button>
+            </div>
+        </div>
     </div>
 
-        <div class="flex-grow-1">
-            <div class="input-group m-0 mb-4">
-                <label for="productname">Product Name</label>
-                <input type="text" name="productname" id="productname" placeholder="Enter product name" value="<?php echo htmlspecialchars($productName); ?>"/>     
-                <span class="errormessage"><?php echo $productNameErr; ?></span>       
-            </div>
-            <div class="d-flex gap-3 align-items-center">
-                <div class="input-group m-0 mb-4">
-                    <label for="category">Category</label>
-                    <select name="category" id="category" style="padding: 10.5px 0.75rem">
-                        <option value="" disabled <?php echo empty($category) ? "selected" : ""; ?>>Select</option>
-                        <?php
-                            foreach ($selectCategories as $cat) {
-                                $selected = ($category == $cat['id']) ? "selected" : "";
-                                echo '<option value="'.$cat['id'].'" '.$selected.'>'.$cat['name'].'</option>';
-                            }
-                        ?>
-                    </select>
-                    <span class="errormessage"><?php echo $categoryErr; ?></span>
-                </div>
-                <button type="button" class="variation-btn addvar flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addcategory">+ Add Category</button>
-            </div>
-            <div class="input-group m-0 mb-4">
-                <label for="description">Description</label>
-                <textarea name="description" id="description" placeholder="Enter product description"><?php echo htmlspecialchars($description); ?></textarea>
-                <span class="errormessage"><?php echo $descriptionErr; ?></span>
-            </div>
-            
-            <div class="input-group m-0 mb-4">
-                <label for="sellingPrice">Selling Price</label>
-                <input type="number" name="sellingPrice" id="sellingPrice" placeholder="Enter selling price" step="0.01" value="<?php echo htmlspecialchars($basePrice); ?>"/>
-                <span class="errormessage"><?php echo $basePriceErr; ?></span>
-            </div>
-
-            <div class="input-group m-0 mb-4" id="initialStockContainer">
-                <label for="initialStock">Initial Stock</label>
-                <input type="number" name="initialStock" id="initialStock" placeholder="Enter initial stock" value="<?php echo htmlspecialchars($initialStock); ?>"/>
-                <span class="errormessage"><?php echo $initialStockErr; ?></span>
-            </div>
-
-            <div class="input-group m-0 mb-4">
-                <label for="">Variants (Optional)</label>
-                <div class="variation-container">
-                    <div class="d-flex justify-content-end pe-3">
-                        <button type="button" class="variation-btn addvar" onclick="addVariationForm()">+ Add Variation</button>
-                    </div>
-                    <div class="variation-forms-wrapper" id="variation-forms-list"></div>
-                </div>
-            </div>
-            <script>
-                let variationFormCount = 0;
-                function addVariationForm() {
-                    variationFormCount++;
-                    const variationForm = document.createElement("div");
-                    variationForm.className = "variation-form";
-                    variationForm.id = `variation-form-${variationFormCount}`;
-                    variationForm.innerHTML = `
-                        <div class="variation-header"> 
-                            <span id="variation-title-${variationFormCount}" class="fw-bold fs-5">Variation ${variationFormCount}</span>
-                            <button type="button" class="variation-btn rename" onclick="renameVariation(${variationFormCount})">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <input type="hidden" name="variation_title_${variationFormCount}" id="variation-input-${variationFormCount}" value="Variation ${variationFormCount}">
-                        </div>
-                        <div class="variation-rows-container my-2" id="variation-rows-container-${variationFormCount}">
-                            ${createVariationRow(variationFormCount, Date.now())}
-                            ${createVariationRow(variationFormCount, Date.now()+1)}
-                            ${createVariationRow(variationFormCount, Date.now()+2)}
-                        </div>
-                        <div class="variation-btn-group">
-                            <button type="button" class="variation-btn addrem" onclick="addVariationRow(${variationFormCount})">Add New Row</button>
-                            <button type="button" class="variation-btn addrem" onclick="removeVariationForm(${variationFormCount})">Remove Variation</button>
-                        </div>
-                    `;
-                    document.getElementById("variation-forms-list").appendChild(variationForm);
-                    document.getElementById("initialStock").disabled = true;
-                    document.getElementById("initialStockContainer").classList.add("disabled-stock");
+    <?php
+        $stalls = $parkObj->getStalls($park_id); 
+        if (empty($stalls)) {
+            echo '<div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">
+                     Add or invite your food stalls here. 
+                  </div>';
+        } else {
+    ?>
+    <div class="row row-cols-1 row-cols-md-3 g-3">
+        <?php
+            date_default_timezone_set('Asia/Manila'); 
+            $currentDay = date('l'); 
+            $currentTime = date('H:i');
+            foreach ($stalls as $stall) { 
+                $isOpen = false;
+                $operatingHours = explode('; ', $stall['stall_operating_hours']); 
+                foreach ($operatingHours as $hours) {
+                    list($days, $timeRange) = explode('<br>', $hours); 
+                    $daysArray = array_map('trim', explode(',', $days)); 
+                    if (in_array($currentDay, $daysArray)) { 
+                        list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                        $openTime24 = date('H:i', strtotime($openTime));
+                        $closeTime24 = date('H:i', strtotime($closeTime));
+                        if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                            $isOpen = true;
+                            break;
+                        }
+                    }
                 }
-
-                function createVariationRow(variationFormId, rowId) {
-                    return `
-                        <div class="variation-row" id="variation-row-${variationFormId}-${rowId}">
-                            <div class="variationimage text-center" id="variationimageContainer-${variationFormId}-${rowId}" onclick="triggerFileInput(${variationFormId}, ${rowId})">
-                                <div class="overlay">
-                                    <i class="fa-solid fa-arrow-up-long mb-1"></i>
-                                    <span>Variation Image</span>
+                ?>
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="position-relative">
+                            <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="Stall Logo">
+                            <div class="position-absolute d-flex gap-2 smaction">
+                                <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= $stall['id'] ?>';"></i>
+                                <i class="fa-solid fa-trash-can" data-bs-toggle="modal" data-bs-target="#deletestall"></i>
+                            </div>
+                        </div>
+                        <div class="card-body px-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <?php 
+                                            $stall_categories = explode(',', $stall['stall_categories']); 
+                                            foreach ($stall_categories as $index => $category) { 
+                                        ?>
+                                            <p class="card-text text-muted m-0"><?= trim($category) ?></p>
+                                            <?php if ($index !== array_key_last($stall_categories)) { ?>
+                                                <span class="dot text-muted"></span>
+                                            <?php } ?>
+                                        <?php } ?>
+                                    </div>
+                                    <h5 class="card-title my-2 fw-bold"><?= $stall['name'] ?></h5>
+                                    <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
                                 </div>
-                                <input type="file" name="variationimage_${variationFormId}[]" id="variationimage-${variationFormId}-${rowId}" accept="image/jpeg, image/png, image/jpg" style="display:none;" onchange="displaySelectedImage(${variationFormId}, ${rowId})">
+                                <?php if ($isOpen) { ?>
+                                    <div class="smopen">
+                                        <i class="fa-solid fa-clock"></i>
+                                        <span>OPEN</span>
+                                    </div>
+                                <?php } else { ?>
+                                    <div class="smclose">
+                                        <i class="fa-solid fa-door-closed"></i>
+                                        <span>CLOSE</span>
+                                    </div>
+                                <?php } ?>
                             </div>
-                            <input type="text" name="variation_name_${variationFormId}[]" placeholder="Option Name">
-                            <div>
-                                <input type="number" name="variation_initial_stock_${variationFormId}[]" placeholder="Stock" min="0" step="1" class="inst">
-                                <?php if (!empty($variationStockErr)): ?>
-                                    <span class="errormessage"><?php echo $variationStockErr; ?></span>
-                                <?php endif; ?>
+                            <div class="accordion accordion-flush" id="accCol<?= $stall['id'] ?>">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>1" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>1">
+                                            Contact Information
+                                        </button>
+                                    </h2>
+                                    <div id="col1flu<?= $stall['id'] ?>1" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
+                                        <div class="accordion-body p-0 mb-3 small">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span>Email</span>
+                                                <span><?= $stall['email'] ?></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span>Phone</span>
+                                                <span class="text-muted"><?= $stall['phone'] ?? 'N/A' ?></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>Website</span>
+                                                <span class="text-muted"><?= $stall['website'] ?? 'N/A' ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>2" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>2">
+                                            Opening Hours
+                                        </button>
+                                    </h2>
+                                    <div id="col1flu<?= $stall['id'] ?>2" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
+                                        <div class="accordion-body p-0 mb-3 small">
+                                            <?= !empty($stall['stall_operating_hours']) ? str_replace('; ', '<br>', $stall['stall_operating_hours']) : 'Not available' ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>3" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>3">
+                                            Payment Methods
+                                        </button>
+                                    </h2>
+                                    <div id="col1flu<?= $stall['id'] ?>3" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
+                                        <div class="accordion-body p-0 mb-3 small">
+                                            <ul>
+                                                <?php 
+                                                    if (!empty($stall['stall_payment_methods'])) {
+                                                        $payment_methods = explode(', ', $stall['stall_payment_methods']);
+                                                        foreach ($payment_methods as $method) {
+                                                            echo "<li class='mb-2'>$method</li>";
+                                                        }
+                                                    } else {
+                                                        echo "<li>No payment methods available</li>";
+                                                    }
+                                                ?>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="d-flex align-items-center addpeso">
-                                <input type="number" name="variation_additional_price_${variationFormId}[]" placeholder="0.00" min="0" step="0.01">
+                            <div class="owner mt-1 py-2 d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-3 align-items-center">
+                                    <img src="<?= $stall['profile_img'] ?: 'assets/images/user.jpg' ?>" alt="Owner Profile">
+                                    <div>
+                                        <span class="fw-bold"><?= $stall['owner_name'] ?></span>
+                                        <p class="m-0"><?= $stall['email'] ?></p>
+                                    </div>
+                                </div>
+                                <i class="text-muted">Owner</i>
                             </div>
-                            <div class="d-flex align-items-center minuspeso">
-                                <input type="number" name="variation_subtract_price_${variationFormId}[]" placeholder="0.00" min="0" step="0.01">
-                            </div>
-                            <button type="button" class="variation-btn delete" onclick="removeVariationRow(this)">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-
-                function triggerFileInput(variationFormId, rowId) {
-                    const inputFile = document.getElementById(`variationimage-${variationFormId}-${rowId}`);
-                    inputFile.value = ''; 
-                    inputFile.click();
-                }
-
-                function displaySelectedImage(variationFormId, rowId) {
-                    const inputFile = document.getElementById(`variationimage-${variationFormId}-${rowId}`);
-                    const imageContainer = document.getElementById(`variationimageContainer-${variationFormId}-${rowId}`);
-                    if (inputFile.files.length > 0) {
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
-                            imageContainer.style.backgroundImage = "url(" + e.target.result + ")";
-                            imageContainer.querySelector('.overlay').style.display = 'none';
-                        };
-                        reader.readAsDataURL(inputFile.files[0]);
-                    } else {
-                        console.warn("No file selected!");
-                    }
-                }
-
-                function addVariationRow(variationFormId) {
-                    const rowId = Date.now();
-                    const variationRowsContainer = document.getElementById(`variation-rows-container-${variationFormId}`);
-                    variationRowsContainer.insertAdjacentHTML("beforeend", createVariationRow(variationFormId, rowId));
-                }
-
-                function removeVariationRow(button) {
-                    const variationRow = button.parentNode;
-                    variationRow.remove();
-                }
-
-                function removeVariationForm(variationFormId) {
-                    const variationForm = document.getElementById(`variation-form-${variationFormId}`);
-                    variationForm.remove();
-                    if (document.getElementById("variation-forms-list").childElementCount === 0) {
-                        document.getElementById("initialStock").disabled = false;
-                        document.getElementById("initialStockContainer").classList.remove("disabled-stock");
-                    }
-                }
-
-                function renameVariation(variationFormId) {
-                    const newTitle = prompt("Enter a new name for this variation:");
-                    if (newTitle && newTitle.trim()) {
-                        document.getElementById(`variation-title-${variationFormId}`).textContent = newTitle.trim();
-                        document.getElementById(`variation-input-${variationFormId}`).value = newTitle.trim();
-                    }
-                }
-            </script>
-
-            <div class="d-flex gap-3">
-                <div class="input-group w-50 m-0 mb-4">
-                    <label for="discount">Discount (Optional)</label>
-                    <input type="number" name="discount" id="discount" placeholder="Enter discount" step="0.01" value="<?php echo htmlspecialchars($discount); ?>"/>
-                    <span class="errormessage"><?php echo $discountErr; ?></span>
-                </div>
-                <div class="d-flex gap-2 w-50">
-                    <div class="input-group m-0 mb-4">
-                        <label for="startDate">Start Date</label>
-                        <input type="date" name="startDate" id="startDate" value="<?php echo htmlspecialchars($startDate); ?>"/>
-                    </div>
-                    <div class="input-group m-0 mb-4">
-                        <label for="endDate">End Date</label>
-                        <input type="date" name="endDate" id="endDate" value="<?php echo htmlspecialchars($endDate); ?>"/>
+                        </div> 
                     </div>
                 </div>
-            </div>
-            <hr>
-            <button type="submit" class="btn btn-primary send px-5 mt-3">ADD PRODUCT</button>
-            <br><br><br><br>
-        </div>
-    </form>
+            <?php } ?>
+    </div> 
+    <?php } ?>
+    <br><br><br><br><br>
 </main>
-<?php include_once './footer.php'; ?>
 
-<!-- Category Modal -->
-<div class="modal fade" id="addcategory" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+<div class="modal fade" id="invitestall" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="" method="post">
-                <div class="modal-body">
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="text-center">
-                        <h4 class="fw-bold mb-4">Add Category</h4>
-                        <div class="form-floating m-0">
-                            <input type="text" name="new_category" class="form-control" placeholder="Category" id="new_category">
-                            <label for="new_category">Category</label>
-                        </div>
-                        <div class="mt-5 mb-3">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add</button>
-                        </div>
-                    </div>
+            <div class="modal-header pb-0 border-0">
+                <div class="d-flex gap-3 align-items-center">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Add Stall Owners</h1>
+                    <i class="fa-regular fa-circle-question m-0" data-bs-toggle="tooltip" data-bs-placement="right" title="An email will be sent to them with an invitaion link to register their stall under your food park. Once they complete the registration, their stall will be added to your food park."></i>
+                    <script>
+                        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+                        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+                    </script>
                 </div>
-            </form>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <select id="emailSelect" name="emails[]" multiple="multiple" style="width: 100%;"></select>
+                </div>
+                <h6 class=" mb-3 mt-3 mt-1">People in your food park</h6>
+                <?php
+                    $owner = $parkObj->getParkOwner($park_id);
+                    if($owner) {
+                ?>
+                <div class="owner mt-1 py-1 px-2 d-flex justify-content-between align-items-center">
+                    <div class="d-flex gap-3 align-items-center">
+                        <img src="<?= $owner['profile_img'] ?>" alt="">
+                        <div>
+                            <span class="fw-bold"><?= $owner['owner_name'] ?> (you)</span>
+                            <p class="m-0"><?= $owner['email'] ?></p>
+                        </div>
+                    </div>
+                    <i class="text-muted small mr-1">Park Owner</i>
+                </div>
+                <?php
+                    }
+                ?>
+                <?php
+                    $owners = $parkObj->getStallOwners($park_id);
+                    if (!empty($owners)) {
+                        foreach ($owners as $owner) {
+                ?>
+                <div class="owner mt-1 py-1 px-2 d-flex justify-content-between align-items-center">
+                    <div class="d-flex gap-3 align-items-center">
+                        <img src="<?= $owner['profile_img'] ?>" alt="">
+                        <div>
+                            <span class="fw-bold"><?= $owner['owner_name'] ?></span>
+                            <p class="m-0"><?= $owner['email'] ?></p>
+                        </div>
+                    </div>
+                    <i class="text-muted small mr-1">Stall Owner</i>
+                </div>
+                <?php
+                        }
+                    }
+                ?>
+            </div>
+            <div class="modal-footer pt-0 border-0">
+                <button type="button" class="btn btn-primary send p-2" id="createStallBtn">Create Stall Page</button>
+                <button type="button" class="btn btn-primary send p-2" id="sendInviteBtn">Send Invitation Link</button>
+            </div>
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
 
+$(document).ready(function () {
+    $("#emailSelect").select2({
+        placeholder: "Add emails to send invitation link",
+        allowClear: true,
+        templateResult: formatEmailWithImage, // For dropdown items
+        templateSelection: formatSelectedEmail, // For selected items
+        dropdownParent: $("#invitestall"), // Ensure it renders within the modal
+        ajax: {
+            url: "fetch_emails.php",
+            type: "GET",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return { search: params.term };
+            },
+            processResults: function (data) {
+                return { 
+                    results: data.map(user => ({
+                        id: user.id,  // Use user ID instead of email as ID
+                        text: user.email,
+                        profile_img: user.profile_img
+                    }))
+                };
+            },
+            cache: true
+        }
+    });
+
+    // Format items in dropdown with an image
+    function formatEmailWithImage(item) {
+        if (!item.id) return item.text; // If no ID, show plain text
+
+        let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
+        return $(
+            `<div style="display: flex; align-items: center;">
+                <img src="${imgSrc}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
+                <span>${item.text}</span>
+            </div>`
+        );
+    }
+
+    // Format the selected items inside the box
+    function formatSelectedEmail(item) {
+        if (!item.id) return item.text;
+
+        let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
+        return $(
+            `<div style="display: flex; align-items: center; gap: 5px;">
+                <img src="${imgSrc}" style="width: 20px; height: 20px; border-radius: 50%;">
+                <span>${item.text}</span>
+            </div>`
+        );
+    }
+
+    $('#invitestall').on('shown.bs.modal', function () {
+        $("#emailSelect").val(null).trigger("change"); // Reset selection
+    });
+
+    $("#createStallBtn").on("click", function () {
+        let selectedUsers = $("#emailSelect").select2("data"); // Get selected user objects
+        let parkId = "<?php echo $_SESSION['current_park_id']; ?>"; // Get park ID
+
+        if (!selectedUsers || selectedUsers.length === 0) {
+            Swal.fire({
+                title: 'Hold up! ⚠️',
+                text: 'You haven’t selected any users yet. Let’s fix that and try again!',
+                icon: 'error',
+                confirmButtonText: 'Alright, selecting now!'
+            });
+            return;
+        }
+
+        // Open a new window/tab for each selected user
+        selectedUsers.forEach(function (user) {
+            let userId = user.id; // Fetch user ID from selection
+            let userEmail = encodeURIComponent(user.text); // Fetch user email
+
+            window.open(
+                `stallregistration.php?owner_email=${userEmail}&owner_id=${userId}&park_id=${parkId}`, 
+                "_blank"
+            );
+        });
+    });
+
+    $('#sendInviteBtn').click(function () {
+        var selectedEmails = $('#emailSelect').val();
+        if (selectedEmails.length === 0) {
+            Swal.fire({
+                title: 'Hey, wait a sec! ✋',
+                text: 'You need to pick at least one email before we can send the invites.',
+                icon: 'error',
+                confirmButtonText: 'Got it, picking now!'
+            });
+
+            return;
+        }
+
+        // Show loading indicator
+        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
+        $(this).prop('disabled', true);
+        
+        // Store button reference
+        var $button = $(this);
+
+        $.ajax({
+            url: './email/send_invite.php',
+            type: 'POST',
+            data: { emails: selectedEmails },
+            dataType: 'json',
+            success: function (response) {
+                // Reset button state
+                $button.html('Send Invitation Link');
+                $button.prop('disabled', false);
+                
+                if (response.status === 'success') {
+                    // Show success message
+                    // alert('Invitation links sent successfully!');
+                    Swal.fire({
+                        title: "Success! 🎉",
+                        text: "All invitation links were sent without a hitch! Check your inboxes. 📩",
+                        icon: "success"
+                    });
+
+                    
+                    // Reset the select2 dropdown
+                    $("#emailSelect").val(null).trigger("change");
+                    
+                    // Close the modal
+                    $('#invitestall').modal('hide');
+                } else if (response.status === 'warning') {
+                    // Show warning message with details
+                    var message = 'Some invitations could not be sent:\n';
+                    response.results.forEach(function(result) {
+                        message += '- ' + result.email + ': ' + result.message + '\n';
+                    });
+                    // alert(message);
+                    Swal.fire({
+                        title: 'Yikes! 😬',
+                        text: message || 'Something went wrong. Let’s try that one more time!',
+                        icon: 'error',
+                        confirmButtonText: 'Got it!'
+                    });
+                } else {
+                    // Show error message
+                    // alert('Failed to send some invitation links. Please try again.');
+                    Swal.fire({
+                        title: 'Oops! 🚧',
+                        text: 'Some invitations didn’t make it through. Maybe the internet gremlins are at it again? Give it another shot!',
+                        icon: 'error',
+                        confirmButtonText: 'Alright, I’ll try again!'
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                // Reset button state
+                $button.html('Send Invitation Link');
+                $button.prop('disabled', false);
+                
+                // Show error message
+                // alert('An error occurred while sending invitations: ' + error);
+                Swal.fire({
+                    title: 'Uh-oh! 😟',
+                    text: 'Something went wrong while sending the invitations. Maybe the internet took a coffee break? Try again! Error: ' + error,
+                    icon: 'error',
+                    confirmButtonText: 'Got it, I’ll try again!'
+                })
+            }
+        });
+    });
+
+});
+
+</script>
+
+<?php 
+    include_once 'footer.php'; 
+?>

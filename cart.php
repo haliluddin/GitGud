@@ -2,8 +2,10 @@
 include_once 'links.php'; 
 include_once 'header.php';
 require_once __DIR__ . '/classes/cart.class.php';
+require_once __DIR__ . '/classes/paymongo.class.php';
 
 $cartObj = new Cart();
+$payMongo = new PayMongoHandler();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $payment_method = $_POST['payment_method'] ?? null; 
@@ -35,13 +37,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $order_id = $cartObj->placeOrder($user_id, $payment_method, $order_type, $updatedCart);
     $cartObj->removeCartItems($user_id, $park_id, $updatedCart);
     
-    echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                document.getElementById('orderIdDisplay').innerText = '$order_id';
-                var cashModal = new bootstrap.Modal(document.getElementById('ifcash'));
-                cashModal.show();
-            });
-          </script>";
+    $amountInCents = 30000; 
+    
+    if (strtolower($payment_method) === 'gcash') {
+        $result = $payMongo->createPaymentLink(
+            $amountInCents,
+            'Parking Payment',
+            ['order_id' => $order_id]
+        );
+    
+        if (isset($result['error'])) {
+            echo json_encode(['error' => $result['error']]);
+        } else {
+            echo "<script>
+                    // Open the checkout URL in a new tab
+                    window.open('" . $result['checkout_url'] . "', '_blank');
+                    // Show the 'ifcashless' modal when the user returns to cart.php
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var cashlessModal = new bootstrap.Modal(document.getElementById('ifcashless'));
+                        cashlessModal.show();
+                    });
+                  </script>";
+        }
+    } else {
+        echo "<script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.getElementById('orderIdDisplay').innerText = '$order_id';
+                    var cashModal = new bootstrap.Modal(document.getElementById('ifcash'));
+                    cashModal.show();
+                });
+              </script>";
+    }
 }
 
 $cartGrouped = $cartObj->getCartGroupedItems($user_id, $park_id);
@@ -49,7 +75,6 @@ $cartGrouped = $cartObj->getCartGroupedItems($user_id, $park_id);
 $availableCart = [];
 $disabledCart  = [];
 
-// Separate items based on if the available stock is at least equal to the cart quantity.
 foreach ($cartGrouped as $stallName => $items) {
     foreach ($items as $item) {
         if (intval($item['stock']) >= intval($item['quantity'])) {
@@ -263,6 +288,7 @@ foreach ($cartGrouped as $stallName => $items) {
   </div>
 </div>
 
+<!-- Cash Payment Modal -->
 <div class="modal fade" id="ifcash" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -277,6 +303,31 @@ foreach ($cartGrouped as $stallName => $items) {
                         Your Order ID is <span id="orderIdDisplay" style="color: #CD5C08;"></span>
                     </h5>
                     <p class="mb-3">Please proceed to each stall with this Order ID to complete your payment. Once payment is confirmed, your order will be in preparation queue.</p>
+                    <span>For more details about your order, go to Purchase.</span>
+                </div>
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="window.location.href='purchase.php';">Purchase</button>
+                </div>
+                <br>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cashless Payment Modal -->
+<div class="modal fade" id="ifcashless" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="text-center">
+                    <i class="fa-regular fa-face-smile mb-3" style="color: #CD5C08; font-size: 80px"></i><br>
+                    <span>Thank you for your order!</span>
+                    <h5 class="fw-bold mt-2 mb-4">Your Order ID is <span style="color: #CD5C08;"><?= htmlspecialchars($order_id ?? '0000'); ?></span></h5>
+                    <p class="mb-3">Your order at each stall is now in preparation queue. You will be notified when your items are ready for pickup.</p>
                     <span>For more details about your order, go to Purchase.</span>
                 </div>
                 <div class="text-center mt-4">
@@ -417,4 +468,4 @@ foreach ($cartGrouped as $stallName => $items) {
 
 <?php 
 include_once 'footer.php'; 
-?>
+?> 
