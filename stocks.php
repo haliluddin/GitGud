@@ -19,6 +19,55 @@
         }
     }
 
+    // Handle delete inventory record
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_inventory'])) {
+        $inventory_id = isset($_POST['inventory_id']) ? intval($_POST['inventory_id']) : 0;
+        $prod_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+        $variation_option_id = isset($_POST['variation_option']) && $_POST['variation_option'] ? intval($_POST['variation_option']) : null;
+        
+        $result = $stallObj->deleteInventory($inventory_id, $prod_id, $variation_option_id);
+        if ($result) {
+            $success = "Inventory record deleted successfully.";
+            // Redirect back to the same page to refresh the data
+            if ($variation_option_id) {
+                echo '<script>window.location.href = "stocks.php?id=' . urlencode(encrypt($prod_id)) . '&variation_option=' . $variation_option_id . '";</script>';
+            } else {
+                echo '<script>window.location.href = "stocks.php?id=' . urlencode(encrypt($prod_id)) . '";</script>';
+            }
+            exit;
+        } else {
+            $error = "Failed to delete the inventory record.";
+        }
+    }
+
+    // Handle update inventory record
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_inventory'])) {
+        $inventory_id = isset($_POST['inventory_id']) ? intval($_POST['inventory_id']) : 0;
+        $prod_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+        $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 0;
+        $reason = isset($_POST['reason']) ? trim($_POST['reason']) : '';
+        $type = isset($_POST['inventory_type']) ? trim($_POST['inventory_type']) : '';
+        $variation_option_id = isset($_POST['variation_option']) && $_POST['variation_option'] ? intval($_POST['variation_option']) : null;
+        
+        if ($quantity <= 0) {
+            $error = "Please enter a valid quantity.";
+        } else {
+            $result = $stallObj->updateInventory($inventory_id, $prod_id, $variation_option_id, $type, $quantity, $reason);
+            if ($result) {
+                $success = "Inventory record updated successfully.";
+                // Redirect back to the same page to refresh the data
+                if ($variation_option_id) {
+                    echo '<script>window.location.href = "stocks.php?id=' . urlencode(encrypt($prod_id)) . '&variation_option=' . $variation_option_id . '";</script>';
+                } else {
+                    echo '<script>window.location.href = "stocks.php?id=' . urlencode(encrypt($prod_id)) . '";</script>';
+                }
+                exit;
+            } else {
+                $error = "Failed to update the inventory record.";
+            }
+        }
+    }
+
     $product_id = isset($_GET['id']) ? intval(urldecode(decrypt($_GET['id']))) : 0;
 
     if ($product_id == 0) {
@@ -334,8 +383,8 @@
                             <td class="items"><?= htmlspecialchars($record['quantity']); ?></td>
                             <td class="reason"><?= htmlspecialchars($record['reason']); ?></td>
                             <td class="stoaction">
-                                <i class="fa-solid fa-pen-to-square edit-icon"></i>
-                                <i class="fa-solid fa-trash" data-bs-toggle="modal" data-bs-target="#deletestock"></i>
+                                <i class="fa-solid fa-pen-to-square edit-icon" data-id="<?= $record['id']; ?>" data-quantity="<?= $record['quantity']; ?>" data-reason="<?= $record['reason']; ?>" data-type="Stock In"></i>
+                                <i class="fa-solid fa-trash delete-icon" data-bs-toggle="modal" data-bs-target="#deletestock" data-id="<?= $record['id']; ?>" data-type="Stock In"></i>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -376,8 +425,8 @@
                             <td class="items"><?= htmlspecialchars($record['quantity']); ?></td>
                             <td class="reason"><?= htmlspecialchars($record['reason']); ?></td>
                             <td class="stoaction">
-                                <i class="fa-solid fa-pen-to-square edit-icon"></i>
-                                <i class="fa-solid fa-trash" data-bs-toggle="modal" data-bs-target="#deletestock"></i>
+                                <i class="fa-solid fa-pen-to-square edit-icon" data-id="<?= $record['id']; ?>" data-quantity="<?= $record['quantity']; ?>" data-reason="<?= $record['reason']; ?>" data-type="Stock Out"></i>
+                                <i class="fa-solid fa-trash delete-icon" data-bs-toggle="modal" data-bs-target="#deletestock" data-id="<?= $record['id']; ?>" data-type="Stock Out"></i>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -392,12 +441,12 @@
             <div class="modal-content">
                 <form id="deleteProductForm" action="" method="post">
                     <div class="modal-body">
-                        <div class="d-flex justify-content-end">
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="fw-bold mb-4"><i class="fa-solid fa-circle-exclamation"></i> Delete Product</h4>
-                            <p>You are about to delete this product.<br>Are you sure?</p>
+                        <div class="deletemodal text-center">
+                            <div class="promptdelete">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <h5>Delete Product</h5>
+                                <p>You are about to delete this product.<br>Are you sure?</p>
+                            </div>
                             <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
                             <div class="mt-5 mb-3">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -409,17 +458,119 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Stock Modal -->
+    <div class="modal fade" id="deletestock" tabindex="-1" aria-labelledby="deleteStockLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="deleteStockForm" action="" method="post">
+                    <div class="modal-body">
+                        <div class="deletemodal text-center">
+                            <div class="promptdelete">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <h5>Delete Inventory Record</h5>
+                                <p>Are you sure you want to delete this inventory record?</p>
+                            </div>
+                            <input type="hidden" name="inventory_id" id="delete_inventory_id" value="">
+                            <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
+                            <?php if (!empty($variations)): ?>
+                                <input type="hidden" name="variation_option" value="<?= $selected_option; ?>">
+                            <?php endif; ?>
+                            <div class="mt-5 mb-3">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" name="delete_inventory" class="btn btn-primary">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Stock Modal -->
+    <div class="modal fade" id="editstock" tabindex="-1" aria-labelledby="editStockLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editStockForm" action="" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editStockLabel">Edit Inventory Record</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="inventory_id" id="edit_inventory_id" value="">
+                        <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
+                        <input type="hidden" name="inventory_type" id="edit_inventory_type" value="">
+                        <?php if (!empty($variations)): ?>
+                            <input type="hidden" name="variation_option" value="<?= $selected_option; ?>">
+                        <?php endif; ?>
+                        
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="edit_quantity" name="quantity" required min="1">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Reason</label>
+                            <select class="form-control" id="edit_reason" name="reason" required>
+                                <option value="" disabled selected>Select a reason</option>
+                                <option value="Restock">Restock</option>
+                                <option value="Inventory Adjustment">Inventory Adjustment</option>
+                                <option value="Bulk Orders">Bulk Orders</option>
+                                <option value="Spoilage">Spoilage</option>
+                                <option value="Expired">Expired</option>
+                                <option value="Theft or Loss">Theft or Loss</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="update_inventory" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         function handleVariationChange(selectedOptionId) {
-            window.location.href = "?id=<?= $product['id']; ?>&variation_option=" + selectedOptionId;
+            window.location.href = "?id=<?= urlencode(encrypt($product['id'])); ?>&variation_option=" + selectedOptionId;
         }
+        
+        // Edit stock record
         document.querySelectorAll('.edit-icon').forEach(icon => {
-            icon.addEventListener('click', function () {
-                const row = this.closest('tr');
-                const items = row.querySelector('.items').textContent.trim();
-                const reason = row.querySelector('.reason').textContent.trim();
+            icon.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const quantity = this.getAttribute('data-quantity');
+                const reason = this.getAttribute('data-reason');
+                const type = this.getAttribute('data-type');
+                
+                document.getElementById('edit_inventory_id').value = id;
+                document.getElementById('edit_quantity').value = quantity;
+                document.getElementById('edit_inventory_type').value = type;
+                
+                // Find and select the matching reason option
+                const reasonSelect = document.getElementById('edit_reason');
+                for (let i = 0; i < reasonSelect.options.length; i++) {
+                    if (reasonSelect.options[i].value === reason) {
+                        reasonSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                
+                // Show the edit modal
+                new bootstrap.Modal(document.getElementById('editstock')).show();
             });
         });
+        
+        // Delete stock record
+        document.querySelectorAll('.delete-icon').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                document.getElementById('delete_inventory_id').value = id;
+            });
+        });
+        
         document.getElementById('stockin-form').addEventListener('submit', function(e) {
             setTimeout(function(){ location.reload(); }, 500);
         });

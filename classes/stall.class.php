@@ -194,6 +194,187 @@ class Stall {
         return $result['total_products'];
     }
 
+    /**
+     * Update an inventory record and adjust the stock accordingly
+     * 
+     * @param int $inventory_id The ID of the inventory record to update
+     * @param int $product_id The product ID
+     * @param int|null $variation_option_id The variation option ID (nullable)
+     * @param string $type The inventory type (Stock In or Stock Out)
+     * @param int $quantity The new quantity
+     * @param string $reason The reason for the update
+     * @return bool True if successful, false otherwise
+     */
+    public function updateInventory($inventory_id, $product_id, $variation_option_id, $type, $quantity, $reason) {
+        $conn = $this->db->connect();
+        
+        $conn->beginTransaction();
+        
+        try {
+            // First, get the original inventory record to calculate the difference
+            $sqlOriginal = "SELECT quantity, type FROM inventory WHERE id = :id";
+            $stmtOriginal = $conn->prepare($sqlOriginal);
+            $stmtOriginal->bindValue(':id', $inventory_id, PDO::PARAM_INT);
+            $stmtOriginal->execute();
+            $originalRecord = $stmtOriginal->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$originalRecord) {
+                throw new Exception("Original inventory record not found");
+            }
+            
+            // Update the inventory record
+            $sql = "UPDATE inventory SET quantity = :quantity, reason = :reason 
+                    WHERE id = :id";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindValue(':quantity', $quantity, PDO::PARAM_INT);
+            $stmt->bindValue(':reason', $reason, PDO::PARAM_STR);
+            $stmt->bindValue(':id', $inventory_id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            // Adjust the stock based on the difference
+            $originalQuantity = $originalRecord['quantity'];
+            $originalType = $originalRecord['type'];
+            
+            // Get current stock
+            $sqlCheck = "SELECT quantity FROM stocks WHERE product_id = :product_id AND variation_option_id " . 
+                       ($variation_option_id === null ? "IS NULL" : "= :variation_option_id");
+            $stmtCheck = $conn->prepare($sqlCheck);
+            $stmtCheck->bindValue(':product_id', $product_id, PDO::PARAM_INT);
+            if ($variation_option_id !== null) {
+                $stmtCheck->bindValue(':variation_option_id', $variation_option_id, PDO::PARAM_INT);
+            }
+            $stmtCheck->execute();
+            $currentStock = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$currentStock) {
+                throw new Exception("Stock record not found");
+            }
+            
+            // Calculate what the new stock should be
+            $stockAdjustment = 0;
+            
+            // If the type hasn't changed, just adjust by the difference
+            if ($type == $originalType) {
+                if ($type == 'Stock In') {
+                    $stockAdjustment = $quantity - $originalQuantity;
+                } else { // Stock Out
+                    $stockAdjustment = $originalQuantity - $quantity;
+                }
+            } else {
+                // Type has changed (e.g., from Stock In to Stock Out or vice versa)
+                if ($originalType == 'Stock In') {
+                    // Was Stock In, now Stock Out
+                    $stockAdjustment = -$originalQuantity - $quantity;
+                } else {
+                    // Was Stock Out, now Stock In
+                    $stockAdjustment = $originalQuantity + $quantity;
+                }
+            }
+            
+            // Apply the adjustment to the current stock
+            $newStock = $currentStock['quantity'] + $stockAdjustment;
+            if ($newStock < 0) {
+                $newStock = 0;
+            }
+            
+            // Update the stock
+            $sqlUpdate = "UPDATE stocks SET quantity = :quantity 
+                         WHERE product_id = :product_id AND variation_option_id " .
+                         ($variation_option_id === null ? "IS NULL" : "= :variation_option_id");
+            $stmtUpdate = $conn->prepare($sqlUpdate);
+            $stmtUpdate->bindValue(':quantity', $newStock, PDO::PARAM_INT);
+            $stmtUpdate->bindValue(':product_id', $product_id, PDO::PARAM_INT);
+            if ($variation_option_id !== null) {
+                $stmtUpdate->bindValue(':variation_option_id', $variation_option_id, PDO::PARAM_INT);
+            }
+            $stmtUpdate->execute();
+            
+            $conn->commit();
+            return true;
+        } catch (Exception $e) {
+            $conn->rollBack();
+            return false;
+        }
+    }
+
+    /**
+     * Delete an inventory record and adjust the stock accordingly
+     * 
+     * @param int $inventory_id The ID of the inventory record to delete
+     * @param int $product_id The product ID
+     * @param int|null $variation_option_id The variation option ID (nullable)
+     * @return bool True if successful, false otherwise
+     */
+    public function deleteInventory($inventory_id, $product_id, $variation_option_id) {
+        $conn = $this->db->connect();
+        
+        $conn->beginTransaction();
+        
+        try {
+            // First, get the inventory record to know how to adjust the stock
+            $sql = "SELECT quantity, type FROM inventory WHERE id = :id";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindValue(':id', $inventory_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $record = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$record) {
+                throw new Exception("Inventory record not found");
+            }
+            
+            // Delete the record
+            $sqlDelete = "DELETE FROM inventory WHERE id = :id";
+            $stmtDelete = $conn->prepare($sqlDelete);
+            $stmtDelete->bindValue(':id', $inventory_id, PDO::PARAM_INT);
+            $stmtDelete->execute();
+            
+            // Get current stock
+            $sqlCheck = "SELECT quantity FROM stocks WHERE product_id = :product_id AND variation_option_id " . 
+                       ($variation_option_id === null ? "IS NULL" : "= :variation_option_id");
+            $stmtCheck = $conn->prepare($sqlCheck);
+            $stmtCheck->bindValue(':product_id', $product_id, PDO::PARAM_INT);
+            if ($variation_option_id !== null) {
+                $stmtCheck->bindValue(':variation_option_id', $variation_option_id, PDO::PARAM_INT);
+            }
+            $stmtCheck->execute();
+            $currentStock = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$currentStock) {
+                throw new Exception("Stock record not found");
+            }
+            
+            // Adjust stock based on the deleted record
+            $newStock = $currentStock['quantity'];
+            if ($record['type'] == 'Stock In') {
+                $newStock -= $record['quantity'];
+            } else { // Stock Out
+                $newStock += $record['quantity'];
+            }
+            
+            if ($newStock < 0) {
+                $newStock = 0;
+            }
+            
+            // Update the stock
+            $sqlUpdate = "UPDATE stocks SET quantity = :quantity 
+                         WHERE product_id = :product_id AND variation_option_id " .
+                         ($variation_option_id === null ? "IS NULL" : "= :variation_option_id");
+            $stmtUpdate = $conn->prepare($sqlUpdate);
+            $stmtUpdate->bindValue(':quantity', $newStock, PDO::PARAM_INT);
+            $stmtUpdate->bindValue(':product_id', $product_id, PDO::PARAM_INT);
+            if ($variation_option_id !== null) {
+                $stmtUpdate->bindValue(':variation_option_id', $variation_option_id, PDO::PARAM_INT);
+            }
+            $stmtUpdate->execute();
+            
+            $conn->commit();
+            return true;
+        } catch (Exception $e) {
+            $conn->rollBack();
+            return false;
+        }
+    }
+
     public function getUserOrders($user_id, $park_id) {
         $sql = "SELECT 
                     o.id AS order_id,
