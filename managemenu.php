@@ -136,8 +136,8 @@
 
                                             <div>
                                                 <div class="d-flex gap-3 m-0 small">
-                                                    <span><?= htmlspecialchars($product['code']); ?></span>
-                                                    <span>|</span>
+                                                    <!-- <span><?= htmlspecialchars($product['code']); ?></span>
+                                                    <span>|</span> -->
                                                     <span><?= htmlspecialchars($product['category_name']); ?></span>
                                                 </div>
                                                 <h5 class="fw-bold my-2"><?= htmlspecialchars($product['name']); ?></h5>
