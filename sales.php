@@ -5,33 +5,30 @@ include_once 'modals.php';
 include_once 'nav.php';
 require_once __DIR__ . '/classes/stall.class.php';
 
-$stallObj   = new Stall();
-$stall_id   = $stallObj->getStallId($_SESSION['user']['id']);
+$stallObj    = new Stall();
+
+if ($user['role'] === 'Admin' && isset($_GET['stall_id'])) {
+    $stall_id = intval($_GET['stall_id']);
+} else {
+    $stall_id = $stallObj->getStallId($_SESSION['user']['id']);
+}
+
 $stallCreated = $stallObj->getStallCreationDate($stall_id);
 $createdDate  = date("Y-m-d", strtotime($stallCreated));
 $currentDate  = date("Y-m-d");
 
 $daysOld = (strtotime($currentDate) - strtotime($createdDate))/(60*60*24);
 
+// Define period for Today:
 $todayStart = $currentDate . " 00:00:00";
 $todayEnd   = $currentDate . " 23:59:59";
 
-$yesterdayDate = date("Y-m-d", strtotime("-1 day", strtotime($currentDate)));
+// Yesterday always shows the complete day before today:
+$yesterdayDate  = date("Y-m-d", strtotime("-1 day", strtotime($currentDate)));
 $yesterdayStart = $yesterdayDate . " 00:00:00";
 $yesterdayEnd   = $yesterdayDate . " 23:59:59";
 
-$sevenAvailable = $daysOld >= 7;
-$sevenStart = date("Y-m-d", strtotime($createdDate));
-$sevenEnd   = date("Y-m-d", strtotime($createdDate." +6 days"));
-
-$thirtyAvailable = $daysOld >= 30;
-$thirtyStart = date("Y-m-d", strtotime($createdDate));
-$thirtyEnd   = date("Y-m-d", strtotime($createdDate." +29 days"));
-
-$yearAvailable = $daysOld >= 365;
-$yearStart = date("Y-m-d", strtotime($createdDate));
-$yearEnd   = date("Y-m-d", strtotime($createdDate." +364 days"));
-
+// Initialize time periods with Today
 $timePeriods = [
     'today' => [
         'label'   => 'Today',
@@ -41,6 +38,8 @@ $timePeriods = [
         'sales'   => $stallObj->getSalesToday($stall_id, $todayStart, $todayEnd)
     ]
 ];
+
+// Only add Yesterday if at least one day has passed
 if($daysOld >= 1) {
     $timePeriods['yesterday'] = [
         'label'   => 'Yesterday',
@@ -50,7 +49,14 @@ if($daysOld >= 1) {
         'sales'   => $stallObj->getSalesYesterday($stall_id, $yesterdayStart, $yesterdayEnd)
     ];
 }
-if($sevenAvailable) {
+
+// Calculate complete 7-day periods (anchored at creation)
+$completeWeeks = floor((($daysOld + 1) / 7));
+if($completeWeeks >= 1) {
+    // Get the latest complete week period
+    $weekNumber = $completeWeeks; 
+    $sevenStart = date("Y-m-d", strtotime($createdDate . " + " . (7 * ($weekNumber - 1)) . " days"));
+    $sevenEnd   = date("Y-m-d", strtotime($sevenStart . " + 6 days"));
     $timePeriods['seven'] = [
         'label'   => '7 Days',
         'display' => date("M d, Y", strtotime($sevenStart)) . " - " . date("M d, Y", strtotime($sevenEnd)),
@@ -59,7 +65,13 @@ if($sevenAvailable) {
         'sales'   => $stallObj->getSales7Days($stall_id, $sevenStart . " 00:00:00", $sevenEnd . " 23:59:59")
     ];
 }
-if($thirtyAvailable) {
+
+// Calculate complete 30-day periods
+$complete30Days = floor((($daysOld + 1) / 30));
+if($complete30Days >= 1) {
+    $periodNumber = $complete30Days;
+    $thirtyStart = date("Y-m-d", strtotime($createdDate . " + " . (30 * ($periodNumber - 1)) . " days"));
+    $thirtyEnd   = date("Y-m-d", strtotime($thirtyStart . " + 29 days"));
     $timePeriods['thirty'] = [
         'label'   => '30 Days',
         'display' => date("M d, Y", strtotime($thirtyStart)) . " - " . date("M d, Y", strtotime($thirtyEnd)),
@@ -68,7 +80,13 @@ if($thirtyAvailable) {
         'sales'   => $stallObj->getSales30Days($stall_id, $thirtyStart . " 00:00:00", $thirtyEnd . " 23:59:59")
     ];
 }
-if($yearAvailable) {
+
+// Calculate complete 1-year periods
+$completeYears = floor((($daysOld + 1) / 365));
+if($completeYears >= 1) {
+    $yearNumber = $completeYears;
+    $yearStart = date("Y-m-d", strtotime($createdDate . " + " . (365 * ($yearNumber - 1)) . " days"));
+    $yearEnd   = date("Y-m-d", strtotime($yearStart . " + 364 days"));
     $timePeriods['year'] = [
         'label'   => '1 Year',
         'display' => date("M d, Y", strtotime($yearStart)) . " - " . date("M d, Y", strtotime($yearEnd)),
@@ -77,6 +95,10 @@ if($yearAvailable) {
         'sales'   => $stallObj->getSales1Year($stall_id, $yearStart . " 00:00:00", $yearEnd . " 23:59:59")
     ];
 }
+
+if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
+    $stall_id = intval($_GET['stall_id']);
+} 
 ?>
 <style>
     main {
@@ -102,6 +124,7 @@ if($yearAvailable) {
         $highestProducts = $stallObj->getHighestSellingProducts($stall_id, $period['start'], $period['end']);
     ?>
     <div id="<?php echo $key; ?>" class="section-content <?php echo $key === 'today' ? 'active' : ''; ?>">
+        <!-- Report content remains unchanged -->
         <div class="d-flex gap-3 mb-3">
             <div class="bg-white border rounded-2 p-4 w-75">
                 <div class="w-100 d-flex mb-4">
@@ -247,7 +270,30 @@ if($yearAvailable) {
     </div>
     <?php endforeach; ?>
     <br><br><br><br><br><br>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (!window.location.hash) {
+                window.location.hash = "#today";
+            }
+            
+            const tabs = document.querySelectorAll(".nav-link");
+            tabs.forEach(tab => {
+                tab.classList.remove("active");
+                if (tab.getAttribute("href") === window.location.hash) {
+                    tab.classList.add("active");
+                }
+            });
+            
+            const sections = document.querySelectorAll(".section-content");
+            sections.forEach(section => {
+                section.classList.remove("active");
+                if ("#" + section.id === window.location.hash) {
+                    section.classList.add("active");
+                }
+            });
+        });
+    </script>
 </main>
-<script src="./assets/js/navigation.js?v=<?php echo time(); ?>"></script>
-<script src="./assets/js/sales.js?v=<?php echo time(); ?>"></script>
+
 <?php include_once './footer.php'; ?>

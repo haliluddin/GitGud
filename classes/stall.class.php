@@ -44,7 +44,7 @@ class Stall {
         $query = $this->db->connect()->prepare($sql);
         $query->execute(array(':stall_id' => $stallId));
         $result = $query->fetchAll();
-    
+     
         return $result ?: [];
     }
     
@@ -287,13 +287,12 @@ class Stall {
         return $stmt->fetchColumn();
     }
     
-    // General report method that accepts fixed date ranges.
     private function getSalesReport($stall_id, $start, $end){
         $stmt = $this->db->connect()->prepare("
             SELECT COUNT(*) as totalOrders, COALESCE(SUM(subtotal),0) as totalSales 
             FROM order_items 
             WHERE order_stall_id IN (
-                SELECT id FROM order_stalls WHERE stall_id = ? AND status = 'Preparing'
+                SELECT id FROM order_stalls WHERE stall_id = ? AND status IN ('Preparing', 'Ready', 'Completed')
             ) 
             AND created_at BETWEEN ? AND ?
         ");
@@ -353,7 +352,7 @@ class Stall {
             LEFT JOIN order_items oi ON p.id = oi.product_id 
                 AND oi.created_at BETWEEN ? AND ?
                 AND oi.order_stall_id IN (
-                    SELECT id FROM order_stalls WHERE status = 'Preparing'
+                    SELECT id FROM order_stalls WHERE status IN ('Preparing', 'Ready', 'Completed')
                 )
             WHERE p.stall_id = ?
             GROUP BY p.id
@@ -377,7 +376,7 @@ class Stall {
             SELECT o.user_id, COUNT(*) as orders 
             FROM orders o 
             JOIN order_stalls os ON o.id = os.order_id 
-            WHERE os.stall_id = ? AND o.created_at BETWEEN ? AND ? AND os.status = 'Preparing'
+            WHERE os.stall_id = ? AND o.created_at BETWEEN ? AND ? AND os.status IN ('Preparing', 'Ready', 'Completed')
             GROUP BY o.user_id
         ");
         $stmt->execute([$stall_id, $start, $end]);
@@ -403,7 +402,7 @@ class Stall {
                   JOIN order_stalls os ON oi.order_stall_id = os.id 
                   WHERE os.stall_id = ? 
                     AND oi.created_at BETWEEN ? AND ? 
-                    AND os.status = 'Preparing'
+                    AND os.status IN ('Preparing', 'Ready', 'Completed')
               )
         ");
         $stmt->execute([$stall_id, $stall_id, $start, $end]);
@@ -412,14 +411,13 @@ class Stall {
         return $data;
     }
     
-    
     public function getOperationsHealth($stall_id, $start, $end){
         $data = [];
         $stmt = $this->db->connect()->prepare("
             SELECT o.payment_method, SUM(o.total_price) as sales 
             FROM orders o 
             JOIN order_stalls os ON o.id = os.order_id 
-            WHERE os.stall_id = ? AND o.created_at BETWEEN ? AND ? AND os.status = 'Preparing'
+            WHERE os.stall_id = ? AND o.created_at BETWEEN ? AND ? AND os.status IN ('Preparing', 'Ready', 'Completed')
             GROUP BY o.payment_method
         ");
         $stmt->execute([$stall_id, $start, $end]);
@@ -439,7 +437,7 @@ class Stall {
             SELECT o.order_type, SUM(o.total_price) as sales 
             FROM orders o 
             JOIN order_stalls os ON o.id = os.order_id 
-            WHERE os.stall_id = ? AND o.created_at BETWEEN ? AND ? AND os.status = 'Preparing'
+            WHERE os.stall_id = ? AND o.created_at BETWEEN ? AND ? AND os.status IN ('Preparing', 'Ready', 'Completed')
             GROUP BY o.order_type
         ");
         $stmt->execute([$stall_id, $start, $end]);
@@ -473,8 +471,7 @@ class Stall {
         $stmt->execute([$stall_id, $start, $end]);
         $avg = $stmt->fetchColumn();
         $data['avg_prep_time'] = $avg ? round($avg) : 0;
-
-
+    
         return $data;
     }
     
@@ -484,7 +481,7 @@ class Stall {
             FROM order_items oi 
             JOIN order_stalls os ON oi.order_stall_id = os.id 
             JOIN products p ON oi.product_id = p.id 
-            WHERE os.stall_id = ? AND oi.created_at BETWEEN ? AND ? AND os.status = 'Preparing'
+            WHERE os.stall_id = ? AND oi.created_at BETWEEN ? AND ? AND os.status IN ('Preparing', 'Ready', 'Completed')
             GROUP BY p.id 
             ORDER BY sales DESC 
             LIMIT 5
@@ -492,5 +489,6 @@ class Stall {
         $stmt->execute([$stall_id, $start, $end]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    
     
 }
