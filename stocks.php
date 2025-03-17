@@ -1,48 +1,60 @@
 <?php 
     include_once 'header.php'; 
     include_once 'links.php'; 
-    include_once 'nav.php';
-    include_once 'modals.php';
     require_once __DIR__ . '/classes/stall.class.php';
+    require_once __DIR__ . '/classes/product.class.php';
 
     $stallObj = new Stall();
+    $productObj = new Product();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product'])) {
+        $prod_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+        $result = $productObj->deleteProduct($prod_id);
+        if ($result) {
+            header("Location: managemenu.php");
+            exit;
+        } else {
+            $error = "Failed to delete the product.";
+        }
+    }
 
     $product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     $product = $stallObj->getProductById($product_id);
     $variations = $stallObj->getProductVariations($product['id']);
 
-    $hasStock = false;
-    $lowStock = false;
-    $noStock = true; 
-
     if (!empty($variations)) {
-        $allLowStock = true;
+        $overallStatus = "IN";
         foreach ($variations as $variation) {
             $options = $stallObj->getVariationOptions($variation['id']);
+            $allZero = true;
+            $allLow = true;
             foreach ($options as $option) {
-                $optionStock = $stallObj->getStock($product['id'], $option['id']);
-                if ($optionStock > 0) {
-                    $hasStock = true;
-                    $noStock = false;
-                    if ($optionStock > 5) {
-                        $allLowStock = false;
+                $qty = $stallObj->getStock($product['id'], $option['id']);
+                if ($qty > 0) {
+                    $allZero = false;
+                    if ($qty > 5) {
+                        $allLow = false;
                     }
                 } else {
-                    $allLowStock = false;
+                    $allLow = false;
                 }
             }
-        }
-        $lowStock = $hasStock && $allLowStock;
-    } else {
-        if ($product['stock'] > 0) {
-            $hasStock = true;
-            $noStock = false;
-            if ($product['stock'] <= 5) {
-                $lowStock = true;
+            if ($allZero) {
+                $overallStatus = "NO";
+                break;
+            } elseif ($allLow && $overallStatus !== "NO") {
+                $overallStatus = "LOW";
             }
         }
+    } else {
+        if ($product['stock'] == 0) {
+            $overallStatus = "NO";
+        } elseif ($product['stock'] <= 5) {
+            $overallStatus = "LOW";
+        } else {
+            $overallStatus = "IN";
+        }
     }
-
 
     $selected_option = null;
     if (!empty($variations)) {
@@ -141,16 +153,7 @@
     $stmtStock->execute();
     $rowStock = $stmtStock->fetch(PDO::FETCH_ASSOC);
     $currentStock = $rowStock ? $rowStock['quantity'] : 0;
-
     $stockValue = $currentStock * $product['base_price'];
-
-    if ($currentStock == 0) {
-        $status = "NO";
-    } elseif ($currentStock <= 5) {
-        $status = "LOW";
-    } else {
-        $status = "IN";
-    }
 ?>
 <style>
     main{
@@ -167,9 +170,9 @@
         <div class="d-flex gap-4 align-items-center proinf">
             <div class="position-relative">
                 <img src="<?= htmlspecialchars($product['image']); ?>" alt="">
-                <?php if ($noStock): ?>
+                <?php if ($overallStatus === "NO"): ?>
                     <div class="prostockstat bg-danger">NO STOCK</div>
-                <?php elseif ($lowStock): ?>
+                <?php elseif ($overallStatus === "LOW"): ?>
                     <div class="prostockstat bg-warning">LOW STOCK</div>
                 <?php else: ?>
                     <div class="prostockstat bg-success">IN STOCK</div>
@@ -183,10 +186,26 @@
                 </div>
                 <h5 class="fw-bold my-2"><?= htmlspecialchars($product['name']); ?></h5>
                 <span class="small"><?= htmlspecialchars($product['description']); ?></span>
-                <div class="d-flex gap-5 align-items-center propl">
-                    <span class="proprice">P<?= number_format($product['base_price'], 2); ?></span>
-                    <span class="prolikes small"><i class="fa-solid fa-heart"></i> 189</span>
-                </div>
+                <?php
+                    $today = date('Y-m-d');
+                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                        $product['discount'] = 0.00;
+                        $product['start_date'] = null;
+                        $product['end_date'] = null;
+                    } 
+                    if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
+                        $today >= $product['start_date'] && $today <= $product['end_date']) {
+                        $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
+                ?>
+                        <div class="my-3">
+                            <span class="proprice">₱<?= number_format($discountedPrice, 2); ?></span>
+                            <span class="pricebefore small">₱<?= number_format($product['base_price'], 2); ?></span>
+                        </div>
+                <?php } else { ?>
+                        <div class="my-3">
+                            <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
+                        </div>
+                <?php } ?>
             </div>
         </div>
         <div class="proaction d-flex gap-2 mt-3">
@@ -194,7 +213,6 @@
             <i class="fa-solid fa-trash" data-bs-toggle="modal" data-bs-target="#deleteproduct"></i>
         </div>
     </div>
-
     <?php if (!empty($variations)): ?> 
         <?php $isFirst = true; ?>
         <?php foreach ($variations as $variation): ?>
@@ -204,19 +222,22 @@
                     <span class="small text-muted">Customer is required to select one option</span>
                 </div>
                 <?php foreach ($stallObj->getVariationOptions($variation['id']) as $option): ?>
-                    <div class="d-flex justify-content-between py-2 border-bottom align-items-center">
-                        <div class="d-flex gap-2 align-items-center">
-                            <input type="radio" 
-                                   name="variation_option" 
-                                   value="<?= $option['id']; ?>" 
-                                   <?= ($selected_option === intval($option['id']) || ($isFirst && $selected_option === null)) ? 'checked' : ''; ?>
-                                   onchange="handleVariationChange(this.value)">
-                            <img src="<?= htmlspecialchars($option['image']); ?>" alt="" width="45px" height="45px" class="rounded-2 border">
-                            <span><?= htmlspecialchars($option['name']); ?></span>
+                    <div class="d-flex justify-content-between align-items-center variationitem mb-2">
+                        <div class="form-check d-flex gap-2 align-items-center">
+                            <input 
+                                class="form-check-input" 
+                                type="radio" 
+                                name="variation_option" 
+                                value="<?= $option['id']; ?>" 
+                                <?= ($selected_option === intval($option['id']) || ($isFirst && $selected_option === null)) ? 'checked' : ''; ?>
+                                onchange="handleVariationChange(this.value)">
+                            <img src="<?= htmlspecialchars($option['image']); ?>" alt="<?= htmlspecialchars($option['name']); ?>" width="45px" height="45px" class="rounded-2">
+                            <label class="form-check-label" for="variation<?= $option['id']; ?>">
+                                <?= htmlspecialchars($option['name']); ?>
+                            </label>
                         </div>
                         <span class="ip">
-                            <?= ($option['add_price'] > 0) ? '+ ₱' . number_format($option['add_price'], 2) : 
-                                 (($option['subtract_price'] > 0) ? '- ₱' . number_format($option['subtract_price'], 2) : 'Free'); ?>
+                            <?= ($option['add_price'] > 0) ? '+ ₱' . number_format($option['add_price'], 2) : (($option['subtract_price'] > 0) ? '- ₱' . number_format($option['subtract_price'], 2) : 'Free'); ?>
                         </span>
                         <span class="stock-status">
                             <?php 
@@ -236,7 +257,6 @@
             </div>
         <?php endforeach; ?>
     <?php endif; ?>
-
     <div class="d-flex justify-content-around stostatus bg-white rounded-2 border my-3">
         <div>
             <span><i class="fa-solid fa-arrow-right-to-bracket"></i> Total Stock In</span>
@@ -257,25 +277,23 @@
         <div>
             <span><i class="fa-solid fa-spinner"></i> Status</span>
             <?php 
-                if ($status == 'LOW'){
-                    echo '<h1 class="text-warning">' . $status . '</h1>';
-                } elseif ($status == 'NO'){
-                    echo '<h1 class="text-danger">' . $status . '</h1>';
-                } elseif ($status == 'IN'){
-                    echo '<h1 class="text-success">' . $status . '</h1>';
+                if ($overallStatus == 'LOW'){
+                    echo '<h1 class="text-warning">' . $overallStatus . '</h1>';
+                } elseif ($overallStatus == 'NO'){
+                    echo '<h1 class="text-danger">' . $overallStatus . '</h1>';
+                } elseif ($overallStatus == 'IN'){
+                    echo '<h1 class="text-success">' . $overallStatus . '</h1>';
                 } else {
-                    echo '<h1>' . $status . '</h1>';
+                    echo '<h1>' . $overallStatus . '</h1>';
                 }
             ?>
         </div>
     </div>
-
     <?php if (isset($success)): ?>
         <div class="alert alert-success"><?= htmlspecialchars($success); ?></div>
     <?php elseif (isset($error)): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($error); ?></div>
     <?php endif; ?>
-
     <div class="stockaction d-flex bg-white border rounded-2 mb-5">
         <div class="flex-grow-1 stockleft">
             <span class="text-muted fw-bold">Stock In</span>
@@ -320,7 +338,7 @@
         </div>
         <div class="flex-grow-1 stockright">
             <span class="text-muted fw-bold">Stock Out</span>
-            <form class="d-flex stockin mt-1 mb-3" method="post">
+            <form class="d-flex stockin mt-1 mb-3" method="post" id="stockout-form">
                 <?php if (!empty($variations)): ?>
                     <input type="hidden" name="variation_option" value="<?= $selected_option; ?>">
                 <?php endif; ?>
@@ -336,7 +354,7 @@
                 </select>
                 <input type="submit" name="stockout_submit" value="Go">
             </form>
-            <table>
+            <table id="stockout-table">
                 <tr>
                     <th>Date</th>
                     <th>Items</th>
@@ -361,44 +379,48 @@
             </table>
         </div>
     </div>
-    
+    <div class="modal fade" id="deleteproduct" tabindex="-1" aria-labelledby="deleteProductLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="deleteProductForm" action="" method="post">
+                    <div class="modal-body">
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="fw-bold mb-4"><i class="fa-solid fa-circle-exclamation"></i> Delete Product</h4>
+                            <p>You are about to delete this product.<br>Are you sure?</p>
+                            <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
+                            <div class="mt-5 mb-3">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" name="delete_product" class="btn btn-primary">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>
         function handleVariationChange(selectedOptionId) {
             window.location.href = "?id=<?= $product['id']; ?>&variation_option=" + selectedOptionId;
         }
-        
         document.querySelectorAll('.edit-icon').forEach(icon => {
             icon.addEventListener('click', function () {
                 const row = this.closest('tr');
                 const items = row.querySelector('.items').textContent.trim();
                 const reason = row.querySelector('.reason').textContent.trim();
-                const isStockIn = row.closest('table').id === 'stockin-table';
-
-                if (isStockIn) {
-                    document.getElementById('stockin').value = items;
-                    const reasonDropdown = document.getElementById('stockinreason');
-                    for (let option of reasonDropdown.options) {
-                        if (option.textContent === reason) {
-                            option.selected = true;
-                            break;
-                        }
-                    }
-                } else {
-                    document.getElementById('stockout').value = items;
-                    const reasonDropdown = document.getElementById('stockoutreason');
-                    for (let option of reasonDropdown.options) {
-                        if (option.textContent === reason) {
-                            option.selected = true;
-                            break;
-                        }
-                    }
-                }
             });
         });
+        document.getElementById('stockin-form').addEventListener('submit', function(e) {
+            setTimeout(function(){ location.reload(); }, 500);
+        });
+        document.getElementById('stockout-form').addEventListener('submit', function(e) {
+            setTimeout(function(){ location.reload(); }, 500);
+        });
     </script>
-    <br><br> <br><br>
+    <br><br><br><br>
 </main>
-
 <?php
     include_once './footer.php'; 
 ?>

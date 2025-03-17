@@ -5,20 +5,25 @@
     require_once __DIR__ . '/classes/stall.class.php';
     require_once __DIR__ . '/classes/product.class.php';
 
-    $stallObj = new Stall();
+    $stallObj   = new Stall();
     $productObj = new Product();
     
     $stallId = $stallObj->getStallId($_SESSION['user']['id']);
 
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['new_category'])) {
-        $newCategory = trim($_POST['new_category']);
-        $productObj->addCategory($stallId, $newCategory);
-    }
-
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_category'])) {
-        $categoryId = $_POST['category_id'];
-        $newName    = trim($_POST['category_name']);
-        $productObj->updateCategory($categoryId, $newName);
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        if (isset($_POST['new_category'])) {
+            $newCategory = trim($_POST['new_category']);
+            $productObj->addCategory($stallId, $newCategory);
+        }
+        if (isset($_POST['edit_category'])) {
+            $categoryId = $_POST['category_id'];
+            $newName    = trim($_POST['category_name']);
+            $productObj->updateCategory($categoryId, $newName);
+        }
+        if (isset($_POST['delete_product'])) {
+            $deleteProductId = $_POST['product_id'];
+            $productObj->deleteProduct($deleteProductId);
+        }
     }
 
     $products   = $stallObj->getProducts($stallId);
@@ -69,24 +74,41 @@
                                     $variations = $stallObj->getProductVariations($product['id']);
 
                                     if (!empty($variations)) {
-                                        $allLowStock = true; 
+                                        $overallStockStatus = 'IN STOCK'; 
                                         foreach ($variations as $variation) {
                                             $options = $stallObj->getVariationOptions($variation['id']);
+                                            
+                                            $allZero = true;
+                                            $allLow  = true;
                                             foreach ($options as $option) {
                                                 $optionStock = $stallObj->getStock($product['id'], $option['id']);
-
                                                 if ($optionStock > 0) {
-                                                    $hasStock = true;
-                                                    $noStock = false;
-                                                    if ($optionStock > 5) {
-                                                        $allLowStock = false; 
-                                                    }
-                                                } else {
-                                                    $allLowStock = false; 
+                                                    $allZero = false;
+                                                }
+                                                if ($optionStock > 5) {
+                                                    $allLow = false;
                                                 }
                                             }
+                                            if ($allZero) {
+                                                $overallStockStatus = 'NO STOCK';
+                                                break;
+                                            }
+                                            if ($allLow && $overallStockStatus !== 'NO STOCK') {
+                                                $overallStockStatus = 'LOW STOCK';
+                                            }
                                         }
-                                        $lowStock = $hasStock && $allLowStock;
+                                        if ($overallStockStatus === 'NO STOCK') {
+                                            $noStock = true;
+                                            $hasStock = false;
+                                            $lowStock = false;
+                                        } elseif ($overallStockStatus === 'LOW STOCK') {
+                                            $lowStock = true;
+                                            $hasStock = true;
+                                            $noStock  = false;
+                                        } else {
+                                            $hasStock = true;
+                                            $noStock  = false;
+                                        }
                                     } else {
                                         if ($product['stock'] > 0) {
                                             $hasStock = true;
@@ -267,6 +289,30 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Product Modal -->
+    <div class="modal fade" id="deleteproduct" tabindex="-1" aria-labelledby="deleteProductLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="" method="post">
+                    <div class="modal-body">
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="fw-bold mb-4"><i class="fa-solid fa-circle-exclamation"></i> Delete Product</h4>
+                            <p>You are about to delete this product.<br>Are you sure?</p>
+                            <input type="hidden" name="product_id" id="deleteProductId" value="">
+                            <div class="mt-5 mb-3">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" name="delete_product" class="btn btn-primary">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </main>
 
 <script>
@@ -274,6 +320,13 @@
         document.getElementById('editCategoryId').value = categoryId;
         document.getElementById('editCategoryName').value = categoryName;
     }
+
+    var deleteProductModal = document.getElementById('deleteproduct');
+    deleteProductModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget; 
+        var productId = button.getAttribute('data-product-id');
+        document.getElementById('deleteProductId').value = productId;
+    });
 </script>
 
 <?php

@@ -98,11 +98,29 @@ class Product {
         $stmt->bindValue(':categoryId', $categoryId, PDO::PARAM_INT);
         return $stmt->execute();
     }
-    
-    
-    
-    
-    
+    public function deleteProduct($productId) {
+        try {
+            $db = $this->db->connect();
+            $db->beginTransaction();
+            
+            $sqlCart = "DELETE FROM cart WHERE product_id = :productId";
+            $stmtCart = $db->prepare($sqlCart);
+            $stmtCart->bindParam(':productId', $productId, PDO::PARAM_INT);
+            $stmtCart->execute();
+            
+            $sqlProduct = "DELETE FROM products WHERE id = :id";
+            $stmtProduct = $db->prepare($sqlProduct);
+            $stmtProduct->bindParam(':id', $productId, PDO::PARAM_INT);
+            $stmtProduct->execute();
+            
+            $db->commit();
+            return true;
+        } catch (PDOException $e) {
+            $db->rollBack();
+            error_log("Delete Product Error: " . $e->getMessage());
+            return false;
+        }
+    }
     
     
     public function getCategories($stall_id) {
