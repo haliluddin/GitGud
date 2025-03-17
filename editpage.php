@@ -1,14 +1,15 @@
 <?php
     include_once 'links.php'; 
     include_once 'header.php'; 
-    include_once 'bootstrap.php';  
+    include_once 'bootstrap.php';
+    require_once 'classes/encdec.class.php'; 
 
     $stalllogo = $businessname = $description = $businessemail = $businessphonenumber = $website = '';
     $categories = $paymentMethods = [];
 
     if ($_SERVER['REQUEST_METHOD'] == 'GET') { 
         if (isset($_GET['id'])) {
-            $id = $_GET['id'];
+            $id = urldecode(decrypt($_GET['id']));
             $record = $parkObj->fetchRecord($id);
             if (!empty($record)) {
                 $stalllogo = $record['logo'];
@@ -20,11 +21,13 @@
                 $categories = explode(", ", $record['categories']);
                 $paymentMethods = explode(", ", $record['payment_methods']);
                 $operatingHours = explode("; ", $record['operating_hours']);
-            } 
-        } 
+            } else {
+                echo '<script>window.location.href = "managestall.php";</script>';
+            }
+        }
     } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
-        $id = $_GET['id'] ?? $_POST['id'] ?? null;
+        $id = urldecode(decrypt($_GET['id']));
 
         $businessname = clean_input($_POST['businessname']);
         $description = clean_input($_POST['description']);
@@ -57,7 +60,7 @@
         $stall = $parkObj->editStall($id, $businessname, $description, $businessemail, $businessphonenumber, $website, $stalllogo, $operatingHours, $categories, $paymentMethods);
 
         if (isset($_GET['id'])) {
-            $id = $_GET['id'];
+            $id = urldecode(decrypt($_GET['id']));
             $record = $parkObj->fetchRecord($id);
             if (!empty($record)) {
                 $stalllogo = $record['logo'];
