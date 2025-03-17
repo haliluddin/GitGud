@@ -7,14 +7,16 @@ $user_id = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : null;
 $park_id = isset($_SESSION['current_park_id']) ? $_SESSION['current_park_id'] : null;
 
 if (!$user_id || !$park_id) {
-    echo '<div class="alert alert-info">No notifications available.</div>';
+    echo json_encode(['status' => 'error', 'message' => 'No user or park ID found']);
     exit;
 }
 
-$stallClassObj = new Stall();
-$notifications = $stallClassObj->getNotifications($user_id, $park_id);
+$stallObj = new Stall();
+$notifications = $stallObj->getNotifications($user_id, $park_id);
 
-if ($notifications) {
+ob_start();
+
+if (count($notifications) > 0) {
     foreach ($notifications as $noti) {
         if (strpos($noti['message'], 'Payment Confirmed') !== false) {
             // Payment Confirmed Notification
@@ -23,8 +25,8 @@ if ($notifications) {
                 <div class="d-flex gap-3 align-items-center">
                     <img src="assets/images/gitgud.png" width="85" height="85" alt="Notification">
                     <div>
-                        <h5 class="fw-bold m-0"><?php echo htmlspecialchars($noti['order_id'] . ': ' . $noti['title']); ?></h5>
-                        <p class="my-1"><?php echo htmlspecialchars($noti['message']); ?></p>
+                        <h5 class="fw-bold m-0"><?php echo htmlspecialchars($noti['message']); ?></h5>
+                        <p class="my-1">All your payments have been successfully confirmed! Here's your receipt—click to view and download</p>
                         <span class="text-muted"><?php echo date("m/d/Y H:i", strtotime($noti['created_at'])); ?></span>
                     </div>
                 </div>
@@ -36,10 +38,10 @@ if ($notifications) {
             ?>
             <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
                 <div class="d-flex gap-3 align-items-center">
-                    <img src="<?php echo !empty($noti['logo']) ? htmlspecialchars($noti['logo']) : 'assets/images/stall1.jpg'; ?>" width="85" height="85" alt="Notification">
+                    <img src="<?php echo htmlspecialchars($noti['logo']); ?>" width="85" height="85" alt="Notification">
                     <div>
-                        <h5 class="fw-bold m-0"><?php echo htmlspecialchars($noti['order_id'] . ': ' . $noti['title']); ?></h5>
-                        <p class="my-1"><?php echo htmlspecialchars($noti['message']); ?></p>
+                        <h5 class="fw-bold m-0"><?php echo htmlspecialchars($noti['message']); ?></h5>
+                        <p class="my-1">Your order at <?php echo htmlspecialchars($noti['name']); ?> is awaiting payment. Please go to the stall to pay.</p>
                         <span class="text-muted"><?php echo date("m/d/Y H:i", strtotime($noti['created_at'])); ?></span>
                     </div>
                 </div>
@@ -51,10 +53,14 @@ if ($notifications) {
             ?>
             <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
                 <div class="d-flex gap-3 align-items-center">
-                    <img src="<?php echo !empty($noti['logo']) ? htmlspecialchars($noti['logo']) : 'assets/images/stall1.jpg'; ?>" width="85" height="85" alt="Notification">
+                    <img src="<?php echo htmlspecialchars($noti['logo']); ?>" width="85" height="85" alt="Notification">
                     <div>
-                        <h5 class="fw-bold m-0"><?php echo htmlspecialchars($noti['order_id'] . ': ' . $noti['title']); ?></h5>
-                        <p class="my-1"><?php echo htmlspecialchars($noti['message']); ?></p>
+                        <h5 class="fw-bold m-0"><?php echo htmlspecialchars($noti['message']); ?></h5>
+                        <?php if (strpos($noti['message'], 'Ready to pickup') !== false): ?>
+                            <p class="my-1">Your order at <?php echo htmlspecialchars($noti['name']); ?> is ready for pickup. Please proceed to the counter with your receipt to collect your order</p>
+                        <?php else: ?>
+                            <p class="my-1">Your order at <?php echo htmlspecialchars($noti['name']); ?> is now in preparation queue</p>
+                        <?php endif; ?>
                         <span class="text-muted"><?php echo date("m/d/Y H:i", strtotime($noti['created_at'])); ?></span>
                     </div>
                 </div>
@@ -72,8 +78,7 @@ if ($notifications) {
                 <div class="d-flex gap-3 align-items-center">
                     <img src="assets/images/stall1.jpg" width="85" height="85" alt="Notification">
                     <div>
-                        <h5 class="fw-bold m-0"><?php echo htmlspecialchars($noti['order_id'] . ': ' . $noti['title']); ?></h5>
-                        <p class="my-1"><?php echo htmlspecialchars($noti['message']); ?></p>
+                        <h5 class="fw-bold m-0"><?php echo htmlspecialchars($noti['message']); ?></h5>
                         <span class="text-muted"><?php echo date("m/d/Y H:i", strtotime($noti['created_at'])); ?></span>
                     </div>
                 </div>
@@ -83,6 +88,19 @@ if ($notifications) {
         }
     }
 } else {
-    echo '<p>No notifications found.</p>';
+    ?>
+    <div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">
+        No notification found.
+    </div>
+    <?php
 }
+
+$html = ob_get_clean();
+
+// Return both the HTML and the notification count for the button display logic
+echo json_encode([
+    'status' => 'success',
+    'html' => $html,
+    'count' => count($notifications)
+]);
 ?>
