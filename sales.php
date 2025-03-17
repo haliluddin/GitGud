@@ -5,6 +5,8 @@ include_once 'modals.php';
 include_once 'nav.php';
 require_once __DIR__ . '/classes/stall.class.php';
 
+date_default_timezone_set('Asia/Manila');
+
 $stallObj    = new Stall();
 
 if ($user['role'] === 'Admin' && isset($_GET['stall_id'])) {
