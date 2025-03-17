@@ -303,6 +303,27 @@ class Park {
                     ]);
                 }
             }
+            
+            // Remove old operating hours
+            $conn->prepare("DELETE FROM stall_operating_hours WHERE stall_id = :stall_id")
+                ->execute([':stall_id' => $stall_id]);
+                
+            // Insert updated operating hours
+            if (!empty($operatingHours)) {
+                $stmt = $conn->prepare("INSERT INTO stall_operating_hours (stall_id, days, open_time, close_time) VALUES (:stall_id, :days, :open_time, :close_time)");
+                foreach ($operatingHours as $schedule) {
+                    $days = implode(' & ', $schedule['days']);
+                    $openTime = $schedule['openTime'];
+                    $closeTime = $schedule['closeTime'];
+            
+                    $stmt->execute([
+                        ':stall_id' => $stall_id,
+                        ':days' => $days,
+                        ':open_time' => $openTime,
+                        ':close_time' => $closeTime
+                    ]);
+                }
+            }
     
             return true;
         }

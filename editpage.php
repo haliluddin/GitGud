@@ -55,6 +55,22 @@
     
         // Pass categories and payment methods to addStall function
         $stall = $parkObj->editStall($id, $businessname, $description, $businessemail, $businessphonenumber, $website, $stalllogo, $operatingHours, $categories, $paymentMethods);
+
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
+            $record = $parkObj->fetchRecord($id);
+            if (!empty($record)) {
+                $stalllogo = $record['logo'];
+                $businessname = $record['name'];
+                $description = $record['description'];
+                $businessemail = $record['email'];
+                $businessphonenumber = $record['phone'];
+                $website = $record['website'];
+                $categories = explode(", ", $record['categories']);
+                $paymentMethods = explode(", ", $record['payment_methods']);
+                $operatingHours = explode("; ", $record['operating_hours']);
+            } 
+        } 
     } 
 ?>
 
@@ -230,6 +246,70 @@
             </div>
             <script>
                 let operatingHoursData = [];
+                
+                // Load existing operating hours if available
+                <?php if (isset($operatingHours) && !empty($operatingHours)) : ?>
+                    <?php foreach ($operatingHours as $hourString) : ?>
+                        <?php
+                            // Parse the operating hours string
+                            $parts = explode(" - ", $hourString);
+                            if (count($parts) >= 2) {
+                                // The first part contains days and open time
+                                $dayTimeParts = explode(" ", $parts[0]);
+                                $closeTime = $parts[1];
+                                
+                                // The last element is the open time
+                                $openTime = array_pop($dayTimeParts);
+                                
+                                // The remaining elements are the days
+                                $days = implode(" ", $dayTimeParts);
+                                $days = str_replace("<br>", "", $days);
+                                $daysList = explode(" & ", $days);
+                                
+                                // Output JavaScript to populate the data
+                                echo "operatingHoursData.push({
+                                    days: ['" . implode("', '", $daysList) . "'],
+                                    openTime: '$openTime',
+                                    closeTime: '$closeTime'
+                                });\n";
+                                
+                                // Display in the schedule container
+                                echo "
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const scheduleText = '" . implode(", ", $daysList) . " <br> $openTime - $closeTime';
+                                        const scheduleContainer = document.getElementById('scheduleContainer');
+                                        
+                                        const scheduleItem = document.createElement('p');
+                                        scheduleItem.innerHTML = scheduleText;
+                                        
+                                        const deleteButton = document.createElement('button');
+                                        deleteButton.innerHTML = '<i class=\"fa-regular fa-circle-xmark\"></i>';
+                                        deleteButton.classList.add('delete-btn');
+                                        deleteButton.onclick = function() {
+                                            scheduleContainer.removeChild(scheduleItem);
+                                            operatingHoursData = operatingHoursData.filter(
+                                                entry =>
+                                                    !(entry.days.join(',') === '" . implode(",", $daysList) . "' &&
+                                                    entry.openTime === '$openTime' &&
+                                                    entry.closeTime === '$closeTime')
+                                            );
+                                            document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
+                                        };
+                                        
+                                        scheduleItem.insertBefore(deleteButton, scheduleItem.firstChild);
+                                        scheduleContainer.appendChild(scheduleItem);
+                                    });
+                                ";
+                            }
+                        ?>
+                    <?php endforeach; ?>
+                    
+                    // Update the hidden input field with the existing data
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
+                    });
+                <?php endif; ?>
+                
                 function addOperatingHours() {
                     const openHour = String(document.getElementById('open_hour').value).padStart(2, '0');
                     const openMinute = String(document.getElementById('open_minute').value).padStart(2, '0');
