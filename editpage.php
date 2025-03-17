@@ -4,6 +4,7 @@
     include_once 'bootstrap.php';  
 
     $stalllogo = $businessname = $description = $businessemail = $businessphonenumber = $website = '';
+    $categories = $paymentMethods = [];
 
     if ($_SERVER['REQUEST_METHOD'] == 'GET') { 
         if (isset($_GET['id'])) {
@@ -32,7 +33,7 @@
         $website = clean_input($_POST['website']);
     
         $categories = isset($_POST['categories']) ? $_POST['categories'] : []; // Get categories
-        $payment_methods = isset($_POST['payment_methods']) ? $_POST['payment_methods'] : []; // Get payment methods
+        $paymentMethods = isset($_POST['payment_methods']) ? $_POST['payment_methods'] : []; // Get payment methods
     
         if (isset($_FILES['stalllogo']) && $_FILES['stalllogo']['error'] == UPLOAD_ERR_OK) {
             $uploadDir = 'uploads/business/';
@@ -53,7 +54,7 @@
         $operatingHours = json_decode($operatingHoursJson, true);
     
         // Pass categories and payment methods to addStall function
-        $stall = $parkObj->editStall($id, $businessname, $description, $businessemail, $businessphonenumber, $website, $stalllogo, $operatingHours, $categories, $payment_methods);
+        $stall = $parkObj->editStall($id, $businessname, $description, $businessemail, $businessphonenumber, $website, $stalllogo, $operatingHours, $categories, $paymentMethods);
     } 
 ?>
 
