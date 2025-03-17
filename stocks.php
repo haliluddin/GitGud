@@ -3,6 +3,7 @@
     include_once 'links.php'; 
     require_once __DIR__ . '/classes/stall.class.php';
     require_once __DIR__ . '/classes/product.class.php';
+    require_once __DIR__ . '/classes/encdec.class.php';
 
     $stallObj = new Stall();
     $productObj = new Product();
@@ -18,7 +19,14 @@
         }
     }
 
-    $product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    $product_id = isset($_GET['id']) ? intval(urldecode(decrypt($_GET['id']))) : 0;
+
+    if ($product_id == 0) {
+        // Redirect to managemenu.php using javascript
+        echo '<script>window.location.href = "managemenu.php";</script>';
+        exit;
+    }
+
     $product = $stallObj->getProductById($product_id);
     $variations = $stallObj->getProductVariations($product['id']);
 
@@ -180,8 +188,8 @@
             </div>
             <div>
                 <div class="d-flex gap-3 m-0 small">
-                    <span><?= htmlspecialchars($product['code']); ?></span>
-                    <span>|</span>
+                    <!-- <span><?= htmlspecialchars($product['code']); ?></span>
+                    <span>|</span> -->
                     <span><?= htmlspecialchars($product['category_name']); ?></span>
                 </div>
                 <h5 class="fw-bold my-2"><?= htmlspecialchars($product['name']); ?></h5>
@@ -304,7 +312,7 @@
                 <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
                 <input type="number" name="stockin" id="stockin" placeholder="# of items">      
                 <select name="stockinreason" id="stockinreason">
-                    <option value="">Select a reason</option>
+                    <option value="" selected disabled>Select a reason</option>
                     <option value="Restock">Restock</option>
                     <option value="Inventory Adjustment">Inventory Adjustment</option>
                     <option value="Bulk Orders">Bulk Orders</option>
@@ -345,7 +353,7 @@
                 <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
                 <input type="number" name="stockout" id="stockout" placeholder="# of items">      
                 <select name="stockoutreason" id="stockoutreason">
-                    <option value="">Select a reason</option>
+                    <option value="" selected disabled>Select a reason</option>
                     <option value="Spoilage">Spoilage</option>
                     <option value="Expired">Expired</option>
                     <option value="Inventory Adjustment">Inventory Adjustment</option>
