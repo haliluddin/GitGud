@@ -1,9 +1,5 @@
 <?php  
     include_once 'header.php';
-
-    // if (isset($user) && $user['role'] !== 'Park Owner')
-    //     exit(header("Location: index.php"));
-
     include_once 'links.php'; 
     include_once 'nav.php';
     include_once 'bootstrap.php'; 
@@ -32,7 +28,6 @@
         border-radius: 30px !important; 
         margin: 4px !important;
     }
-
     .select2-selection__choice__remove {
         font-size: 20px !important;
         margin-left: auto !important; 
@@ -41,13 +36,11 @@
     .select2-selection {
         padding: 10px !important;
     }
-
     .select2-selection__choice img {
         width: 25px !important;
         height: 25px !important;
         border-radius: 50% !important;
     }
-
     .select2-results__option{
         padding: 7px 15px !important;
         background-color: white !important;
@@ -62,28 +55,29 @@
     <div class="d-flex justify-content-end mb-3">
         <button class="addpro" type="button" data-bs-toggle="modal" data-bs-target="#invitestall">+ Add Stall</button>
     </div>
+    <?php
+        $stalls = $parkObj->getStalls($park_id); 
+        if (empty($stalls)) {
+            echo '<div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">
+                     Add or invite your food stalls here. 
+                  </div>';
+        } else {
+    ?>
     <div class="row row-cols-1 row-cols-md-3 g-3">
         <?php
-            $stalls = $parkObj->getStalls($park_id); 
-
             date_default_timezone_set('Asia/Manila'); 
             $currentDay = date('l'); 
             $currentTime = date('H:i');
-
             foreach ($stalls as $stall) { 
                 $isOpen = false;
                 $operatingHours = explode('; ', $stall['stall_operating_hours']); 
-
                 foreach ($operatingHours as $hours) {
                     list($days, $timeRange) = explode('<br>', $hours); 
                     $daysArray = array_map('trim', explode(',', $days)); 
-
                     if (in_array($currentDay, $daysArray)) { 
                         list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                        
                         $openTime24 = date('H:i', strtotime($openTime));
                         $closeTime24 = date('H:i', strtotime($closeTime));
-
                         if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
                             $isOpen = true;
                             break;
@@ -96,7 +90,6 @@
                         <div class="position-relative">
                             <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="Stall Logo">
                             <div class="position-absolute d-flex gap-2 smaction">
-                                <!--<i class="fa-solid fa-sack-dollar" onclick="window.location.href='rent.php';"></i>-->
                                 <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= $stall['id'] ?>';"></i>
                                 <i class="fa-solid fa-trash-can" data-bs-toggle="modal" data-bs-target="#deletestall"></i>
                             </div>
@@ -115,12 +108,9 @@
                                             <?php } ?>
                                         <?php } ?>
                                     </div>
-
                                     <h5 class="card-title my-2 fw-bold"><?= $stall['name'] ?></h5>
                                     <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
                                 </div>
-
-                                <!-- Display OPEN or CLOSE based on operating hours -->
                                 <?php if ($isOpen) { ?>
                                     <div class="smopen">
                                         <i class="fa-solid fa-clock"></i>
@@ -133,91 +123,85 @@
                                     </div>
                                 <?php } ?>
                             </div>
-                                
-                                <!-- Accordion for Details -->
-                                <div class="accordion accordion-flush" id="accCol<?= $stall['id'] ?>">
-                                    <!-- Contact Information -->
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>1" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>1">
-                                                Contact Information
-                                            </button>
-                                        </h2>
-                                        <div id="col1flu<?= $stall['id'] ?>1" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
-                                            <div class="accordion-body p-0 mb-3 small">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span>Email</span>
-                                                    <span><?= $stall['email'] ?></span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span>Phone</span>
-                                                    <span class="text-muted"><?= $stall['phone'] ?? 'N/A' ?></span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span>Website</span>
-                                                    <span class="text-muted"><?= $stall['website'] ?? 'N/A' ?></span>
-                                                </div>
+                            <div class="accordion accordion-flush" id="accCol<?= $stall['id'] ?>">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>1" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>1">
+                                            Contact Information
+                                        </button>
+                                    </h2>
+                                    <div id="col1flu<?= $stall['id'] ?>1" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
+                                        <div class="accordion-body p-0 mb-3 small">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span>Email</span>
+                                                <span><?= $stall['email'] ?></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span>Phone</span>
+                                                <span class="text-muted"><?= $stall['phone'] ?? 'N/A' ?></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>Website</span>
+                                                <span class="text-muted"><?= $stall['website'] ?? 'N/A' ?></span>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- Opening Hours -->
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>2" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>2">
-                                                Opening Hours
-                                            </button>
-                                        </h2>
-                                        <div id="col1flu<?= $stall['id'] ?>2" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
-                                            <div class="accordion-body p-0 mb-3 small">
-                                                <?= !empty($stall['stall_operating_hours']) ? str_replace('; ', '<br>', $stall['stall_operating_hours']) : 'Not available' ?>
-                                            </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>2" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>2">
+                                            Opening Hours
+                                        </button>
+                                    </h2>
+                                    <div id="col1flu<?= $stall['id'] ?>2" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
+                                        <div class="accordion-body p-0 mb-3 small">
+                                            <?= !empty($stall['stall_operating_hours']) ? str_replace('; ', '<br>', $stall['stall_operating_hours']) : 'Not available' ?>
                                         </div>
                                     </div>
-
-                                    <!-- Payment Method -->
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>3" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>3">
-                                                Payment Methods
-                                            </button>
-                                        </h2>
-                                        <div id="col1flu<?= $stall['id'] ?>3" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
-                                            <div class="accordion-body p-0 mb-3 small">
-                                                <ul>
-                                                    <?php if (!empty($stall['stall_payment_methods'])) {
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>3" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>3">
+                                            Payment Methods
+                                        </button>
+                                    </h2>
+                                    <div id="col1flu<?= $stall['id'] ?>3" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
+                                        <div class="accordion-body p-0 mb-3 small">
+                                            <ul>
+                                                <?php 
+                                                    if (!empty($stall['stall_payment_methods'])) {
                                                         $payment_methods = explode(', ', $stall['stall_payment_methods']);
                                                         foreach ($payment_methods as $method) {
                                                             echo "<li class='mb-2'>$method</li>";
                                                         }
                                                     } else {
                                                         echo "<li>No payment methods available</li>";
-                                                    } ?>
-                                                </ul>
-                                            </div>
+                                                    }
+                                                ?>
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Owner Information -->
-                                <div class="owner mt-1 py-2 d-flex justify-content-between align-items-center">
-                                    <div class="d-flex gap-3 align-items-center">
-                                        <img src="<?= $stall['profile_img'] ?: 'assets/images/user.jpg' ?>" alt="Owner Profile">
-                                        <div>
-                                            <span class="fw-bold"><?= $stall['owner_name'] ?></span>
-                                            <p class="m-0"><?= $stall['email'] ?></p>
-                                        </div>
+                            </div>
+                            <div class="owner mt-1 py-2 d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-3 align-items-center">
+                                    <img src="<?= $stall['profile_img'] ?: 'assets/images/user.jpg' ?>" alt="Owner Profile">
+                                    <div>
+                                        <span class="fw-bold"><?= $stall['owner_name'] ?></span>
+                                        <p class="m-0"><?= $stall['email'] ?></p>
                                     </div>
-                                    <i class="text-muted">Owner</i>
                                 </div>
-
-                            </div> 
+                                <i class="text-muted">Owner</i>
+                            </div>
                         </div> 
                     </div>
-                <?php } ?>
+                </div>
+            <?php } ?>
     </div> 
+    <?php } ?>
     <br><br><br><br><br>
 </main>
+
 
 <div class="modal fade" id="invitestall" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -274,16 +258,6 @@
                         }
                     }
                 ?>
-                <!--<div class="owner mt-1 py-1 px-2 d-flex justify-content-between align-items-center">
-                    <div class="d-flex gap-3 align-items-center">
-                        <img src="assets/images/profile.jpg" alt="">
-                        <div>
-                            <span class="fw-bold">Naila Haliluddin</span>
-                            <p class="m-0">example@gmail.com</p>
-                        </div>
-                    </div>
-                    <i class="text-muted small mr-1">Stall Owner</i>
-                </div>-->
             </div>
             <div class="modal-footer pt-0 border-0">
                 <button type="button" class="btn btn-primary send p-2" id="createStallBtn">Create Stall Page</button>

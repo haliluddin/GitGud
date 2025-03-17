@@ -25,10 +25,25 @@
                 <span><?= htmlspecialchars($user['full_name'] ?? '') ?></span>
             </a>
             <ul class="dropdown-menu dropdown-menu-center p-0 mt-2" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
-                <li><a class="dropdown-item" href="(admin)manageaccount.php"><i class="fa-solid fa-gear me-2"></i> Manage Accounts</a></li>
-                <li><a class="dropdown-item" href="account.php"><i class="fa-solid fa-user me-2"></i> Account</a></li>
-                <li><a class="dropdown-item" href="./logout.php"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Logout</a></li>
+                <?php if ($user && $user['role'] === 'Admin'): ?>
+                    <li>
+                        <a class="dropdown-item" href="(admin)manageaccount.php">
+                            <i class="fa-solid fa-gear me-2"></i> Manage Accounts
+                        </a>
+                    </li>
+                <?php endif; ?>
+                <li>
+                    <a class="dropdown-item" href="account.php">
+                        <i class="fa-solid fa-user me-2"></i> Account
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="./logout.php">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Logout
+                    </a>
+                </li>
             </ul>
+
         </div>
     <?php else: ?>
         <div>

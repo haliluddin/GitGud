@@ -5,7 +5,13 @@ include_once 'nav.php';
 require_once __DIR__ . '/classes/stall.class.php';
 
 $stallObj = new Stall();
-$stall_id = $stallObj->getStallId($_SESSION['user']['id']);
+
+if ($user['role'] === 'Admin' && isset($_GET['stall_id'])) {
+    $stall_id = intval($_GET['stall_id']);
+} else {
+    $stall_id = $stallObj->getStallId($_SESSION['user']['id']);
+}
+
 $ordersData = $stallObj->getStallOrders($stall_id);
 
 $groupedOrders = [];
@@ -36,6 +42,7 @@ $statusMapping = [
     'Completed' => 'completed',
     'Canceled'  => 'canceled'
 ];
+
 ?>
 <style>
     main{

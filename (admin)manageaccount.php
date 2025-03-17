@@ -1,11 +1,27 @@
 <?php
-    include_once 'header.php'; 
+    session_start();
+
+    include_once 'landingheader.php';
     include_once 'links.php'; 
     include_once 'modals.php'; 
     require_once __DIR__ . '/classes/admin.class.php';
+    require_once __DIR__ . '/classes/db.class.php';
+
+    $userObj = new User();
     $adminObj = new Admin();
-    date_default_timezone_set('Asia/Manila');
+
+    $isLoggedIn = false;
     
+    if (isset($_SESSION['user'])) {
+        if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
+            $isLoggedIn = true;
+        } else {
+            header('Location: email/verify_email.php');
+            exit();
+        }
+    }
+
+    date_default_timezone_set('Asia/Manila');
     $currentDateTime = date("l, F j, Y h:i A");
 
 ?>
@@ -27,13 +43,6 @@
         color: black;
         margin-bottom: 8px;
     }
-
-/*
-#CD5C08
-#FFF5E4
-#C1D8C3
-#6A9C89
-*/
 </style>
 
 <main>

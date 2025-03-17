@@ -8,12 +8,16 @@
     $stallObj   = new Stall();
     $productObj = new Product();
     
-    $stallId = $stallObj->getStallId($_SESSION['user']['id']);
+    if ($user['role'] === 'Admin' && isset($_GET['stall_id'])) {
+        $stall_id = intval($_GET['stall_id']);
+    } else {
+        $stall_id = $stallObj->getStallId($_SESSION['user']['id']);
+    }    
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (isset($_POST['new_category'])) {
             $newCategory = trim($_POST['new_category']);
-            $productObj->addCategory($stallId, $newCategory);
+            $productObj->addCategory($stall_id, $newCategory);
         }
         if (isset($_POST['edit_category'])) {
             $categoryId = $_POST['category_id'];
@@ -26,8 +30,9 @@
         }
     }
 
-    $products   = $stallObj->getProducts($stallId);
-    $categories = $productObj->getCategories($stallId);
+    $products   = $stallObj->getProducts($stall_id);
+    $categories = $productObj->getCategories($stall_id);
+
 ?>
 <style>
     main{ 

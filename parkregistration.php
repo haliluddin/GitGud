@@ -23,16 +23,15 @@ if (isset($_SESSION['user']['id'])) {
                 if ($status == 'Pending Approval') {
                     header('Location: pendingapproval.php');
                     exit();
-                } else if ($status == 'Approved') {
-                    header('Location: dashboard.php');
+                } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
+                    header('Location: parkregistration.php');
                     exit();
                 } else if ($status == 'Rejected') {
                     echo 'Your business registration has been rejected.';
-                } else {
-                    echo $status;
+                    exit();
                 }
             }
-
+            
             $first_name = $user['first_name'];
             $last_name = $user['last_name'];
             $email = $user['email'];
@@ -129,13 +128,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($status == 'Pending Approval') {
             header('Location: pendingapproval.php');
             exit();
-        } else if ($status == 'Approved') {
-            header('Location: dashboard.php');
+        } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
+            header('Location: parkregistration.php');
             exit();
         } else if ($status == 'Rejected') {
             echo 'Your business registration has been rejected.';
         }
-    } else if ($business_id == "Existing Business") {
+    } /*else if ($business_id == "Existing Business") {
         echo 'Business already exists';
     } else if ($business_id == "Existing Email") {
         echo 'Email already exists';
@@ -143,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo 'Phone already exists';
     } else {
         echo 'Failed to register business';
-    }
+    }*/
 }
 ?>
 <style>
