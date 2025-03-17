@@ -179,7 +179,7 @@
                                         </div>
                                         <div class="proaction d-flex gap-2 mt-3">
                                             <i class="fa-solid fa-box" onclick="window.location.href='stocks.php?id=<?= urlencode(encrypt($product['id'])) ?>';"></i>
-                                            <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editproduct.php?id=<?= $product['id']; ?>';"></i>
+                                            <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editproduct.php?id=<?= urlencode(encrypt($product['id'])) ?>';"></i>
                                             <i class="fa-solid fa-trash" data-bs-toggle="modal" data-bs-target="#deleteproduct" data-product-id="<?= $product['id']; ?>"></i>
                                         </div>
                                     </div>
