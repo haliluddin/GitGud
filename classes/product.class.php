@@ -32,6 +32,34 @@ class Product {
         
         return false;
     } 
+
+    function updateProduct($product_id, $productName, $category, $description, $basePrice, $discount, $startDate, $endDate, $imagePath) {
+        $db = $this->db->connect();  
+        $sql = "UPDATE products SET 
+                name = :name,
+                category_id = :category_id,
+                description = :description, 
+                base_price = :base_price,
+                discount = :discount,
+                start_date = :start_date,
+                end_date = :end_date,
+                image = :image
+                WHERE id = :product_id";
+                
+        $stmt = $db->prepare($sql);
+        
+        $stmt->bindValue(':name', $productName);
+        $stmt->bindValue(':category_id', $category);
+        $stmt->bindValue(':description', $description);
+        $stmt->bindValue(':base_price', $basePrice);
+        $stmt->bindValue(':discount', $discount);
+        $stmt->bindValue(':start_date', $startDate);
+        $stmt->bindValue(':end_date', $endDate);
+        $stmt->bindValue(':image', $imagePath);
+        $stmt->bindValue(':product_id', $product_id);
+        
+        return $stmt->execute();
+    }
     
     function addVariations($productId, $variationName) {
         $db = $this->db->connect();  
@@ -267,25 +295,25 @@ class Product {
     
 
 
-    /*function getProducts($stallId) {
-        $sql = "SELECT * FROM products WHERE stall_id = :stall_id;";
-        $query = $this->db->connect()->prepare($sql);
-        $query->execute(array(':stall_id' => $stallId));
-        $result = $query->fetchAll();
+    // function getProducts($stallId) {
+    //     $sql = "SELECT * FROM products WHERE stall_id = :stall_id;";
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->execute(array(':stall_id' => $stallId));
+    //     $result = $query->fetchAll();
 
-        if (empty($result)) {
-            return [];
-        }
+    //     if (empty($result)) {
+    //         return [];
+    //     }
     
-        foreach ($result as $key => $product) {
-            $category = $this->getCategory($product['category_id']);
-            if ($category) {
-                $result[$key]['category'] = $category['name'];
-            }
-        }
+    //     foreach ($result as $key => $product) {
+    //         $category = $this->getCategory($product['category_id']);
+    //         if ($category) {
+    //             $result[$key]['category'] = $category['name'];
+    //         }
+    //     }
     
-        return $result;
-    }
+    //     return $result;
+    // }
 
     function getProductById($productId) {
         $sql = "SELECT * FROM products WHERE id = :id;";
@@ -301,24 +329,25 @@ class Product {
         if ($category) {
             $result['category'] = $category['name'];
         }
+        $result['category_id'] = $result['category_id'];
     
         return $result;
     }
 
-    function getProduct($productId) {
-        $sql = "SELECT p.*, c.name AS category_name, 
-                    COALESCE(SUM(s.quantity), 0) AS stock 
-                FROM products p 
-                JOIN categories c ON p.category_id = c.id 
-                LEFT JOIN stocks s ON p.id = s.product_id 
-                WHERE p.id = :product_id 
-                GROUP BY p.id;";
+    // function getProduct($productId) {
+    //     $sql = "SELECT p.*, c.name AS category_name, 
+    //                 COALESCE(SUM(s.quantity), 0) AS stock 
+    //             FROM products p 
+    //             JOIN categories c ON p.category_id = c.id 
+    //             LEFT JOIN stocks s ON p.id = s.product_id 
+    //             WHERE p.id = :product_id 
+    //             GROUP BY p.id;";
 
-        $query = $this->db->connect()->prepare($sql);
-        $query->execute(array(':product_id' => $productId));
-        $result = $query->fetch(); 
+    //     $query = $this->db->connect()->prepare($sql);
+    //     $query->execute(array(':product_id' => $productId));
+    //     $result = $query->fetch(); 
 
-        return $result ?: null;
-    }*/
+    //     return $result ?: null;
+    // }
 
 }
