@@ -6,20 +6,24 @@ class PayMongoHandler {
         $this->secretKey = $secretKey;
     }
     
-    public function createPaymentLink($amount, $description = 'Payment', $metadata = []) {
+    public function createPaymentLink($amount, $description = 'Payment', $metadata = [], $redirect = null) {
         $data = [
             'data' => [
                 'attributes' => [
-                    'amount' => $amount,
-                    'currency' => 'PHP',
+                    'amount'      => $amount,
+                    'currency'    => 'PHP',
                     'description' => $description,
-                    'metadata' => $metadata,
+                    'metadata'    => $metadata,
                 ],
             ],
         ];
-
-        $ch = curl_init('https://api.paymongo.com/v1/links');
         
+        // If redirect URLs are provided, add them to the attributes
+        if ($redirect) {
+            $data['data']['attributes']['redirect'] = $redirect;
+        }
+        
+        $ch = curl_init('https://api.paymongo.com/v1/links');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
@@ -39,9 +43,9 @@ class PayMongoHandler {
         
         if (isset($responseData['data']['attributes']['checkout_url'])) {
             return [
-                'success' => true,
-                'payment_id' => $responseData['data']['id'],
-                'checkout_url' => $responseData['data']['attributes']['checkout_url'],
+                'success'         => true,
+                'payment_id'      => $responseData['data']['id'],
+                'checkout_url'    => $responseData['data']['attributes']['checkout_url'],
                 'status_check_html' => $this->generateStatusCheckHtml($responseData['data']['id'])
             ];
         }

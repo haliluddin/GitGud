@@ -4,6 +4,8 @@
     include_once 'nav.php';
     include_once 'bootstrap.php'; 
     include_once 'modals.php'; 
+
+    $park = $parkObj->getPark($park_id);
 ?>
 
 <style>
@@ -52,9 +54,45 @@
 </style>
 
 <main>
-    <div class="d-flex justify-content-end mb-3">
-        <button class="addpro" type="button" data-bs-toggle="modal" data-bs-target="#invitestall">+ Add Stall</button>
+    <div class="d-flex mb-3 align-items-center gap-3">
+        <div class="py-2 px-3 rounded-2 border w-100 bg-white d-flex align-items-center justify-content-between" data-bs-toggle="offcanvas" data-bs-target="#foodparkbranch" aria-controls="foodparkbranch" style="cursor: pointer;">
+            <div class="d-flex align-items-center gap-3">
+                <img src="<?= $park['business_logo'] ?>" width="50px" height="50px" class="rounded-5">
+                <div>
+                    <p class="m-0 fw-bold"><?= $park['business_name'] ?></p>
+                    <span class="text-muted small"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City</span>
+                </div>
+            </div>
+            <i class="fa-solid fa-angle-down"></i>
+        </div>
+        <button class="addpro flex-shrink-0" type="button" data-bs-toggle="modal" data-bs-target="#invitestall">+ Add Stall</button>
     </div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="foodparkbranch" aria-labelledby="foodparkbranchLabel" style="width: 40%;">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="foodparkbranchLabel">Manage Food Park</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="text-center mb-4 border-bottom pb-3">
+                <div class="profile-picture" data-bs-toggle="modal" data-bs-target="#editfoodpark">
+                    <img src="<?= $park['business_logo'] ?>" alt="Profile Picture" class="profile-img rounded-5">
+                    <div class="camera-overlay">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold m-0 mb-1 mt-3"><?= $park['business_name'] ?></h4>
+                <span class="text-muted mb-1"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City, Philippines</span>
+                <div class="d-flex gap-2 text-muted align-items-center justify-content-center mb-1">
+                    <span><i class="fa-solid fa-envelope"></i> <?= $park['business_email'] ?></span>
+                    <span class="dot"></span>
+                    <span><i class="fa-solid fa-phone small"></i> +63<?= $park['business_phone'] ?></span>
+                </div>
+                <button class="variation-btn addrem m-2" data-bs-toggle="modal" data-bs-target="#editfoodpark">Edit Park</button>
+                <button class="variation-btn addrem" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button>
+            </div>
+        </div>
+    </div>
+
     <?php
         $stalls = $parkObj->getStalls($park_id); 
         if (empty($stalls)) {
