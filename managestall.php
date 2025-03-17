@@ -5,6 +5,8 @@
     include_once 'bootstrap.php'; 
     include_once 'modals.php';
     require_once 'classes/encdec.class.php';
+    $park = $parkObj->getPark($park_id);
+
 ?>
 
 <style>
@@ -50,6 +52,7 @@
     .select2-results__option--highlighted{
         background-color: #e0e0e0 !important;
     }
+    
 </style>
 
 <main>
