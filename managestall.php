@@ -91,7 +91,7 @@
                         <div class="position-relative">
                             <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="Stall Logo">
                             <div class="position-absolute d-flex gap-2 smaction">
-                                <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= urlencode(encrypt($stall['id'])) ?>';"></i>
+                                <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= $stall['id'] ?>"></i>
                                 <i class="fa-solid fa-trash-can" data-bs-toggle="modal" data-bs-target="#deletestall"></i>
                             </div>
                         </div>
@@ -203,6 +203,8 @@
     <br><br><br><br><br>
 </main>
 
+<!-- Hidden input to store stall ID for delete operation -->
+<input type="hidden" id="stall_id_to_delete" value="">
 
 <div class="modal fade" id="invitestall" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -267,6 +269,25 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="deletestall" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header pb-0 border-0">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Delete Stall</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this stall?</p>
+            </div>
+            <div class="modal-footer pt-0 border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteStall">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
@@ -442,6 +463,84 @@ $(document).ready(function () {
 
 });
 
+</script>
+
+<script>
+// Attach click event to all delete icons
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteIcons = document.querySelectorAll('.fa-trash-can');
+    
+    deleteIcons.forEach(icon => {
+        icon.addEventListener('click', function() {
+            // Get the stall ID from the edit icon in the same card
+            // First, get the card parent element
+            const card = this.closest('.card');
+            // Get the edit icon's onclick attribute which contains the ID
+            const editIconOnclick = card.querySelector('.fa-pen-to-square').getAttribute('onclick');
+            // Extract just the ID number
+            const stallId = editIconOnclick.split('id=')[1].replace(/['")\s;]/g, '');
+            
+            console.log('Stall ID to delete:', stallId); // Debug
+            
+            // Set the stall ID in the hidden input
+            document.getElementById('stall_id_to_delete').value = stallId;
+        });
+    });
+    
+    // Handle delete confirmation
+    document.getElementById('confirmDeleteStall').addEventListener('click', function() {
+        const stallId = document.getElementById('stall_id_to_delete').value;
+        
+        console.log('Confirming delete of stall ID:', stallId); // Debug
+        
+        // Make an AJAX request to delete the stall
+        fetch('delete_stall.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'stall_id=' + stallId
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Delete response:', data); // Debug
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deletestall'));
+            modal.hide();
+            
+            if (data.success) {
+                // Show success message
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Stall has been deleted successfully.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    // Reload the page
+                    window.location.reload();
+                });
+            } else {
+                // Show error message
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message || 'Failed to delete stall. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: 'An unexpected error occurred. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
+    });
+});
 </script>
 
 <?php 

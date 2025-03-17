@@ -17,7 +17,7 @@
             <span>You are about to delete this stall.<br>Are you sure?</span>
             <div class="mt-5 mb-3">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Delete</button>
+                <button type="button" class="btn btn-primary" id="confirmDeleteStall">Delete</button>
             </div>
         </div>
       </div>
@@ -1198,29 +1198,6 @@
         </div>
     </div>
 </div>
-
-<!-- Check for message -->
-<script>
-    // Check for session messages and open the modal
-    <?php if (isset($_SESSION['error'])): ?>
-        alert("<?php echo $_SESSION['error']; ?>");
-        // Open the modal
-        var myModal = new bootstrap.Modal(document.getElementById('changepassword'));
-        myModal.show();
-        <?php unset($_SESSION['error']); ?>
-    <?php elseif (isset($_SESSION['success'])): ?>
-        alert("<?php echo $_SESSION['success']; ?>");
-        // Open the modal
-        var myModal = new bootstrap.Modal(document.getElementById('changepassword'));
-        myModal.show();
-        
-        // Save the user session as xdata
-        var xdata = "<?php echo isset($_SESSION['user_session']) ? $_SESSION['user_session'] : ''; ?>";
-        localStorage.setItem('xdata', xdata); // Store xdata in local storage
-
-        <?php unset($_SESSION['success']); ?>
-    <?php endif; ?>
-</script>
 
 <!-- Delete Account -->
 <div class="modal fade" id="deleteaccount" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

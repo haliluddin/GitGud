@@ -421,10 +421,55 @@ class Park {
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
     
+    public function deleteStall($stallId) {
+        // Begin transaction for safer deletion across multiple tables
+        $conn = $this->db->connect();
+        $conn->beginTransaction();
+        
+        try {
+            // First, delete cart items linked to products of this stall
+            $stmt = $conn->prepare("DELETE FROM cart WHERE product_id IN (SELECT id FROM products WHERE stall_id = :stall_id)");
+            $stmt->execute([':stall_id' => $stallId]);
+            
+            // Delete from categories table
+            $stmt = $conn->prepare("DELETE FROM categories WHERE stall_id = :stall_id");
+            $stmt->execute([':stall_id' => $stallId]);
+            
+            // Delete from stall_operating_hours table
+            $stmt = $conn->prepare("DELETE FROM stall_operating_hours WHERE stall_id = :stall_id");
+            $stmt->execute([':stall_id' => $stallId]);
+            
+            // Delete from stall_categories table
+            $stmt = $conn->prepare("DELETE FROM stall_categories WHERE stall_id = :stall_id");
+            $stmt->execute([':stall_id' => $stallId]);
+            
+            // Delete from stall_payment_methods table
+            $stmt = $conn->prepare("DELETE FROM stall_payment_methods WHERE stall_id = :stall_id");
+            $stmt->execute([':stall_id' => $stallId]);
+            
+            // Delete products associated with the stall
+            $stmt = $conn->prepare("DELETE FROM products WHERE stall_id = :stall_id");
+            $stmt->execute([':stall_id' => $stallId]);
+            
+            // Delete from order_stalls if there are any
+            $stmt = $conn->prepare("DELETE FROM order_stalls WHERE stall_id = :stall_id");
+            $stmt->execute([':stall_id' => $stallId]);
+            
+            // Finally delete the stall itself
+            $stmt = $conn->prepare("DELETE FROM stalls WHERE id = :stall_id");
+            $stmt->execute([':stall_id' => $stallId]);
+            
+            // Commit transaction
+            $conn->commit();
+            return true;
+        } catch (Exception $e) {
+            // Roll back transaction if error occurs
+            $conn->rollBack();
+            return false;
+        }
+    }
     
-    
-    
-/*
+    /*
     function addPark($name, $description, $location, $image, $ownerName, $contactNumber, $email, $openingTime, $closingTime, $priceRange, $status) {
         $uniqueUrl = uniqid();
 
