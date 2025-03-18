@@ -1,25 +1,26 @@
 <?php 
-// Include the Database class
-require_once 'classes/db.php';
+$servername = "localhost";
+$username = "root"; // Change this to your DB username
+$password = ""; // Change this to your DB password
+$database = "gitgud"; // Your database name
 
-// Create a new Database instance and connect
-$database = new Database();
-$conn = $database->connect();
+$conn = new mysqli($servername, $username, $password, $database);
 
-if (!$conn) {
-    die("Connection failed");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
-$sql = "SELECT id, email, profile_img FROM users JOIN verification ON users.id = verification.user_id WHERE email LIKE ? AND role != 'Park Owner' AND role != 'Stall Owner' AND verification.is_verified = 1 LIMIT 10"; // Exclude park owners and stall owners
+$sql = "SELECT id, email, profile_img FROM users WHERE email LIKE ? LIMIT 10"; // Fetch user ID as well
 $stmt = $conn->prepare($sql);
 $searchTerm = "%" . $search . "%";
-$stmt->execute([$searchTerm]); // PDO uses array for parameters
-$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt->bind_param("s", $searchTerm);
+$stmt->execute();
+$result = $stmt->get_result();
 
 $emails = [];
-foreach ($result as $row) {
+while ($row = $result->fetch_assoc()) {
     $emails[] = [
         'id' => $row['id'], // Include user ID
         'email' => $row['email'],
