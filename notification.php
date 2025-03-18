@@ -39,7 +39,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
                                 <span class="text-muted"><?php echo date("m/d/Y H:i", strtotime($noti['created_at'])); ?></span>
                             </div>
                         </div>
-                        <button class="p-1 border bg-white small" onclick="window.location.href='receipt.php?order_id=<?php echo $noti['order_id']; ?>';">View Receipt</button>
+                        <button class="p-1 border bg-white small" onclick="window.open('receipt.php?order_id=<?php echo $noti['order_id']; ?>', '_blank');">View Receipt</button>
                     </div>
                 <?php elseif(strpos($noti['message'], 'Pending Payment') !== false): ?>
                     <!-- Remind Payment Notification -->

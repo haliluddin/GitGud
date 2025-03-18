@@ -380,7 +380,6 @@ class User {
                         o.total_price,
                         o.payment_method,
                         o.order_type,
-                        o.scheduled_time,
                         o.created_at AS order_date,
                         os.status,
                         p.image AS file_path,

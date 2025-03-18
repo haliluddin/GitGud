@@ -18,7 +18,6 @@ $action = isset($_POST['action']) ? $_POST['action'] : '';
 
 $stallObj = new Stall();
 
-// Use Database class instead of direct PDO connection
 $database = new Database();
 $pdo = $database->connect();
 

@@ -460,6 +460,73 @@ class Stall {
         return $stmt->execute([$user_id, $order_id, $stall_id, $message]);
     }
 
+    public function getOrderDetails($order_id) {
+        $db = $this->db->connect();
+        $sql = "
+            SELECT 
+                b.business_name,
+                b.barangay,
+                b.street_building_house,
+                s.name AS stall_name,
+                p.name AS product_name,
+                o.id AS order_id,
+                o.created_at AS order_created_at,
+                o.total_price,
+                os.subtotal AS stall_subtotal,
+                oi.quantity,
+                oi.price,
+                oi.subtotal AS item_subtotal
+            FROM orders o
+            JOIN order_stalls os ON o.id = os.order_id
+            JOIN stalls s ON os.stall_id = s.id
+            JOIN business b ON s.park_id = b.id
+            JOIN order_items oi ON os.id = oi.order_stall_id
+            JOIN products p ON oi.product_id = p.id
+            WHERE o.id = :order_id
+            ORDER BY s.id, oi.created_at
+        ";
+        $stmt = $db->prepare($sql);
+        $stmt->execute(['order_id' => $order_id]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (!$rows) {
+            return false;
+        }
+        
+        $orderDetails = [];
+        
+        $orderDetails['order'] = [
+             'order_id'            => $rows[0]['order_id'],
+             'order_created_at'    => $rows[0]['order_created_at'],
+             'total_price'         => $rows[0]['total_price'],
+             'business_name'       => $rows[0]['business_name'],
+             'barangay'            => $rows[0]['barangay'],
+             'street_building_house'=> $rows[0]['street_building_house']
+        ];
+        
+        $orderDetails['stalls'] = [];
+        foreach ($rows as $row) {
+             $stallName = $row['stall_name'];
+             if (!isset($orderDetails['stalls'][$stallName])) {
+                  $orderDetails['stalls'][$stallName] = [
+                         'stall_name'       => $stallName,
+                         'stall_subtotal'   => $row['stall_subtotal'],
+                         'order_items'      => []
+                  ];
+             }
+             $orderDetails['stalls'][$stallName]['order_items'][] = [
+                   'product_name'  => $row['product_name'],
+                   'quantity'      => $row['quantity'],
+                   'price'         => $row['price'],
+                   'item_subtotal' => $row['item_subtotal']
+             ];
+        }
+        
+        return $orderDetails;
+    }
+    
+    
+
 
     public function getStallCreationDate($stall_id){ 
         $stmt = $this->db->connect()->prepare("SELECT created_at FROM stalls WHERE id = ?");
