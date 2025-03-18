@@ -1166,7 +1166,7 @@
                             <input type="password" class="form-control" name="retypepassword" placeholder="Re-type New Password" required>
                             <label for="retypepassword">Re-type New Password</label>
                         </div>
-                        <a href="resetpassword.php" class="text-decoration-none" style=" color: #CD5C08;">Forgot Password?</a>
+                        <!-- <a href="resetpassword.php" class="text-decoration-none" style=" color: #CD5C08;">Forgot Password?</a> -->
                         <div class="form-check mt-3 mb-5">
                             <input class="form-check-input" type="checkbox" name="logout_other_devices" value="1" id="flexCheckDefault" checked>
                             <label class="form-check-label" for="flexCheckDefault">Log out of other devices. Choose this if someone else used your account.</label>
