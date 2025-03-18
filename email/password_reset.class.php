@@ -15,6 +15,22 @@ class PasswordReset {
     }
 
     function sendResetEmail($user_id, $email, $first_name, $token) {
+        // Check for cooldown period
+        $sql = "SELECT created_at FROM password_resets WHERE user_id = :user_id";
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute([':user_id' => $user_id]);
+        $reset = $query->fetch();
+
+        if ($reset) {
+            $current_time = time();
+            $created_at = strtotime($reset['created_at']);
+            $cooldown = 300; // 5 minutes in seconds
+
+            if (($current_time - $created_at) < $cooldown) {
+                return ['cooldown' => $cooldown - ($current_time - $created_at)];
+            }
+        }
+
         $encrypted_token = urlencode(encrypt($token));
         $encrypted_user_id = urlencode(encrypt($user_id));
         
@@ -117,7 +133,7 @@ class PasswordReset {
                 <p>We received a request to reset your password. Click the button below to proceed:</p>
                 <a href='{$link}' class='reset-button'>Reset Password</a>
                 <p>If you didn't request this, you can safely ignore this email.</p>
-                <p class='footer'>This link will expire in 24 hours.</p>
+                <p>This link will expire in 24 hours.</p>
                 <p class='footer'>If you're having trouble with the button, copy and paste this link into your browser:</p>
                 <p class='footer'>{$link}</p>
             </div>
