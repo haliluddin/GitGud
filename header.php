@@ -60,7 +60,8 @@ if (isset($_SESSION['user'])) {
     }
 }
 
-$allStalls = $parkObj->getStalls($park_id);
+if (isset($park_id))
+    $allStalls = $parkObj->getStalls($park_id);
 
 ?>
 
