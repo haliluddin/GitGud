@@ -910,26 +910,6 @@
         </div>
     </div>
 </div>
-<!--id="purchaseButton
-<script>
-    async function fetchPaymentLink() {
-        try {
-            const response = await fetch('paymongo.php');
-            const data = await response.json();
-
-            if (data.checkout_url) {
-                document.getElementById('purchaseButton').onclick = function () {
-                    window.location.href = data.checkout_url;
-                };
-            } else {
-                console.error('Error fetching payment link:', data.error);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
-    window.onload = fetchPaymentLink;
-</script>"-->
 
 <!-- Placed Order as scheduled with Online Paymenyt -->
 <div class="modal fade" id="ifscheduled" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
@@ -1200,7 +1180,7 @@
 </div>
 
 <!-- Delete Account -->
-<div class="modal fade" id="deleteaccount" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteaccount" tabindex="-1" aria-labelledby="deleteAccountLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-body">
@@ -1209,18 +1189,34 @@
                 </div>
                 <div class="text-center">
                     <h4 class="fw-bold">Delete Account</h4>
-                    <p class="m-0 my-3">Deleting your account will remove all of your information from our database. This cannot be undone.</p>
+                    <p class="m-0 my-3 text-danger">
+                        Deleting your account will remove all of your information from our database. <br>
+                        <strong>This action cannot be undone.</strong>
+                    </p>
 
-                    <div class="form-floating mb-5">
-                        <input type="text" class="form-control" id="currentpassword" placeholder="Current Password (Updated 10/21/2023">
-                        <label for="currentpassword">To confirm this, type "DELETE"</label>
-                    </div>
-                    <input type="submit" value="Delete Account" class="button" />
+                    <form id="delete-account-form">
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" name="currentpassword" id="currentpassword" placeholder="Current Password" required>
+                            <label for="currentpassword">Current Password</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" name="confirmation" id="confirmation" placeholder="DELETE" required aria-describedby="confirmHelp">
+                            <label for="confirmation">Type <strong>"DELETE"</strong> to confirm</label>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100">Delete Account</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Reset delete account form when modal is closed
+    $('#deleteaccount').on('hidden.bs.modal', function () {
+        $('#delete-account-form').trigger('reset');
+    });
+</script>
 
 <!-- Report -->
 <div class="modal fade" id="report" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -1244,23 +1240,3 @@
     </div>
   </div>
 </div>
-
-
- <!-- Pending Cashless Approval 
-    <div class="modal fade" id="pendingcashless" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <br>
-                    <div class="text-center">
-                        <i class="fa-solid fa-wallet mb-4"  style="color: #CD5C08; font-size: 80px"></i>
-                        <p class="mb-4">Your selected payment method (GCash) is pending approval. Please note that the admin will review and set up the API before this payment method can be used. You will receive a notification once an action has been taken.</p>
-                    </div>
-                    <div class="d-flex justify-content-center mt-4">
-                        <button type="button" class="button w-25" onclick="window.location.href='stallpage.php';">OK</button>
-                    </div>
-                    <br>
-                </div>
-            </div>
-        </div>
-    </div>-->

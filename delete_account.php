@@ -33,6 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verify password
     $verify = $userObj->verifyPassword($_POST['current_password'], $_SESSION['user']['id']);
     
+    // Check if password verification was successful
+    if (!$verify) {
+        echo json_encode(['success' => false, 'message' => 'Incorrect password']);
+        exit();
+    }
+    
     // Delete user account
     $delete_result = $userObj->deleteUser($_SESSION['user']['id']);
     

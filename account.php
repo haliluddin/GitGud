@@ -159,28 +159,84 @@
         </div>
     </form>
     <br><br><br><br>
-    <!-- <script>
-         document.getElementById("selectImageBtn").addEventListener("click", function () {
-            document.getElementById("fileInput").click();
-        });
-
-        document.getElementById("fileInput").addEventListener("change", function (event) {
-            const file = event.target.files[0]; 
-
-            if (file) {
-                if (file.type.startsWith("image/")) {
-                    const reader = new FileReader();
-
-                    reader.onload = function (e) {
-                        document.getElementById("profileImage").src = e.target.result;
-                    };
-
-                    reader.readAsDataURL(file); 
-                } else {
-                    alert("Please select a valid image file (JPEG, PNG).");
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Reset delete account form when modal is closed
+            $('#deleteaccount').on('hidden.bs.modal', function () {
+                $('#delete-account-form').trigger('reset');
+            });
+            
+            // Handle delete account form submission
+            $('#delete-account-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                const currentPassword = $('#currentpassword').val();
+                const confirmation = $('#confirmation').val();
+                
+                if (!currentPassword || !confirmation) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Please fill in all fields'
+                    });
+                    return;
                 }
-            }
+                
+                // Show final confirmation SweetAlert
+                Swal.fire({
+                    title: 'Are you absolutely sure?',
+                    text: "This action cannot be undone. All your data will be permanently deleted.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete my account',
+                    cancelButtonText: 'No, keep my account'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Close the delete account modal
+                        $('#deleteaccount').modal('hide');
+                        
+                        // Proceed with account deletion
+                        $.ajax({
+                            type: 'POST',
+                            url: 'delete_account.php',
+                            data: {
+                                current_password: currentPassword,
+                                confirmation: confirmation
+                            },
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: response.message,
+                                        allowOutsideClick: false
+                                    }).then((result) => {
+                                        window.location.href = 'index.php'; // Redirect to homepage after successful deletion
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: response.message
+                                    });
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred: ' + error
+                                });
+                            }
+                        });
+                    }
+                });
+            });
         });
-    </script> -->
+    </script>
 </main>
 <?php include_once 'footer.php'; ?>
