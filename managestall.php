@@ -402,15 +402,99 @@ $(document).ready(function () {
             return;
         }
 
-        // Open a new window/tab for each selected user
-        selectedUsers.forEach(function (user) {
-            let userId = user.id; // Fetch user ID from selection
-            let userEmail = encodeURIComponent(user.text); // Fetch user email
+        // Show loading state
+        Swal.fire({
+            title: 'Sending invitations...',
+            text: 'Processing your request',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
-            window.open(
-                `stallregistration.php?owner_email=${userEmail}&owner_id=${userId}&park_id=${parkId}`, 
-                "_blank"
-            );
+        // Prepare data for AJAX
+        let userData = selectedUsers.map(user => ({
+            id: user.id,
+            email: user.text
+        }));
+
+        // Send AJAX request
+        $.ajax({
+            url: 'email/process_stall_invitations.php',
+            type: 'POST',
+            data: {
+                users: userData,
+                park_id: parkId
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // We have URLs for each user
+                    if (response.urls && response.urls.length > 0) {
+                        let successCount = 0;
+                        
+                        // Open each successful URL in a new tab
+                        response.urls.forEach(function(item) {
+                            if (item.success && item.url) {
+                                window.open(item.url, "_blank");
+                                successCount++;
+                            }
+                        });
+                        
+                        // Check if we have any failures to report
+                        let failureCount = response.urls.length - successCount;
+                        
+                        if (failureCount > 0) {
+                            let detailsHtml = '<ul class="text-start">';
+                            response.urls.forEach(function(item) {
+                                if (!item.success) {
+                                    detailsHtml += `<li>${item.email}: ${item.message}</li>`;
+                                }
+                            });
+                            detailsHtml += '</ul>';
+                            
+                            Swal.fire({
+                                title: 'Some URLs could not be generated',
+                                html: `${failureCount} URL(s) could not be generated due to errors.<br>${detailsHtml}`,
+                                icon: 'warning',
+                                confirmButtonText: 'Ok, I understand'
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Success! 🎉',
+                                text: 'All URLs have been generated and opened successfully!',
+                                icon: 'success',
+                                confirmButtonText: 'Great!'
+                            });
+                        }
+                        
+                        // Close the modal after processing
+                        $('#invitestall').modal('hide');
+                    } else {
+                        Swal.fire({
+                            title: 'No URLs generated',
+                            text: 'No URLs were generated from the server.',
+                            icon: 'warning',
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Oops! 😕',
+                        text: response.message || 'Something went wrong. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'Try again'
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    title: 'Connection Error',
+                    text: 'Unable to connect to the server. Please check your connection and try again.',
+                    icon: 'error',
+                    confirmButtonText: 'Try again'
+                });
+            }
         });
     });
 

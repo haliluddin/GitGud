@@ -1212,7 +1212,7 @@
                     <p class="m-0 my-3">Deleting your account will remove all of your information from our database. This cannot be undone.</p>
 
                     <div class="form-floating mb-5">
-                        <input type="password" class="form-control" id="currentpassword" placeholder="Current Password (Updated 10/21/2023">
+                        <input type="text" class="form-control" id="currentpassword" placeholder="Current Password (Updated 10/21/2023">
                         <label for="currentpassword">To confirm this, type "DELETE"</label>
                     </div>
                     <input type="submit" value="Delete Account" class="button" />

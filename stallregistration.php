@@ -12,14 +12,121 @@
     $parkObj = new Park();
 
     $stalllogo = $businessname = $description = $businessemail = $businessphonenumber = $website = '';
+    $validInvitation = false;
 
-    if (isset($_GET['owner_email']) && isset($_GET['owner_id']) && isset($_GET['park_id'])) {
-        $owner_email = $_GET['owner_email'];
-        $owner_id = $_GET['owner_id'];
-        $park_id = $_GET['park_id'];
+    // Debugging function
+    function debug_log($message, $data = null) {
+        echo "<pre style='background: #f5f5f5; padding: 10px; margin: 10px 0; border: 1px solid #ddd;'>";
+        echo "<strong>DEBUG:</strong> " . $message . "<br>";
+        if ($data !== null) {
+            echo "<strong>DATA:</strong> ";
+            print_r($data);
+        }
+        echo "</pre>";
+    }
 
-        $user = $userObj->getUser($owner_id);
-    } 
+    if (isset($_GET['oe']) && isset($_GET['oi']) && isset($_GET['pi']) && isset($_GET['token']) && isset($_GET['id'])) {
+        $owner_email_encrypted = $_GET['oe'];
+        $owner_id_encrypted = $_GET['oi'];
+        $park_id_encrypted = $_GET['pi'];
+        $token_encrypted = $_GET['token'];
+        $user_id_encrypted = $_GET['id'];
+
+        // Decrypt the parameters
+        try {
+            $owner_email = decrypt(urldecode($owner_email_encrypted));
+            $owner_id = decrypt(urldecode($owner_id_encrypted));
+            $park_id = decrypt(urldecode($park_id_encrypted));
+            $user_id = decrypt(urldecode($user_id_encrypted));
+            $token = decrypt(urldecode($token_encrypted));
+
+            // Store original encrypted values for comparison
+            // debug_log("Decrypted values:", [
+            //     'owner_email' => $owner_email,
+            //     'owner_id' => $owner_id,
+            //     'park_id' => $park_id,
+            //     'user_id' => $user_id,
+            //     'token' => $token
+            // ]);
+
+            // Verify the park_id exists in the business table
+            $db = new Database();
+            $conn = $db->connect();
+            $sql = "SELECT COUNT(*) FROM business WHERE id = :park_id";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([':park_id' => $park_id]);
+            $parkExists = $stmt->fetchColumn() > 0;
+
+            if (!$parkExists) {
+                debug_log("Error: Park ID does not exist in the business table", $park_id);
+                echo "<script>
+                    alert('Invalid park ID. The specified food park does not exist.');
+                    window.location.href = 'index.php';
+                </script>";
+                exit;
+            }
+        } catch (Exception $e) {
+            debug_log("Error decrypting parameters", $e->getMessage());
+            echo "<script>
+                alert('Error processing invitation link. Please try again or contact support.');
+                window.location.href = 'index.php';
+            </script>";
+            exit;
+        }
+
+        // Verify the invitation token
+        $db = new Database();
+        $conn = $db->connect();
+        $sql = "SELECT * FROM stall_invitations WHERE invitation_token = :token AND user_id = :user_id AND park_id = :park_id";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([
+            ':token' => $token,
+            ':user_id' => $user_id,
+            ':park_id' => $park_id
+        ]);
+        
+        $invitation = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($invitation) {
+            // Check if token has expired
+            if (strtotime($invitation['token_expiration']) > time()) {
+                // Check if already used
+                if ($invitation['is_used'] == 0) {
+                    $validInvitation = true;
+                    $user = $userObj->getUser($user_id);
+                } else {
+                    echo "<script>
+                        alert('This invitation has already been used. You cannot register the same stall twice.');
+                        window.location.href = 'index.php';
+                    </script>";
+                    exit;
+                }
+            } else {
+                echo "<script>
+                    alert('This invitation link has expired. Please contact the food park owner for a new invitation.');
+                    window.location.href = 'index.php';
+                </script>";
+                exit;
+            }
+        } else {
+            debug_log("Invitation not found in database", [
+                'token' => $token,
+                'user_id' => $user_id,
+                'park_id' => $park_id
+            ]);
+            echo "<script>
+                alert('Invalid invitation link. Please contact the food park owner for a new invitation.');
+                window.location.href = 'index.php';
+            </script>";
+            exit;
+        }
+    } else {
+        echo "<script>
+            alert('Invalid invitation link. Missing required parameters.');
+            window.location.href = 'index.php';
+        </script>";
+        exit;
+    }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $businessname = clean_input($_POST['businessname']);
