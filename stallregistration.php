@@ -44,13 +44,13 @@
             $token = decrypt(urldecode($token_encrypted));
 
             // Store original encrypted values for comparison
-            debug_log("Decrypted values:", [
-                'owner_email' => $owner_email,
-                'owner_id' => $owner_id,
-                'park_id' => $park_id,
-                'user_id' => $user_id,
-                'token' => $token
-            ]);
+            // debug_log("Decrypted values:", [
+            //     'owner_email' => $owner_email,
+            //     'owner_id' => $owner_id,
+            //     'park_id' => $park_id,
+            //     'user_id' => $user_id,
+            //     'token' => $token
+            // ]);
 
             // Verify the park_id exists in the business table
             $db = new Database();
