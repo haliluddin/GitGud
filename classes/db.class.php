@@ -120,14 +120,57 @@ class User {
         }
     }
 
-    public function deleteUser($user_id){
-        $sql = "DELETE FROM users WHERE id = :id;";
+    public function deleteUser($user_id){ 
+        try {
+            $db = $this->db->connect();
+            $db->exec('SET FOREIGN_KEY_CHECKS = 0'); // Disable foreign key checks before transaction
+            $db->beginTransaction();
+            
+            // Tables to delete from
+            $tables = [
+                'verification', 'stall_invitations', 'stall_likes', 'notifications', 'cart', 
+                'orders', 'stalls', 'business'
+            ];
+            
+            // Delete user-related data
+            foreach ($tables as $table) {
+                $sql = "DELETE FROM $table WHERE user_id = :id";
+                $query = $db->prepare($sql);
+                $query->execute([':id' => $user_id]);
+            }
+            
+            // Delete from users table (uses 'id' instead of 'user_id')
+            $sql = "DELETE FROM users WHERE id = :id";
+            $query = $db->prepare($sql);
+            $query->execute([':id' => $user_id]);
+            
+            // Re-enable foreign key checks
+            $db->exec('SET FOREIGN_KEY_CHECKS = 1');
+            
+            // Commit the transaction
+            $db->commit();
+            
+            return true;
+        } catch (PDOException $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            
+            error_log("Error deleting user: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function verifyPassword($password, $user_id) {
+        $sql = "SELECT password FROM users WHERE id = :id;";
         $query = $this->db->connect()->prepare($sql);
-        $query->execute(array(
-            ':id' => $user_id
-        ));
+        $query->execute([':id' => $user_id]);
+        $result = $query->fetch();
         
-        return $query;
+        if (!password_verify($password, $result['password'])) {
+            return false;
+        }
+        return true;
     }
 
     public function getUser($user_id){
