@@ -9,12 +9,31 @@ class Admin {
         $this->db = new Database();
     }
 
-    function getUsers() {
+    function getUsers($search = null) {
         $sql = "SELECT * FROM users";
+        
+        if ($search) {
+            $sql .= " WHERE first_name LIKE :search 
+                       OR last_name LIKE :search 
+                       OR email LIKE :search 
+                       OR phone LIKE :search 
+                       OR birth_date LIKE :search 
+                       OR sex LIKE :search 
+                       OR status LIKE :search 
+                       OR role LIKE :search 
+                       OR created_at LIKE :search";
+        }
+        
         $query = $this->db->connect()->prepare($sql);
+        
+        if ($search) {
+            $query->bindValue(':search', "%" . $search . "%");
+        }
+        
         $query->execute();
         return $query->fetchAll();
     }
+    
 
     function getBusinesses() {
         $sql = "

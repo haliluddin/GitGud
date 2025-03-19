@@ -1,486 +1,526 @@
-<?php  
-    include_once 'header.php';
+<?php
+    session_start();
+
+    include_once 'landingheader.php';
     include_once 'links.php'; 
-    include_once 'nav.php';
-    include_once 'bootstrap.php'; 
     include_once 'modals.php'; 
+    require_once __DIR__ . '/classes/admin.class.php';
+    require_once __DIR__ . '/classes/db.class.php';
 
-    $park = $parkObj->getPark($park_id);
+    $userObj = new User();
+    $adminObj = new Admin();
+
+    $isLoggedIn = false;
+    
+    if (isset($_SESSION['user'])) {
+        if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
+            $isLoggedIn = true;
+        } else {
+            header('Location: email/verify_email.php');
+            exit();
+        }
+    }
+
+    date_default_timezone_set('Asia/Manila');
+    $currentDateTime = date("l, F j, Y h:i A");
+
 ?>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
-     main{
+    main{
         padding: 20px 120px;
     }
-    .btn{
-        width: 150px;
+    .salestable th{
+        padding-top: 10px;
+        width: 10%;
     }
-    .ip{
-        color: #CD5C08;
-        font-weight: bold;
+    .dropdown-menu-center {
+        left: 50% !important;
+        transform: translateX(-50%) !important;
     }
-    .select2-selection__choice {
-        display: flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        padding: 5px 10px !important;
-        background-color: #f8f8f8 !important; 
-        border: 1px solid #ccc !important; 
-        padding: 0 10px !important;
-        border-radius: 30px !important; 
-        margin: 4px !important;
-    }
-    .select2-selection__choice__remove {
-        font-size: 20px !important;
-        margin-left: auto !important; 
-        order: 2 !important; 
-    }
-    .select2-selection {
-        padding: 10px !important;
-    }
-    .select2-selection__choice img {
-        width: 25px !important;
-        height: 25px !important;
-        border-radius: 50% !important;
-    }
-    .select2-results__option{
-        padding: 7px 15px !important;
-        background-color: white !important;
-        color: black !important;
-    }
-    .select2-results__option--highlighted{
-        background-color: #e0e0e0 !important;
+    .acchead a{
+        text-decoration: none;
+        color: black;
+        margin-bottom: 8px;
     }
 </style>
 
 <main>
-    <div class="d-flex mb-3 align-items-center gap-3">
-        <div class="py-2 px-3 rounded-2 border w-100 bg-white d-flex align-items-center justify-content-between" data-bs-toggle="offcanvas" data-bs-target="#foodparkbranch" aria-controls="foodparkbranch" style="cursor: pointer;">
-            <div class="d-flex align-items-center gap-3">
-                <img src="<?= $park['business_logo'] ?>" width="50px" height="50px" class="rounded-5">
-                <div>
-                    <p class="m-0 fw-bold"><?= $park['business_name'] ?></p>
-                    <span class="text-muted small"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City</span>
-                </div>
-            </div>
-            <i class="fa-solid fa-angle-down"></i>
-        </div>
-        <button class="addpro flex-shrink-0" type="button" data-bs-toggle="modal" data-bs-target="#invitestall">+ Add Stall</button>
+    <div class="nav-container d-flex gap-3 my-2">
+        <a href="#all" class="nav-link" data-target="all">Accounts</a>
+        <a href="#applications" class="nav-link" data-target="applications">Applications</a>
+        <a href="#reports" class="nav-link" data-target="reports">Reports</a>
+        <a href="#onlinepayment" class="nav-link" data-target="onlinepayment">Online Payment</a>
+
     </div>
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="foodparkbranch" aria-labelledby="foodparkbranchLabel" style="width: 40%;">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="foodparkbranchLabel">Manage Food Park</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <div class="text-center mb-4 border-bottom pb-3">
-                <div class="profile-picture" data-bs-toggle="modal" data-bs-target="#editfoodpark">
-                    <img src="<?= $park['business_logo'] ?>" alt="Profile Picture" class="profile-img rounded-5">
-                    <div class="camera-overlay">
-                        <i class="fa-solid fa-camera"></i>
-                    </div>
-                </div>
-                <h4 class="fw-bold m-0 mb-1 mt-3"><?= $park['business_name'] ?></h4>
-                <span class="text-muted mb-1"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City, Philippines</span>
-                <div class="d-flex gap-2 text-muted align-items-center justify-content-center mb-1">
-                    <span><i class="fa-solid fa-envelope"></i> <?= $park['business_email'] ?></span>
-                    <span class="dot"></span>
-                    <span><i class="fa-solid fa-phone small"></i> +63<?= $park['business_phone'] ?></span>
-                </div>
-                <button class="variation-btn addrem m-2" data-bs-toggle="modal" data-bs-target="#editfoodpark">Edit Park</button>
-                <button class="variation-btn addrem" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button>
+
+    <div id="all" class="w-100 border rounded-2 p-3 bg-white section-content">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h5 class="fw-bold mb-2">Manage Accounts</h5>
+                <span class="small"><?= $currentDateTime ?></span>
             </div>
+            <button class="disatc m-0 small" data-bs-toggle="modal" data-bs-target="#adduser">+ Add User</button>
+        </div>
+        <div class="d-flex align-items-center text-muted small gap-4 mt-2 mb-3">
+            <form action="#" method="get" class="searchmenu rounded-2">
+                <input type="text" name="search" placeholder="Search account" style="width: 230px;">
+                <button type="submit" class="m-0 ms-2"><i class="fas fa-search fa-lg small"></i></button>
+            </form>
+            <select name="sortOptions" id="sortOptions" class="border-0 text-muted small py-1 px-2">
+                <option value="all">All</option>
+            </select>
+            <i class="fa-regular fa-circle-down rename"></i>
+            <div class="d-flex gap-2 align-items-center small rename py-1 px-2">
+                <span style="cursor: context-menu;">47s</span>
+                <i class="fa-solid fa-arrow-rotate-left"></i>
+            </div>
+        </div>
+        <table class="salestable w-100 text-center border-top">
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Birthday</th>
+                <th>Sex</th>
+                <th>Status</th>
+                <th>Role</th>
+                <th>Date Created</th>
+                <th>Action</th>
+            </tr>
+            <?php
+                $users = $adminObj->getUsers();
+
+                foreach ($users as $user) {
+                    echo '<tr>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['first_name']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['last_name']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['email']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . "+63" . htmlspecialchars($user['phone']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['birth_date']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['sex']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['status']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-1"><span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">' . htmlspecialchars($user['role']) . '</span></td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['created_at']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">';
+                    echo '<div class="dropdown position-relative">';
+                    echo '<i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>';
+                    echo '<ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">';
+                    echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edituser">Edit</a></li>';
+                    echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser">Delete</a></li>';
+                    echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deactivateuser">Deactivate</a></li>';
+                    echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#activitylog">Activity</a></li>';
+                    echo '<li><a class="dropdown-item" href="parkregistration.php">Create Park</a></li>';
+                    echo '</ul>';
+                    echo '</div>';
+                    echo '</td>';
+                    echo '</tr>';
+                }
+            ?>
+            <!-- <tr>
+                <td class="fw-normal small py-3 px-4">Naila</td>
+                <td class="fw-normal small py-3 px-4">Haliluddin</td>
+                <td class="fw-normal small py-3 px-4">example@gmail.com</td>
+                <td class="fw-normal small py-3 px-4">+639123456789</td>
+                <td class="fw-normal small py-3 px-4">12/04/2003</td>
+                <td class="fw-normal small py-3 px-4">Female</td>
+                <td class="fw-normal small py-3 px-4">Active</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-warning border border-warning py-1 px-2 border-2 fw-bold">Park</span></td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="dropdown position-relative">
+                        <i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>
+                        <ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edituser">Edit</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser">Delete</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deactivateuser">Deactivate</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#activitylog">Activity</a></li>
+                            <li><a class="dropdown-item" href="parkregistration.php">Create Park</a></li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="fw-normal small py-3 px-4">Naila</td>
+                <td class="fw-normal small py-3 px-4">Haliluddin</td>
+                <td class="fw-normal small py-3 px-4">example@gmail.com</td>
+                <td class="fw-normal small py-3 px-4">+639123456789</td>
+                <td class="fw-normal small py-3 px-4">12/04/2003</td>
+                <td class="fw-normal small py-3 px-4">Female</td>
+                <td class="fw-normal small py-3 px-4">Active</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-danger border border-danger py-1 px-2 border-2 fw-bold">Stall</span></td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="dropdown position-relative">
+                        <i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>
+                        <ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edituser">Edit</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser">Delete</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deactivateuser">Deactivate</a></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#activitylog">Activity</a></li>
+                            <li><a class="dropdown-item" href="parkregistration.php">Create Park</a></li>
+                        </ul>
+                    </div>
+                </td>
+            </tr> -->
+            
+        </table>
+        <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3">
+            <!-- Pagination will be dynamically generated -->
         </div>
     </div>
 
-    <?php
-        $stalls = $parkObj->getStalls($park_id); 
-        if (empty($stalls)) {
-            echo '<div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">
-                     Add or invite your food stalls here. 
-                  </div>';
-        } else {
-    ?>
-    <div class="row row-cols-1 row-cols-md-3 g-3">
-        <?php
-            date_default_timezone_set('Asia/Manila'); 
-            $currentDay = date('l'); 
-            $currentTime = date('H:i');
-            foreach ($stalls as $stall) { 
-                $isOpen = false;
-                $operatingHours = explode('; ', $stall['stall_operating_hours']); 
-                foreach ($operatingHours as $hours) {
-                    list($days, $timeRange) = explode('<br>', $hours); 
-                    $daysArray = array_map('trim', explode(',', $days)); 
-                    if (in_array($currentDay, $daysArray)) { 
-                        list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                        $openTime24 = date('H:i', strtotime($openTime));
-                        $closeTime24 = date('H:i', strtotime($closeTime));
-                        if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                            $isOpen = true;
-                            break;
-                        }
+    <div id="applications" class="w-100 border rounded-2 p-3 bg-white section-content">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h5 class="fw-bold mb-2">Applications</h5>
+                <span class="small">November 03, 2024 8:40 AM</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center text-muted small gap-4 mt-2 mb-3">
+            <form action="#" method="get" class="searchmenu rounded-2">
+                <input type="text" name="search" placeholder="Search account" style="width: 230px;">
+                <button type="submit" class="m-0 ms-2"><i class="fas fa-search fa-lg small"></i></button>
+            </form>
+            <select name="sortOptions" id="sortOptions" class="border-0 text-muted small py-1 px-2">
+                <option value="all">All</option>
+            </select>
+            <i class="fa-regular fa-circle-down rename"></i>
+            <div class="d-flex gap-2 align-items-center small rename py-1 px-2">
+                <span style="cursor: context-menu;">47s</span>
+                <i class="fa-solid fa-arrow-rotate-left"></i>
+            </div>
+        </div>
+        <table class="salestable w-100 text-center border-top">
+            <tr>
+                <th style="width: 17%;">Owner</th>
+                <th style="width: 18%;">Business Name</th>
+                <th style="width: 25%;">Location</th>
+                <th style="width: 10%;">Other Info</th>
+                <th style="width: 10%;">Date Applied</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 10%;">Action</th>
+            </tr>
+
+            <?php
+                $getBusinesses = $adminObj->getBusinesses();
+
+                foreach ($getBusinesses as $business) {
+                    $status = '';
+                    if (htmlspecialchars($business['business_status']) == 'Pending Approval') {
+                        $status = 'Pending';
+                    
+                        echo '<tr>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['owner_name']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['business_name']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . 
+                            htmlspecialchars($business['region_province_city']) . ', ' . 
+                            htmlspecialchars($business['barangay']) . ', ' . 
+                            htmlspecialchars($business['street_building_house']) . 
+                            '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">
+                            <i class="fa-solid fa-chevron-down rename small" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#moreparkinfo" 
+                                data-email="' . htmlspecialchars($business['business_email']) . '"
+                                data-phone="' . htmlspecialchars($business['business_phone']) . '"
+                                data-hours="' . htmlspecialchars($business['operating_hours']) . '"
+                                data-permit="' . htmlspecialchars($business['business_permit']) . '"
+                                data-logo="' . htmlspecialchars($business['business_logo']) . '">
+                            </i>
+                        </td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['created_at']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">' . $status . '</span></td>';
+                        echo '<td class="fw-normal small py-3 px-4">';
+                        echo '<div class="d-flex gap-2 justify-content-center">';
+                        echo '<button class="approve-btn bg-success text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px">Approve</button>';
+                        echo '<button class="deny-btn bg-danger text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px">Deny</button>';
+                        echo '</div>';
+                        echo '</td>';
+                        echo '</tr>';
                     }
                 }
-                ?>
-                <div class="col">
-                    <div class="card h-100">
-                        <div class="position-relative">
-                            <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="Stall Logo">
-                            <div class="position-absolute d-flex gap-2 smaction">
-                                <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= $stall['id'] ?>';"></i>
-                                <i class="fa-solid fa-trash-can" data-bs-toggle="modal" data-bs-target="#deletestall"></i>
-                            </div>
-                        </div>
-                        <div class="card-body px-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div>
-                                    <div class="d-flex gap-2 align-items-center">
-                                        <?php 
-                                            $stall_categories = explode(',', $stall['stall_categories']); 
-                                            foreach ($stall_categories as $index => $category) { 
-                                        ?>
-                                            <p class="card-text text-muted m-0"><?= trim($category) ?></p>
-                                            <?php if ($index !== array_key_last($stall_categories)) { ?>
-                                                <span class="dot text-muted"></span>
-                                            <?php } ?>
-                                        <?php } ?>
-                                    </div>
-                                    <h5 class="card-title my-2 fw-bold"><?= $stall['name'] ?></h5>
-                                    <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
-                                </div>
-                                <?php if ($isOpen) { ?>
-                                    <div class="smopen">
-                                        <i class="fa-solid fa-clock"></i>
-                                        <span>OPEN</span>
-                                    </div>
-                                <?php } else { ?>
-                                    <div class="smclose">
-                                        <i class="fa-solid fa-door-closed"></i>
-                                        <span>CLOSE</span>
-                                    </div>
-                                <?php } ?>
-                            </div>
-                            <div class="accordion accordion-flush" id="accCol<?= $stall['id'] ?>">
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header">
-                                        <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>1" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>1">
-                                            Contact Information
-                                        </button>
-                                    </h2>
-                                    <div id="col1flu<?= $stall['id'] ?>1" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
-                                        <div class="accordion-body p-0 mb-3 small">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <span>Email</span>
-                                                <span><?= $stall['email'] ?></span>
-                                            </div>
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <span>Phone</span>
-                                                <span class="text-muted"><?= $stall['phone'] ?? 'N/A' ?></span>
-                                            </div>
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span>Website</span>
-                                                <span class="text-muted"><?= $stall['website'] ?? 'N/A' ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header">
-                                        <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>2" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>2">
-                                            Opening Hours
-                                        </button>
-                                    </h2>
-                                    <div id="col1flu<?= $stall['id'] ?>2" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
-                                        <div class="accordion-body p-0 mb-3 small">
-                                            <?= !empty($stall['stall_operating_hours']) ? str_replace('; ', '<br>', $stall['stall_operating_hours']) : 'Not available' ?>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header">
-                                        <button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#col1flu<?= $stall['id'] ?>3" aria-expanded="false" aria-controls="col1flu<?= $stall['id'] ?>3">
-                                            Payment Methods
-                                        </button>
-                                    </h2>
-                                    <div id="col1flu<?= $stall['id'] ?>3" class="accordion-collapse collapse" data-bs-parent="#accCol<?= $stall['id'] ?>">
-                                        <div class="accordion-body p-0 mb-3 small">
-                                            <ul>
-                                                <?php 
-                                                    if (!empty($stall['stall_payment_methods'])) {
-                                                        $payment_methods = explode(', ', $stall['stall_payment_methods']);
-                                                        foreach ($payment_methods as $method) {
-                                                            echo "<li class='mb-2'>$method</li>";
-                                                        }
-                                                    } else {
-                                                        echo "<li>No payment methods available</li>";
-                                                    }
-                                                ?>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="owner mt-1 py-2 d-flex justify-content-between align-items-center">
-                                <div class="d-flex gap-3 align-items-center">
-                                    <img src="<?= $stall['profile_img'] ?: 'assets/images/user.jpg' ?>" alt="Owner Profile">
-                                    <div>
-                                        <span class="fw-bold"><?= $stall['owner_name'] ?></span>
-                                        <p class="m-0"><?= $stall['email'] ?></p>
-                                    </div>
-                                </div>
-                                <i class="text-muted">Owner</i>
-                            </div>
-                        </div> 
+            ?>
+           
+        </table>
+        <!-- Approve/Deny Confirmation Modal -->
+        <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to <span id="actionText"></span> this application?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmAction">Yes, Proceed</button>
                     </div>
                 </div>
-            <?php } ?>
-    </div> 
-    <?php } ?>
-    <br><br><br><br><br>
-</main>
+            </div>
+        </div>
 
+        <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3">
+            <!-- Pagination will be dynamically generated -->
+        </div>
+    </div>
 
-<div class="modal fade" id="invitestall" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div id="reports" class="w-100 border rounded-2 p-3 bg-white section-content">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h5 class="fw-bold mb-2">Report</h5>
+                <span class="small">November 03, 2024 8:40 AM</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center text-muted small gap-4 mt-2 mb-3">
+            <form action="#" method="get" class="searchmenu rounded-2">
+                <input type="text" name="search" placeholder="Search account" style="width: 230px;">
+                <button type="submit" class="m-0 ms-2"><i class="fas fa-search fa-lg small"></i></button>
+            </form>
+            <select name="sortOptions" id="sortOptions" class="border-0 text-muted small py-1 px-2">
+                <option value="all">All</option>
+            </select>
+            <i class="fa-regular fa-circle-down rename"></i>
+            <div class="d-flex gap-2 align-items-center small rename py-1 px-2">
+                <span style="cursor: context-menu;">47s</span>
+                <i class="fa-solid fa-arrow-rotate-left"></i>
+            </div>
+        </div>
+        <table class="salestable w-100 text-center border-top">
+            <tr>
+                <th>Reported By</th>
+                <th>Reported User</th>
+                <th>Reason</th>
+                <th>Date Reported</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+
+            <tr>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Self Report lang</td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">Pending</span></td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="bg-success text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>
+                        <button class="bg-danger text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Self Report lang</td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span></td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Self Report lang</td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Resolved</span></td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>
+                    </div>
+                </td>
+            </tr>
+           
+        </table>
+        <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3">
+            <!-- Pagination will be dynamically generated -->
+        </div>
+    </div>
+
+    <div id="onlinepayment" class="w-100 border rounded-2 p-3 bg-white section-content">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h5 class="fw-bold mb-2">Online Payment</h5>
+                <span class="small">November 03, 2024 8:40 AM</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center text-muted small gap-4 mt-2 mb-3">
+            <form action="#" method="get" class="searchmenu rounded-2">
+                <input type="text" name="search" placeholder="Search account" style="width: 230px;">
+                <button type="submit" class="m-0 ms-2"><i class="fas fa-search fa-lg small"></i></button>
+            </form>
+            <select name="sortOptions" id="sortOptions" class="border-0 text-muted small py-1 px-2">
+                <option value="all">All</option>
+            </select>
+            <i class="fa-regular fa-circle-down rename"></i>
+            <div class="d-flex gap-2 align-items-center small rename py-1 px-2">
+                <span style="cursor: context-menu;">47s</span>
+                <i class="fa-solid fa-arrow-rotate-left"></i>
+            </div>
+        </div>
+        <table class="salestable w-100 text-center border-top">
+            <tr>
+                <th>Owner</th>
+                <th>Business Name</th>
+                <th>Payment Method</th>
+                <th>Submitted On</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+
+            <tr>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Stall Name</td>
+                <td class="fw-normal small py-3 px-4">GCash</td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">Pending</span></td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="bg-success text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>
+                        <button class="bg-danger text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Stall Name</td>
+                <td class="fw-normal small py-3 px-4">GCash</td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span></td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Self Report lang</td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Resolved</span></td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>
+                    </div>
+                </td>
+            </tr>
+           
+        </table>
+        <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3">
+            <!-- Pagination will be dynamically generated -->
+        </div>
+    </div>
+    <script src="assets/js/adminresponse.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/pagination.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/activate.js?v=<?php echo time(); ?>"></script>
+
+    <br><br><br><br>
+
+    <!-- More Park Info -->
+<div class="modal fade" id="moreparkinfo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header pb-0 border-0">
-                <div class="d-flex gap-3 align-items-center">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Add Stall Owners</h1>
-                    <i class="fa-regular fa-circle-question m-0" data-bs-toggle="tooltip" data-bs-placement="right" title="An email will be sent to them with an invitaion link to register their stall under your food park. Once they complete the registration, their stall will be added to your food park."></i>
-                    <script>
-                        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-                        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-                    </script>
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold m-0">More Info</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <select id="emailSelect" name="emails[]" multiple="multiple" style="width: 100%;"></select>
-                </div>
-                <h6 class=" mb-3 mt-3 mt-1">People in your food park</h6>
-                <?php
-                    $owner = $parkObj->getParkOwner($park_id);
-                    if($owner) {
-                ?>
-                <div class="owner mt-1 py-1 px-2 d-flex justify-content-between align-items-center">
-                    <div class="d-flex gap-3 align-items-center">
-                        <img src="<?= $owner['profile_img'] ?>" alt="">
-                        <div>
-                            <span class="fw-bold"><?= $owner['owner_name'] ?> (you)</span>
-                            <p class="m-0"><?= $owner['email'] ?></p>
-                        </div>
+
+                <h5 class="fw-bold mb-3">Business Contact</h5>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Business Email</span>
+                        <span data-email></span>
                     </div>
-                    <i class="text-muted small mr-1">Park Owner</i>
-                </div>
-                <?php
-                    }
-                ?>
-                <?php
-                    $owners = $parkObj->getStallOwners($park_id);
-                    if (!empty($owners)) {
-                        foreach ($owners as $owner) {
-                ?>
-                <div class="owner mt-1 py-1 px-2 d-flex justify-content-between align-items-center">
-                    <div class="d-flex gap-3 align-items-center">
-                        <img src="<?= $owner['profile_img'] ?>" alt="">
-                        <div>
-                            <span class="fw-bold"><?= $owner['owner_name'] ?></span>
-                            <p class="m-0"><?= $owner['email'] ?></p>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Business Phone Number</span>
+                        <span data-phone class="text-muted"></span>
                     </div>
-                    <i class="text-muted small mr-1">Stall Owner</i>
                 </div>
-                <?php
-                        }
-                    }
-                ?>
-            </div>
-            <div class="modal-footer pt-0 border-0">
-                <button type="button" class="btn btn-primary send p-2" id="createStallBtn">Create Stall Page</button>
-                <button type="button" class="btn btn-primary send p-2" id="sendInviteBtn">Send Invitation Link</button>
+
+                <h5 class="fw-bold mb-3">Business Logo</h5>
+                <div class="mb-4">
+                    <i class="fa-solid fa-circle-check text-success me-2"></i>
+                    <a data-logo href="#" target="_blank"></a>
+                </div>
+
+                <h5 class="fw-bold mb-3">Operating Hours</h5>
+                <div class="mb-4" data-hours>
+                    <!-- Dynamically added operating hours -->
+                </div>
+
+                <h5 class="fw-bold mb-3">Business Permit</h5>
+                <div class="mb-4">
+                    <i class="fa-solid fa-circle-check text-success me-2"></i>
+                    <a data-permit href="#" target="_blank"></a>
+                </div>
             </div>
         </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
+    const modal = document.getElementById('moreparkinfo');
 
-$(document).ready(function () {
-    $("#emailSelect").select2({
-        placeholder: "Add emails to send invitation link",
-        allowClear: true,
-        templateResult: formatEmailWithImage, // For dropdown items
-        templateSelection: formatSelectedEmail, // For selected items
-        dropdownParent: $("#invitestall"), // Ensure it renders within the modal
-        ajax: {
-            url: "fetch_emails.php",
-            type: "GET",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return { search: params.term };
-            },
-            processResults: function (data) {
-                return { 
-                    results: data.map(user => ({
-                        id: user.id,  // Use user ID instead of email as ID
-                        text: user.email,
-                        profile_img: user.profile_img
-                    }))
-                };
-            },
-            cache: true
-        }
-    });
+    modal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
 
-    // Format items in dropdown with an image
-    function formatEmailWithImage(item) {
-        if (!item.id) return item.text; // If no ID, show plain text
+        // Get data attributes
+        const email = button.getAttribute('data-email');
+        const phone = button.getAttribute('data-phone');
+        const hours = button.getAttribute('data-hours');
+        const permit = button.getAttribute('data-permit'); // Permit file path
+        const logo = button.getAttribute('data-logo'); // Logo file path
 
-        let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
-        return $(
-            `<div style="display: flex; align-items: center;">
-                <img src="${imgSrc}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
-                <span>${item.text}</span>
-            </div>`
-        );
-    }
+        // Populate modal fields
+        modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
+        modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
 
-    // Format the selected items inside the box
-    function formatSelectedEmail(item) {
-        if (!item.id) return item.text;
+        // Populate operating hours
+        const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
+        hoursContainer.innerHTML = hours 
+            ? hours.split('; ').map(hour => `<p>${hour}</p>`).join('') 
+            : '<p>No operating hours available</p>';
 
-        let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
-        return $(
-            `<div style="display: flex; align-items: center; gap: 5px;">
-                <img src="${imgSrc}" style="width: 20px; height: 20px; border-radius: 50%;">
-                <span>${item.text}</span>
-            </div>`
-        );
-    }
-
-    $('#invitestall').on('shown.bs.modal', function () {
-        $("#emailSelect").val(null).trigger("change"); // Reset selection
-    });
-
-    $("#createStallBtn").on("click", function () {
-        let selectedUsers = $("#emailSelect").select2("data"); // Get selected user objects
-        let parkId = "<?php echo $_SESSION['current_park_id']; ?>"; // Get park ID
-
-        if (!selectedUsers || selectedUsers.length === 0) {
-            Swal.fire({
-                title: 'Hold up! ⚠️',
-                text: 'You haven’t selected any users yet. Let’s fix that and try again!',
-                icon: 'error',
-                confirmButtonText: 'Alright, selecting now!'
-            });
-            return;
+        // Populate permit link
+        const permitLink = modal.querySelector('.modal-body a[data-permit]');
+        if (permit) {
+            permitLink.textContent = permit.split('/').pop(); // Extract filename
+            permitLink.href = permit; // Set file path
+            permitLink.target = '_blank'; // Open in new tab
+        } else {
+            permitLink.textContent = 'No permit file';
+            permitLink.removeAttribute('href');
+            permitLink.removeAttribute('target');
         }
 
-        // Open a new window/tab for each selected user
-        selectedUsers.forEach(function (user) {
-            let userId = user.id; // Fetch user ID from selection
-            let userEmail = encodeURIComponent(user.text); // Fetch user email
-
-            window.open(
-                `stallregistration.php?owner_email=${userEmail}&owner_id=${userId}&park_id=${parkId}`, 
-                "_blank"
-            );
-        });
-    });
-
-    $('#sendInviteBtn').click(function () {
-        var selectedEmails = $('#emailSelect').val();
-        if (selectedEmails.length === 0) {
-            Swal.fire({
-                title: 'Hey, wait a sec! ✋',
-                text: 'You need to pick at least one email before we can send the invites.',
-                icon: 'error',
-                confirmButtonText: 'Got it, picking now!'
-            });
-
-            return;
+        // Populate business logo link
+        const logoLink = modal.querySelector('.modal-body a[data-logo]');
+        if (logo) {
+            logoLink.textContent = logo.split('/').pop(); // Extract filename
+            logoLink.href = logo; // Set file path
+            logoLink.target = '_blank'; // Open in new tab
+        } else {
+            logoLink.textContent = 'No logo file';
+            logoLink.removeAttribute('href');
+            logoLink.removeAttribute('target');
         }
-
-        // Show loading indicator
-        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
-        $(this).prop('disabled', true);
-        
-        // Store button reference
-        var $button = $(this);
-
-        $.ajax({
-            url: './email/send_invite.php',
-            type: 'POST',
-            data: { emails: selectedEmails },
-            dataType: 'json',
-            success: function (response) {
-                // Reset button state
-                $button.html('Send Invitation Link');
-                $button.prop('disabled', false);
-                
-                if (response.status === 'success') {
-                    // Show success message
-                    // alert('Invitation links sent successfully!');
-                    Swal.fire({
-                        title: "Success! 🎉",
-                        text: "All invitation links were sent without a hitch! Check your inboxes. 📩",
-                        icon: "success"
-                    });
-
-                    
-                    // Reset the select2 dropdown
-                    $("#emailSelect").val(null).trigger("change");
-                    
-                    // Close the modal
-                    $('#invitestall').modal('hide');
-                } else if (response.status === 'warning') {
-                    // Show warning message with details
-                    var message = 'Some invitations could not be sent:\n';
-                    response.results.forEach(function(result) {
-                        message += '- ' + result.email + ': ' + result.message + '\n';
-                    });
-                    // alert(message);
-                    Swal.fire({
-                        title: 'Yikes! 😬',
-                        text: message || 'Something went wrong. Let’s try that one more time!',
-                        icon: 'error',
-                        confirmButtonText: 'Got it!'
-                    });
-                } else {
-                    // Show error message
-                    // alert('Failed to send some invitation links. Please try again.');
-                    Swal.fire({
-                        title: 'Oops! 🚧',
-                        text: 'Some invitations didn’t make it through. Maybe the internet gremlins are at it again? Give it another shot!',
-                        icon: 'error',
-                        confirmButtonText: 'Alright, I’ll try again!'
-                    });
-                }
-            },
-            error: function (xhr, status, error) {
-                // Reset button state
-                $button.html('Send Invitation Link');
-                $button.prop('disabled', false);
-                
-                // Show error message
-                // alert('An error occurred while sending invitations: ' + error);
-                Swal.fire({
-                    title: 'Uh-oh! 😟',
-                    text: 'Something went wrong while sending the invitations. Maybe the internet took a coffee break? Try again! Error: ' + error,
-                    icon: 'error',
-                    confirmButtonText: 'Got it, I’ll try again!'
-                })
-            }
-        });
     });
-
-});
-
 </script>
-
-<?php 
+</main>
+<?php
     include_once 'footer.php'; 
 ?>
+
