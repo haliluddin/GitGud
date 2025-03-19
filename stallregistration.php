@@ -7,8 +7,7 @@
 
     require_once './classes/db.class.php';
     require_once './classes/park.class.php';
-    require_once __DIR__ . '/classes/encdec.class.php';
-
+    require_once './classes/encdec.class.php';
 
     $userObj = new User();
     $parkObj = new Park();
