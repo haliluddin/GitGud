@@ -75,12 +75,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $userObj->password = $password;
                 $user = $userObj->checkUser();
                 if ($user == true) {
-                    $_SESSION['user'] = [];
-                    $_SESSION['user']['id'] = $user['id'];
                     $verification = $verificationObj->sendVerificationEmail($user['id'], $user['email'], $user['first_name']);
                     if ($verification) {
-                        header('Location: ./email/verify_email.php');
-                        exit();
+                        echo "
+                        <script>
+                            Swal.fire({
+                                title: 'Email Verification Sent',
+                                text: 'A verification link has been sent to your email: $email',
+                                icon: 'success',
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'OK'
+                            });
+                        </script>";
                     } else {
                         echo "ERROR: " . $verification;
                         echo '<script>alert("Failed to send verification email")</script>';
