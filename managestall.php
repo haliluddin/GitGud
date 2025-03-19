@@ -5,6 +5,17 @@
     include_once 'bootstrap.php'; 
     include_once 'modals.php';
     require_once 'classes/encdec.class.php';
+
+    if (!$user) {
+        echo '<script> window.location.href = "signin.php" </script>';
+        exit();
+    }
+
+    if (!isset($park_id)) {
+        // Redirect to index using javascript
+        echo '<script> window.location.href = "index.php" </script>';
+        exit();
+    }
     $park = $parkObj->getPark($park_id);
 
 ?>
