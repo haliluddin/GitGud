@@ -432,14 +432,33 @@ $(document).ready(function () {
                     // We have URLs for each user
                     if (response.urls && response.urls.length > 0) {
                         let successCount = 0;
+                        let successfulUrls = [];
                         
-                        // Open each successful URL in a new tab
+                        // Collect successful URLs
                         response.urls.forEach(function(item) {
                             if (item.success && item.url) {
-                                window.open(item.url, "_blank");
+                                successfulUrls.push({
+                                    email: item.email,
+                                    url: item.url
+                                });
                                 successCount++;
                             }
                         });
+                        
+                        // Function to open URLs with a delay to avoid popup blockers
+                        function openUrlsSequentially(urls, index) {
+                            if (index < urls.length) {
+                                window.open(urls[index].url, "_blank");
+                                setTimeout(function() {
+                                    openUrlsSequentially(urls, index + 1);
+                                }, 500);
+                            }
+                        }
+                        
+                        // Try to open URLs sequentially
+                        if (successfulUrls.length > 0) {
+                            openUrlsSequentially(successfulUrls, 0);
+                        }
                         
                         // Check if we have any failures to report
                         let failureCount = response.urls.length - successCount;
@@ -460,9 +479,19 @@ $(document).ready(function () {
                                 confirmButtonText: 'Ok, I understand'
                             });
                         } else {
+                            // Create HTML for manual URL opening in case automatic opening fails
+                            let urlListHtml = '';
+                            if (successfulUrls.length > 1) {
+                                urlListHtml = '<p>If not all URLs opened automatically, you can click on them below:</p><ul class="text-start">';
+                                successfulUrls.forEach(function(item) {
+                                    urlListHtml += `<li><a href="${item.url}" target="_blank">${item.email}</a></li>`;
+                                });
+                                urlListHtml += '</ul>';
+                            }
+                            
                             Swal.fire({
                                 title: 'Success! 🎉',
-                                text: 'All URLs have been generated and opened successfully!',
+                                html: `All URLs have been generated successfully!${urlListHtml}`,
                                 icon: 'success',
                                 confirmButtonText: 'Great!'
                             });
