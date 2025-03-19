@@ -17,7 +17,8 @@
         if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
             $isLoggedIn = true;
         } else {
-            header('Location: email/verify_email.php');
+            // Redirect to verify email page using javascript
+            echo '<script> window.location.href = "email/verify_email.php" </script>';
             exit();
         }
     }
