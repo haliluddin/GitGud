@@ -219,14 +219,14 @@ class Cart {
         return $conn->lastInsertId();
     }
     
-    public function createOrderStall($order_id, $stall_id, $subtotal) {
+    public function createOrderStall($order_id, $stall_id, $subtotal, $status = 'Pending', $queue_number = null) {
         $conn = $this->db->connect();
-        $sql = "INSERT INTO order_stalls (order_id, stall_id, subtotal)
-                VALUES (?, ?, ?)";
+        $sql = "INSERT INTO order_stalls (order_id, stall_id, subtotal, status, queue_number)
+                VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$order_id, $stall_id, $subtotal]);
+        $stmt->execute([$order_id, $stall_id, $subtotal, $status, $queue_number]);
         return $conn->lastInsertId();
-    }
+    }    
     
     public function createOrderItem($order_stall_id, $product_id, $variations, $request, $quantity, $price, $subtotal) {
         $conn = $this->db->connect();
@@ -257,17 +257,30 @@ class Cart {
         $conn->beginTransaction();
         try {
             $order_id = $this->createOrder($user_id, $total_order, $payment_method, $order_type);
-        
+            
+            // If payment method is GCash, set stall status to "Preparing"
+            $stall_status = (strtolower($payment_method) === 'gcash') ? 'Preparing' : 'Pending';
+            
             foreach ($cartGrouped as $stallName => $items) {
                 $stall_id = $items[0]['stall_id'];
                 $subtotal = $stallSubtotals[$stall_id];
-                $order_stall_id = $this->createOrderStall($order_id, $stall_id, $subtotal);
+                
+                // Determine queue number if status is "Preparing"
+                $queue_number = null;
+                if ($stall_status === 'Preparing') {
+                    $stmtMax = $conn->prepare("SELECT MAX(queue_number) AS max_queue FROM order_stalls WHERE DATE(created_at) = CURDATE() AND queue_number IS NOT NULL");
+                    $stmtMax->execute();
+                    $resMax = $stmtMax->fetch();
+                    $queue_number = $resMax && $resMax['max_queue'] ? intval($resMax['max_queue']) + 1 : 1;
+                }
+                
+                $order_stall_id = $this->createOrderStall($order_id, $stall_id, $subtotal, $stall_status, $queue_number);
         
                 foreach ($items as $item) {
                     $item_subtotal = $item['quantity'] * $item['unit_price'];
                     $variations = (!empty($item['variation_names'])) ? implode(", ", $item['variation_names']) : null;
                     $this->createOrderItem($order_stall_id, $item['product_id'], $variations, $item['request'], $item['quantity'], $item['unit_price'], $item_subtotal);
-                    
+                        
                     if (!empty($item['variation_option_ids'])) {
                         foreach ($item['variation_option_ids'] as $varOptId) {
                             $sqlStock = "UPDATE stocks 
@@ -275,11 +288,7 @@ class Cart {
                                          WHERE product_id = ? 
                                          AND variation_option_id = ?";
                             $stmtStock = $conn->prepare($sqlStock);
-                            $stmtStock->execute([
-                                $item['quantity'], 
-                                $item['product_id'], 
-                                $varOptId
-                            ]);
+                            $stmtStock->execute([$item['quantity'], $item['product_id'], $varOptId]);
                         }
                     } else {
                         $sqlStock = "UPDATE stocks 
@@ -287,10 +296,7 @@ class Cart {
                                      WHERE product_id = ? 
                                      AND variation_option_id IS NULL";
                         $stmtStock = $conn->prepare($sqlStock);
-                        $stmtStock->execute([
-                            $item['quantity'], 
-                            $item['product_id']
-                        ]);
+                        $stmtStock->execute([$item['quantity'], $item['product_id']]);
                     }
                 }
             }

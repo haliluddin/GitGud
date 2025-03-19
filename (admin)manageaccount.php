@@ -3,6 +3,7 @@
 session_start();
 include_once 'landingheader.php';
 include_once 'links.php';
+include_once 'modals.php';
 require_once __DIR__ . '/classes/admin.class.php';
 require_once __DIR__ . '/classes/db.class.php';
 require_once __DIR__ . '/classes/user.class.php';
@@ -22,7 +23,6 @@ if (isset($_SESSION['user'])) {
 date_default_timezone_set('Asia/Manila');
 $currentDateTime = date("l, F j, Y h:i A");
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
-$users = $adminObj->getUsers($searchTerm);
 
 $verificationObj = new Verification();
 
@@ -120,7 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="#all" class="nav-link" data-target="all">Accounts</a>
         <a href="#applications" class="nav-link" data-target="applications">Applications</a>
         <a href="#reports" class="nav-link" data-target="reports">Reports</a>
-        <a href="#onlinepayment" class="nav-link" data-target="onlinepayment">Online Payment</a>
     </div>
     <div id="all" class="w-100 border rounded-2 p-3 bg-white section-content">
         <div class="d-flex justify-content-between">
@@ -151,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </tr>
             <tbody id="userTableBody">
                 <?php
-                $users = $adminObj->getUsers();
+                $users = $adminObj->getUsers($searchTerm);
                 if ($users) {
                     foreach ($users as $user) {
                         echo '<tr>';
@@ -346,98 +345,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
     
-    <div class="modal fade" id="adduser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content p-4">
-                <div class="modal-header p-0 border-0 m-0">
-                    <h5 class="m-0">Add User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-0 m-0">
-                    <form action="#" class="form w-100 mt-3" method="POST">
-                        <div class="progressbar">
-                            <div class="progress" id="progress"></div>
-                            <div class="progress-step progress-step-active" data-title="Name"></div>
-                            <div class="progress-step" data-title="Contact"></div>
-                            <div class="progress-step" data-title="Other"></div>
-                            <div class="progress-step" data-title="Password"></div>
-                        </div>
-                        <div class="form-step form-step-active">
-                            <div class="input-group">
-                                <label for="firstname">First Name</label>
-                                <input type="text" name="firstname" id="firstname" placeholder="Enter your first name" value="<?= $first_name ?>" required/>
-                                <span class="text-danger small"><?= $first_name_err ?></span>
-                            </div>
-                            <div class="input-group">
-                                <label for="lastname">Last Name</label>
-                                <input type="text" name="lastname" id="lastname" placeholder="Enter your last name" value="<?= $last_name ?>" required/>
-                                <span class="text-danger small"><?= $last_name_err ?></span>
-                            </div>
-                            <div class="btns-group d-block text-center">
-                                <input type="button" value="Next" class="button btn-next">
-                            </div>
-                        </div>
-                        <div class="form-step">
-                            <div class="form-group">
-                                <label for="phone" class="mb-2">Phone Number</label>
-                                <div class="input-group mt-0">
-                                    <span class="input-group-text">+63</span>
-                                    <input type="tel" name="phone" id="phone" class="form-control phone-input" value="<?= $phone ?>" maxlength="10" placeholder="Enter your phone number" required>
-                                    <span class="text-danger small"><?= $phone_err ?></span>
-                                </div>
-                            </div>
-                            <div class="input-group">
-                                <label for="email">Email</label>
-                                <input type="email" name="email" id="email" placeholder="Enter your email" value="<?= $email ?>" required/>
-                                <span class="text-danger small"><?= $email_err ?></span>
-                            </div>
-                            <div class="btns-group">
-                                <a href="#" class="button btn-prev">Previous</a>
-                                <a href="#" class="button btn-next">Next</a>
-                            </div>
-                        </div>
-                        <div class="form-step">
-                            <div class="input-group">
-                                <label for="dob">Date of Birth</label>
-                                <input type="date" name="dob" id="dob" value="<?= $dob ?>" required/>
-                                <span class="text-danger small"><?= $dob_err ?></span>
-                            </div>
-                            <div class="input-group">
-                                <label for="sex">Sex</label>
-                                <select name="sex" id="sex" required style="padding: 12px 0.75rem">
-                                    <option value="" disabled <?php echo empty($sex) ? "selected" : ""; ?>>Select your sex</option>
-                                    <option value="male" <?php echo ($sex == 'male') ? "selected" : ""; ?>>Male</option>
-                                    <option value="female" <?php echo ($sex == 'female') ? "selected" : ""; ?>>Female</option>
-                                </select>
-                                <span class="text-danger small"><?= $sex_err ?></span>
-                            </div>
-                            <div class="btns-group">
-                                <a href="#" class="button btn-prev">Previous</a>
-                                <a href="#" class="button btn-next">Next</a>
-                            </div>
-                        </div>
-                        <div class="form-step">
-                            <div class="input-group">
-                                <label for="password">Password</label>
-                                <input type="password" name="password" id="password" placeholder="Enter your password" required/>
-                                <span class="text-danger small"><?= $password_err ?></span>
-                            </div>
-                            <div class="input-group">
-                                <label for="confirm_password">Confirm Password</label>
-                                <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm your password" required/>
-                                <span class="text-danger small"><?= $confirm_password_err ?></span>
-                            </div>
-                            <div class="btns-group">
-                                <a href="#" class="button btn-prev">Previous</a>
-                                <input type="submit" value="Add" class="button"/>
-                            </div>
-                        </div>
-                        <br>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
     <div class="modal fade" id="edituser" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-2">

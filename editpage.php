@@ -88,7 +88,9 @@
 </style>
 <main>
     <div class="d-flex justify-content-end">
-        <button class="addpro mb-3 prev" onclick="window.location.href='#';"><i class="fa-solid fa-chevron-left me-2"></i> Previous</button>
+    <button class="addpro mb-3 prev" onclick="window.history.back();">
+        <i class="fa-solid fa-chevron-left me-2"></i> Previous
+    </button>
     </div>
     <form action="" class="srform rounded-2 bg-white p-5" method="POST" enctype="multipart/form-data">
         <div class="pagehead mb-4 border-bottom">

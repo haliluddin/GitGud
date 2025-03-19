@@ -37,12 +37,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $order_id = $cartObj->placeOrder($user_id, $payment_method, $order_type, $updatedCart);
     $cartObj->removeCartItems($user_id, $park_id, $updatedCart);
     
-    $amountInCents = 30000; 
+    // Calculate the total amount in cents from the cart
+    $totalCents = 0;
+    foreach ($updatedCart as $stallName => $items) {
+        foreach ($items as $item) {
+            // Assuming unit_price is in PHP pesos, convert to cents
+            $totalCents += ($item['quantity'] * $item['unit_price']) * 100;
+        }
+    }
     
     if (strtolower($payment_method) === 'gcash') {
         $result = $payMongo->createPaymentLink(
-            $amountInCents,
-            'Parking Payment',
+            $totalCents,
+            'Ordering Payment', 
             ['order_id' => $order_id]
         );
     
@@ -50,9 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             echo json_encode(['error' => $result['error']]);
         } else {
             echo "<script>
-                    // Open the checkout URL in a new tab
                     window.open('" . $result['checkout_url'] . "', '_blank');
-                    // Show the 'ifcashless' modal when the user returns to cart.php
                     document.addEventListener('DOMContentLoaded', function() {
                         var cashlessModal = new bootstrap.Modal(document.getElementById('ifcashless'));
                         cashlessModal.show();
@@ -167,7 +172,6 @@ foreach ($cartGrouped as $stallName => $items) {
                                 <button type="button" class="carttop" onclick="deleteCartItem('<?= $item['product_id'] ?>', '<?= urlencode($item['request']) ?>')">Delete</button>
                             </div>
                         </div>
-                        <!-- Hidden inputs for this cart item -->
                         <input type="hidden" name="cart_items[<?= $counter ?>][product_id]" value="<?= htmlspecialchars($item['product_id']) ?>">
                         <input type="hidden" name="cart_items[<?= $counter ?>][stall_id]" value="<?= htmlspecialchars($item['stall_id']) ?>">
                         <input type="hidden" name="cart_items[<?= $counter ?>][stall_name]" value="<?= htmlspecialchars($stallName) ?>">
@@ -181,7 +185,6 @@ foreach ($cartGrouped as $stallName => $items) {
                     <?php endforeach; ?>
                 </div>
             <?php endforeach; ?>
-            <!-- Order details and submit button -->
             <div class="d-flex justify-content-between align-items-start border py-3 px-4 rounded-2 bg-white mb-3">
                 <div style="width: 70%">
                     <div class="d-flex align-items-center mb-4">
@@ -427,7 +430,7 @@ foreach ($cartGrouped as $stallName => $items) {
     }
 
     function validatePaymentMethods() {
-        const selectedMethod = document.getElementById('paymentMethod').value; // "Cash" or "GCash"
+        const selectedMethod = document.getElementById('paymentMethod').value;
         document.querySelectorAll('.stall-group').forEach(stall => {
             const supportedMethods = stall.getAttribute('data-supported-methods')
                 .split(',')
@@ -468,4 +471,4 @@ foreach ($cartGrouped as $stallName => $items) {
 
 <?php 
 include_once 'footer.php'; 
-?> 
+?>
