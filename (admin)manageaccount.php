@@ -23,7 +23,9 @@ date_default_timezone_set('Asia/Manila');
 $currentDateTime = date("l, F j, Y h:i A");
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 $users = $adminObj->getUsers($searchTerm);
+
 $verificationObj = new Verification();
+
 $first_name = $last_name = $phone = $email = $dob = $sex = $password = $confirm_password = '';
 $first_name_err = $last_name_err = $phone_err = $email_err = $dob_err = $sex_err = $password_err = $confirm_password_err = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -111,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .salestable th{ padding-top: 10px; width: 10%; }
     .dropdown-menu-center { left: 50% !important; transform: translateX(-50%) !important; }
     .acchead a{ text-decoration: none; color: black; margin-bottom: 8px; }
+    button:disabled { background-color: #D3d3d3 !important; }
 </style>
 <main>
     <div class="nav-container d-flex gap-3 my-2">
@@ -207,69 +210,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <th style="width: 10%;">Status</th>
                 <th style="width: 10%;">Action</th>
             </tr>
-
             <?php
-                $getBusinesses = $adminObj->getBusinesses();
-
+            $getBusinesses = $adminObj->getBusinesses();
+            if ($getBusinesses) {
                 foreach ($getBusinesses as $business) {
-                    $status = '';
-                    if (htmlspecialchars($business['business_status']) == 'Pending Approval') {
-                        $status = 'Pending';
-                    
-                        echo '<tr>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['owner_name']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['business_name']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . 
-                            htmlspecialchars($business['region_province_city']) . ', ' . 
-                            htmlspecialchars($business['barangay']) . ', ' . 
-                            htmlspecialchars($business['street_building_house']) . 
-                            '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">
-                            <i class="fa-solid fa-chevron-down rename small" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#moreparkinfo" 
-                                data-email="' . htmlspecialchars($business['business_email']) . '"
-                                data-phone="' . htmlspecialchars($business['business_phone']) . '"
-                                data-hours="' . htmlspecialchars($business['operating_hours']) . '"
-                                data-permit="' . htmlspecialchars($business['business_permit']) . '"
-                                data-logo="' . htmlspecialchars($business['business_logo']) . '">
-                            </i>
-                        </td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['created_at']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">' . $status . '</span></td>';
-                        echo '<td class="fw-normal small py-3 px-4">';
-                        echo '<div class="d-flex gap-2 justify-content-center">';
-                        echo '<button class="approve-btn bg-success text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px">Approve</button>';
-                        echo '<button class="deny-btn bg-danger text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px">Deny</button>';
-                        echo '</div>';
-                        echo '</td>';
-                        echo '</tr>';
+                    $businessStatus = htmlspecialchars($business['business_status']);
+                    if ($businessStatus == 'Pending Approval') {
+                        $statusDisplay = '<span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">Pending</span>';
+                    } else if ($businessStatus == 'Approved') {
+                        $statusDisplay = '<span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Accepted</span>';
+                    } else if ($businessStatus == 'Rejected') {
+                        $statusDisplay = '<span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span>';
+                    } else {
+                        $statusDisplay = '<span class="small rounded-5 text-muted border border-muted p-1 border-2 fw-bold">' . $businessStatus . '</span>';
                     }
+                    echo '<tr>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['owner_name']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['business_name']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['region_province_city']) . ', ' . htmlspecialchars($business['barangay']) . ', ' . htmlspecialchars($business['street_building_house']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">
+                        <i class="fa-solid fa-chevron-down rename small" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#moreparkinfo" 
+                            data-email="' . htmlspecialchars($business['business_email']) . '"
+                            data-phone="' . htmlspecialchars($business['business_phone']) . '"
+                            data-hours="' . htmlspecialchars($business['operating_hours']) . '"
+                            data-permit="' . htmlspecialchars($business['business_permit']) . '"
+                            data-logo="' . htmlspecialchars($business['business_logo']) . '">
+                        </i>
+                    </td>';
+                    echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['created_at']) . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4 status-cell">' . $statusDisplay . '</td>';
+                    echo '<td class="fw-normal small py-3 px-4">';
+                    echo '<div class="d-flex gap-2 justify-content-center">';
+                    $disabled = ($businessStatus == 'Approved' || $businessStatus == 'Rejected') ? 'disabled' : '';
+                    echo '<button class="approve-btn bg-success text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px" ' . $disabled . '>Approve</button>';
+                    echo '<button class="deny-btn bg-danger text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px" ' . $disabled . '>Deny</button>';
+                    echo '</div>';
+                    echo '</td>';
+                    echo '</tr>';
                 }
+            } else {
+                echo '<tr><td colspan="7" class="text-center py-5">No result found</td></tr>';
+            }
             ?>
-           
         </table>
-        <!-- Approve/Deny Confirmation Modal -->
-        <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to <span id="actionText"></span> this application?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="confirmAction">Yes, Proceed</button>
-                    </div>
+        <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3"></div>
+    </div>
+
+    <!-- Approve/Deny Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to <span id="actionText"></span> this application?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmAction">Yes, Proceed</button>
                 </div>
             </div>
-        </div>
-
-        <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3">
-            <!-- Pagination will be dynamically generated -->
         </div>
     </div>
 
@@ -546,50 +550,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-        const modal = document.getElementById('moreparkinfo');
-
-        modal.addEventListener('show.bs.modal', function (event) {
+        $(document).ready(function () {
+            var businessId, action, statusCell;
+            $('.approve-btn, .deny-btn').click(function () {
+                businessId = $(this).data('id');
+                action = $(this).hasClass('approve-btn') ? 'approve' : 'deny';
+                $('#actionText').text(action === 'approve' ? 'approve' : 'deny');
+                statusCell = $(this).closest('tr').find('td.status-cell');
+                $('#confirmModal').modal('show');
+            });
+            $('#confirmAction').click(function () {
+                $.ajax({
+                    url: 'adminresponse.php',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ business_id: businessId, action: action }),
+                    success: function (response) {
+                        if (response.success) {
+                            if (action === 'approve') {
+                                statusCell.html('<span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Accepted</span>');
+                            } else if (action === 'deny') {
+                                statusCell.html('<span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span>');
+                            }
+                            alert(response.message);
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('Error processing request.');
+                    }
+                });
+                $('#confirmModal').modal('hide');
+            });
+        });
+        $('#moreparkinfo').on('show.bs.modal', function (event) {
             const button = event.relatedTarget;
-
-            // Get data attributes
             const email = button.getAttribute('data-email');
             const phone = button.getAttribute('data-phone');
             const hours = button.getAttribute('data-hours');
-            const permit = button.getAttribute('data-permit'); // Permit file path
-            const logo = button.getAttribute('data-logo'); // Logo file path
-
-            // Populate modal fields
-            modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
-            modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
-
-            // Populate operating hours
-            const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
-            hoursContainer.innerHTML = hours 
-                ? hours.split('; ').map(hour => `<p>${hour}</p>`).join('') 
-                : '<p>No operating hours available</p>';
-
-            // Populate permit link
-            const permitLink = modal.querySelector('.modal-body a[data-permit]');
+            const permit = button.getAttribute('data-permit');
+            const logo = button.getAttribute('data-logo');
+            $(this).find('.modal-body span[data-email]').text(email || 'N/A');
+            $(this).find('.modal-body span[data-phone]').text(phone || 'N/A');
+            const hoursContainer = $(this).find('.modal-body div[data-hours]');
+            hoursContainer.html(hours ? hours.split('; ').map(hour => `<p>${hour}</p>`).join('') : '<p>No operating hours available</p>');
+            const permitLink = $(this).find('.modal-body a[data-permit]');
             if (permit) {
-                permitLink.textContent = permit.split('/').pop(); // Extract filename
-                permitLink.href = permit; // Set file path
-                permitLink.target = '_blank'; // Open in new tab
+                permitLink.text(permit.split('/').pop());
+                permitLink.attr('href', permit).attr('target', '_blank');
             } else {
-                permitLink.textContent = 'No permit file';
-                permitLink.removeAttribute('href');
-                permitLink.removeAttribute('target');
+                permitLink.text('No permit file').removeAttr('href').removeAttr('target');
             }
-
-            // Populate business logo link
-            const logoLink = modal.querySelector('.modal-body a[data-logo]');
+            const logoLink = $(this).find('.modal-body a[data-logo]');
             if (logo) {
-                logoLink.textContent = logo.split('/').pop(); // Extract filename
-                logoLink.href = logo; // Set file path
-                logoLink.target = '_blank'; // Open in new tab
+                logoLink.text(logo.split('/').pop());
+                logoLink.attr('href', logo).attr('target', '_blank');
             } else {
-                logoLink.textContent = 'No logo file';
-                logoLink.removeAttribute('href');
-                logoLink.removeAttribute('target');
+                logoLink.text('No logo file').removeAttr('href').removeAttr('target');
             }
         });
     </script>
