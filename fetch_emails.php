@@ -12,10 +12,10 @@ if (!$conn) {
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
-$sql = "SELECT id, email, profile_img FROM users JOIN verification ON users.id = verification.user_id WHERE email LIKE ? AND role != 'Park Owner' AND role != 'Stall Owner' AND verification.is_verified = 1 LIMIT 10"; // Exclude park owners and stall owners
+$sql = "SELECT id, email, profile_img FROM users JOIN verification ON users.id = verification.user_id WHERE email LIKE ? AND verification.is_verified = 1 LIMIT 10";
 $stmt = $conn->prepare($sql);
 $searchTerm = "%" . $search . "%";
-$stmt->execute([$searchTerm]); // PDO uses array for parameters
+$stmt->execute([$searchTerm]);
 $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $emails = [];
