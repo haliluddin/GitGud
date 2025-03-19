@@ -1,15 +1,16 @@
+
 <?php
 session_start();
 include_once 'landingheader.php';
 include_once 'links.php';
 require_once __DIR__ . '/classes/admin.class.php';
 require_once __DIR__ . '/classes/db.class.php';
+require_once __DIR__ . '/classes/user.class.php';
 require_once './email/verification_token.class.php';
 
 $userObj = new User();
 $adminObj = new Admin();
 $isLoggedIn = false;
-
 if (isset($_SESSION['user'])) {
     if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
         $isLoggedIn = true;
@@ -18,7 +19,6 @@ if (isset($_SESSION['user'])) {
         exit();
     }
 }
-
 date_default_timezone_set('Asia/Manila');
 $currentDateTime = date("l, F j, Y h:i A");
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -26,8 +26,21 @@ $users = $adminObj->getUsers($searchTerm);
 $verificationObj = new Verification();
 $first_name = $last_name = $phone = $email = $dob = $sex = $password = $confirm_password = '';
 $first_name_err = $last_name_err = $phone_err = $email_err = $dob_err = $sex_err = $password_err = $confirm_password_err = '';
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['update_user'])) {
+        $user_id = $_POST['edit_user_id'];
+        $first_name = htmlspecialchars(trim($_POST['edit_first_name']));
+        $last_name = htmlspecialchars(trim($_POST['edit_last_name']));
+        $birth_date = $_POST['edit_birth_date'];
+        $sex = $_POST['edit_sex'];
+        $update = $userObj->updateUser($user_id, $first_name, $last_name, $birth_date, $sex);
+        if ($update) {
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
+        } else {
+            echo '<script>alert("Update failed")</script>';
+        }
+    }
     if (isset($_POST['firstname']) && isset($_POST['lastname']) && isset($_POST['phone']) && isset($_POST['email']) && isset($_POST['dob']) && isset($_POST['sex']) && isset($_POST['password']) && isset($_POST['confirm_password'])) {
         $first_name = htmlspecialchars(trim($_POST['firstname']));
         $last_name = htmlspecialchars(trim($_POST['lastname']));
@@ -83,70 +96,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo '<script>alert("Failed to sign up")</script>';
             }
         }
-    } else {
-        if (empty($_POST['firstname'])) {
-            $first_name_err = 'First name is required';
-        }
-        if (empty($_POST['lastname'])) {
-            $last_name_err = 'Last name is required';
-        }
-        if (empty($_POST['phone'])) {
-            $phone_err = 'Phone is required';
-        }
-        if (empty($_POST['email'])) {
-            $email_err = 'Email is required';
-        } else if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-            $email_err = 'Invalid email format';
-        }
-        if (empty($_POST['dob'])) {
-            $dob_err = 'Date of birth is required';
-        }
-        if (empty($_POST['sex'])) {
-            $sex_err = "Sex is required";
-        }
-        if (empty($_POST['password'])) {
-            $password_err = 'Password is required';
-        }
-        if (empty($_POST['confirm_password'])) {
-            $confirm_password_err = 'Confirm password is required';
-        }
-    }
-} else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    if (isset($_GET['firstname']))
-        $first_name = $_GET['firstname'];
-    if (isset($_GET['lastname']))
-        $last_name = $_GET['lastname'];
-    if (isset($_GET['phone']))
-        $phone = $_GET['phone'];
-    if (isset($_GET['email']))
-        $email = $_GET['email'];
-    if (isset($_GET['dob']))
-        $dob = $_GET['dob'];
-    if (isset($_GET['sex']))
-        $sex = $_GET['sex'];
-    if (isset($_GET['password']))
-        $password = $_GET['password'];
-    if (isset($_GET['confirm_password']))
-        $confirm_password = $_GET['confirm_password'];
-}
-
-if (isset($_POST['delete_user'])) {
-    $user_id = $_POST['user_id'];
-    $result = $userObj->deleteUser($user_id);
-    if ($result) {
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit();
-    } else {
-        echo '<script>alert("Failed to delete user")</script>';
     }
 }
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
-main{ padding: 20px 120px; }
-.salestable th{ padding-top: 10px; width: 10%; }
-.dropdown-menu-center { left: 50% !important; transform: translateX(-50%) !important; }
-.acchead a{ text-decoration: none; color: black; margin-bottom: 8px; }
+    main{ padding: 20px 120px; }
+    .salestable th{ padding-top: 10px; width: 10%; }
+    .dropdown-menu-center { left: 50% !important; transform: translateX(-50%) !important; }
+    .acchead a{ text-decoration: none; color: black; margin-bottom: 8px; }
 </style>
 <main>
     <div class="nav-container d-flex gap-3 my-2">
@@ -184,41 +142,200 @@ main{ padding: 20px 120px; }
             </tr>
             <tbody id="userTableBody">
                 <?php
-                    $users = $adminObj->getUsers();
-                    if ($users) {
-                        foreach ($users as $user) {
-                            echo '<tr>';
-                            echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['first_name']) . '</td>';
-                            echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['last_name']) . '</td>';
-                            echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['email']) . '</td>';
-                            echo '<td class="fw-normal small py-3 px-4">' . "+63" . htmlspecialchars($user['phone']) . '</td>';
-                            echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['birth_date']) . '</td>';
-                            echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['sex']) . '</td>';
-                            echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['status']) . '</td>';
-                            echo '<td class="fw-normal small py-3 px-1"><span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">' . htmlspecialchars($user['role']) . '</span></td>';
-                            echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['created_at']) . '</td>';
-                            echo '<td class="fw-normal small py-3 px-4">';
-                            echo '<div class="dropdown position-relative">';
-                            echo '<i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>';
-                            echo '<ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">';
-                            echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edituser">Edit</a></li>';
-                            echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser" data-user-id="' . $user['id'] . '">Delete</a></li>';
-                            echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deactivateuser">Deactivate</a></li>';
-                            echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#activitylog">Activity</a></li>';
-                            echo '<li><a class="dropdown-item" href="parkregistration.php">Create Park</a></li>';
-                            echo '</ul>';
-                            echo '</div>';
-                            echo '</td>';
-                            echo '</tr>';
-                        }
-                    } else {
-                        echo '<tr><td colspan="10" class="text-center py-5">No result found</td></tr>';
+                $users = $adminObj->getUsers();
+                if ($users) {
+                    foreach ($users as $user) {
+                        echo '<tr>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['first_name']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['last_name']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['email']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . "+63" . htmlspecialchars($user['phone']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['birth_date']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['sex']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['status']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-1"><span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">' . htmlspecialchars($user['role']) . '</span></td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['created_at']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">';
+                        echo '<div class="dropdown position-relative">';
+                        echo '<i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>';
+                        echo '<ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">';
+                        echo '<li><a class="dropdown-item edit-user" href="#" data-bs-toggle="modal" data-bs-target="#edituser" data-user-id="' . $user['id'] . '" data-first-name="' . htmlspecialchars($user['first_name']) . '" data-last-name="' . htmlspecialchars($user['last_name']) . '" data-email="' . htmlspecialchars($user['email']) . '" data-phone="' . htmlspecialchars($user['phone']) . '" data-birth-date="' . $user['birth_date'] . '" data-sex="' . htmlspecialchars($user['sex']) . '">Edit</a></li>';
+                        echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser" data-user-id="' . $user['id'] . '">Delete</a></li>';
+                        echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deactivateuser">Deactivate</a></li>';
+                        echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#activitylog">Activity</a></li>';
+                        echo '<li><a class="dropdown-item" href="parkregistration.php?user_id=' . $user['id'] . '">Create Park</a></li>';
+                        echo '</ul>';
+                        echo '</div>';
+                        echo '</td>';
+                        echo '</tr>';
                     }
+                } else {
+                    echo '<tr><td colspan="10" class="text-center py-5">No result found</td></tr>';
+                }
                 ?>
             </tbody>
         </table>
         <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3"></div>
     </div>
+
+    <div id="applications" class="w-100 border rounded-2 p-3 bg-white section-content">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h5 class="fw-bold mb-2">Applications</h5>
+                <span class="small"><?= $currentDateTime ?></span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center text-muted small gap-4 mt-2 mb-3">
+            <form action="#" method="get" class="searchmenu rounded-2">
+                <input type="text" name="search" placeholder="Search account" style="width: 230px;" value="<?= htmlspecialchars($searchTerm) ?>">
+                <button type="submit" class="m-0 ms-2"><i class="fas fa-search fa-lg small"></i></button>
+            </form>
+        </div>
+        <table class="salestable w-100 text-center border-top">
+            <tr>
+                <th style="width: 17%;">Owner</th>
+                <th style="width: 18%;">Business Name</th>
+                <th style="width: 25%;">Location</th>
+                <th style="width: 10%;">Other Info</th>
+                <th style="width: 10%;">Date Applied</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 10%;">Action</th>
+            </tr>
+
+            <?php
+                $getBusinesses = $adminObj->getBusinesses();
+
+                foreach ($getBusinesses as $business) {
+                    $status = '';
+                    if (htmlspecialchars($business['business_status']) == 'Pending Approval') {
+                        $status = 'Pending';
+                    
+                        echo '<tr>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['owner_name']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['business_name']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . 
+                            htmlspecialchars($business['region_province_city']) . ', ' . 
+                            htmlspecialchars($business['barangay']) . ', ' . 
+                            htmlspecialchars($business['street_building_house']) . 
+                            '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">
+                            <i class="fa-solid fa-chevron-down rename small" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#moreparkinfo" 
+                                data-email="' . htmlspecialchars($business['business_email']) . '"
+                                data-phone="' . htmlspecialchars($business['business_phone']) . '"
+                                data-hours="' . htmlspecialchars($business['operating_hours']) . '"
+                                data-permit="' . htmlspecialchars($business['business_permit']) . '"
+                                data-logo="' . htmlspecialchars($business['business_logo']) . '">
+                            </i>
+                        </td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['created_at']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">' . $status . '</span></td>';
+                        echo '<td class="fw-normal small py-3 px-4">';
+                        echo '<div class="d-flex gap-2 justify-content-center">';
+                        echo '<button class="approve-btn bg-success text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px">Approve</button>';
+                        echo '<button class="deny-btn bg-danger text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px">Deny</button>';
+                        echo '</div>';
+                        echo '</td>';
+                        echo '</tr>';
+                    }
+                }
+            ?>
+           
+        </table>
+        <!-- Approve/Deny Confirmation Modal -->
+        <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to <span id="actionText"></span> this application?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmAction">Yes, Proceed</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3">
+            <!-- Pagination will be dynamically generated -->
+        </div>
+    </div>
+
+    <div id="reports" class="w-100 border rounded-2 p-3 bg-white section-content">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h5 class="fw-bold mb-2">Report</h5>
+                <span class="small"><?= $currentDateTime ?></span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center text-muted small gap-4 mt-2 mb-3">
+            <form action="#" method="get" class="searchmenu rounded-2">
+                <input type="text" name="search" placeholder="Search account" style="width: 230px;" value="<?= htmlspecialchars($searchTerm) ?>">
+                <button type="submit" class="m-0 ms-2"><i class="fas fa-search fa-lg small"></i></button>
+            </form>
+        </div>
+        <table class="salestable w-100 text-center border-top">
+            <tr>
+                <th>Reported By</th>
+                <th>Reported User</th>
+                <th>Reason</th>
+                <th>Date Reported</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+
+            <tr>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Self Report lang</td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">Pending</span></td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="bg-success text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>
+                        <button class="bg-danger text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Self Report lang</td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span></td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Athena Casino</td>
+                <td class="fw-normal small py-3 px-4">Self Report lang</td>
+                <td class="fw-normal small py-3 px-4">07/29/2024</td>
+                <td class="fw-normal small py-3 px-4"><span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Resolved</span></td>
+                <td class="fw-normal small py-3 px-4">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>
+                        <button class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>
+                    </div>
+                </td>
+            </tr>
+           
+        </table>
+        <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3">
+            <!-- Pagination will be dynamically generated -->
+        </div>
+    </div>
+    
     <div class="modal fade" id="adduser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-4">
@@ -311,6 +428,50 @@ main{ padding: 20px 120px; }
             </div>
         </div>
     </div>
+    <div class="modal fade" id="edituser" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-2">
+                <form action="" method="POST" id="editUserForm">
+                    <input type="hidden" name="edit_user_id" id="editUserId" value="">
+                    <div class="modal-body">
+                        <div class="modal-header p-0 border-0 mb-4">
+                            <h4 class="m-0">Edit User</h4>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="mb-2">
+                            <label for="editFirstName" class="form-label">First Name</label>
+                            <input type="text" name="edit_first_name" id="editFirstName" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label for="editLastName" class="form-label">Last Name</label>
+                            <input type="text" name="edit_last_name" id="editLastName" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label for="editEmail" class="form-label">Email</label>
+                            <input type="email" name="edit_email" id="editEmail" class="form-control" disabled>
+                        </div>
+                        <div class="mb-2">
+                            <label for="editPhone" class="form-label">Phone</label>
+                            <input type="text" name="edit_phone" id="editPhone" class="form-control" disabled>
+                        </div>
+                        <div class="mb-2">
+                            <label for="editBirthDate" class="form-label">Birth Date</label>
+                            <input type="date" name="edit_birth_date" id="editBirthDate" class="form-control" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="editSex" class="form-label">Sex</label>
+                            <select name="edit_sex" id="editSex" class="form-control" required>
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <button type="submit" name="update_user" class="btn btn-primary w-100">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="deleteuser" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -334,10 +495,120 @@ main{ padding: 20px 120px; }
             </div>
         </div>
     </div>
+
+    <!-- More Park Info -->
+    <div class="modal fade" id="moreparkinfo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold m-0">More Info</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <h5 class="fw-bold mb-3">Business Contact</h5>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Business Email</span>
+                            <span data-email></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Business Phone Number</span>
+                            <span data-phone class="text-muted"></span>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3">Business Logo</h5>
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-check text-success me-2"></i>
+                        <a data-logo href="#" target="_blank"></a>
+                    </div>
+
+                    <h5 class="fw-bold mb-3">Operating Hours</h5>
+                    <div class="mb-4" data-hours>
+                        <!-- Dynamically added operating hours -->
+                    </div>
+
+                    <h5 class="fw-bold mb-3">Business Permit</h5>
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-check text-success me-2"></i>
+                        <a data-permit href="#" target="_blank"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const modal = document.getElementById('moreparkinfo');
+
+        modal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+
+            // Get data attributes
+            const email = button.getAttribute('data-email');
+            const phone = button.getAttribute('data-phone');
+            const hours = button.getAttribute('data-hours');
+            const permit = button.getAttribute('data-permit'); // Permit file path
+            const logo = button.getAttribute('data-logo'); // Logo file path
+
+            // Populate modal fields
+            modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
+            modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
+
+            // Populate operating hours
+            const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
+            hoursContainer.innerHTML = hours 
+                ? hours.split('; ').map(hour => `<p>${hour}</p>`).join('') 
+                : '<p>No operating hours available</p>';
+
+            // Populate permit link
+            const permitLink = modal.querySelector('.modal-body a[data-permit]');
+            if (permit) {
+                permitLink.textContent = permit.split('/').pop(); // Extract filename
+                permitLink.href = permit; // Set file path
+                permitLink.target = '_blank'; // Open in new tab
+            } else {
+                permitLink.textContent = 'No permit file';
+                permitLink.removeAttribute('href');
+                permitLink.removeAttribute('target');
+            }
+
+            // Populate business logo link
+            const logoLink = modal.querySelector('.modal-body a[data-logo]');
+            if (logo) {
+                logoLink.textContent = logo.split('/').pop(); // Extract filename
+                logoLink.href = logo; // Set file path
+                logoLink.target = '_blank'; // Open in new tab
+            } else {
+                logoLink.textContent = 'No logo file';
+                logoLink.removeAttribute('href');
+                logoLink.removeAttribute('target');
+            }
+        });
+    </script>
+
+    <script>
+    $('#edituser').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var userId = button.data('user-id');
+        var firstName = button.data('first-name');
+        var lastName = button.data('last-name');
+        var email = button.data('email');
+        var phone = button.data('phone');
+        var birthDate = button.data('birth-date');
+        var sex = button.data('sex');
+        $('#editUserId').val(userId);
+        $('#editFirstName').val(firstName);
+        $('#editLastName').val(lastName);
+        $('#editEmail').val(email);
+        $('#editPhone').val(phone);
+        $('#editBirthDate').val(birthDate);
+        $('#editSex').val(sex);
+    });
     $('#deleteuser').on('show.bs.modal', function (event) {
-        const button = $(event.relatedTarget);
-        const userId = button.data('user-id');
+        var button = $(event.relatedTarget);
+        var userId = button.data('user-id');
         $('#modalUserId').val(userId);
     });
     </script>

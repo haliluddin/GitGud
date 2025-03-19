@@ -230,7 +230,7 @@
     </div>
 </div>
 
-<!-- Edit User -->
+<!-- Edit User 
 <div class="modal fade" id="edituser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content p-4">
@@ -318,7 +318,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <!-- Suspend User -->
 <div class="modal fade" id="deactivateuser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

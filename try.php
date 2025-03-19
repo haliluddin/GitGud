@@ -51,7 +51,6 @@
         <a href="#applications" class="nav-link" data-target="applications">Applications</a>
         <a href="#reports" class="nav-link" data-target="reports">Reports</a>
         <a href="#onlinepayment" class="nav-link" data-target="onlinepayment">Online Payment</a>
-
     </div>
 
     <div id="all" class="w-100 border rounded-2 p-3 bg-white section-content">
@@ -421,6 +420,7 @@
             <!-- Pagination will be dynamically generated -->
         </div>
     </div>
+
     <script src="assets/js/adminresponse.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/pagination.js?v=<?php echo time(); ?>"></script>
@@ -429,96 +429,97 @@
     <br><br><br><br>
 
     <!-- More Park Info -->
-<div class="modal fade" id="moreparkinfo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="fw-bold m-0">More Info</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <h5 class="fw-bold mb-3">Business Contact</h5>
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span>Business Email</span>
-                        <span data-email></span>
+    <div class="modal fade" id="moreparkinfo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold m-0">More Info</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span>Business Phone Number</span>
-                        <span data-phone class="text-muted"></span>
+
+                    <h5 class="fw-bold mb-3">Business Contact</h5>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Business Email</span>
+                            <span data-email></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Business Phone Number</span>
+                            <span data-phone class="text-muted"></span>
+                        </div>
                     </div>
-                </div>
 
-                <h5 class="fw-bold mb-3">Business Logo</h5>
-                <div class="mb-4">
-                    <i class="fa-solid fa-circle-check text-success me-2"></i>
-                    <a data-logo href="#" target="_blank"></a>
-                </div>
+                    <h5 class="fw-bold mb-3">Business Logo</h5>
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-check text-success me-2"></i>
+                        <a data-logo href="#" target="_blank"></a>
+                    </div>
 
-                <h5 class="fw-bold mb-3">Operating Hours</h5>
-                <div class="mb-4" data-hours>
-                    <!-- Dynamically added operating hours -->
-                </div>
+                    <h5 class="fw-bold mb-3">Operating Hours</h5>
+                    <div class="mb-4" data-hours>
+                        <!-- Dynamically added operating hours -->
+                    </div>
 
-                <h5 class="fw-bold mb-3">Business Permit</h5>
-                <div class="mb-4">
-                    <i class="fa-solid fa-circle-check text-success me-2"></i>
-                    <a data-permit href="#" target="_blank"></a>
+                    <h5 class="fw-bold mb-3">Business Permit</h5>
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-check text-success me-2"></i>
+                        <a data-permit href="#" target="_blank"></a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    const modal = document.getElementById('moreparkinfo');
+    <script>
+        const modal = document.getElementById('moreparkinfo');
 
-    modal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
+        modal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
 
-        // Get data attributes
-        const email = button.getAttribute('data-email');
-        const phone = button.getAttribute('data-phone');
-        const hours = button.getAttribute('data-hours');
-        const permit = button.getAttribute('data-permit'); // Permit file path
-        const logo = button.getAttribute('data-logo'); // Logo file path
+            // Get data attributes
+            const email = button.getAttribute('data-email');
+            const phone = button.getAttribute('data-phone');
+            const hours = button.getAttribute('data-hours');
+            const permit = button.getAttribute('data-permit'); // Permit file path
+            const logo = button.getAttribute('data-logo'); // Logo file path
 
-        // Populate modal fields
-        modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
-        modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
+            // Populate modal fields
+            modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
+            modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
 
-        // Populate operating hours
-        const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
-        hoursContainer.innerHTML = hours 
-            ? hours.split('; ').map(hour => `<p>${hour}</p>`).join('') 
-            : '<p>No operating hours available</p>';
+            // Populate operating hours
+            const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
+            hoursContainer.innerHTML = hours 
+                ? hours.split('; ').map(hour => `<p>${hour}</p>`).join('') 
+                : '<p>No operating hours available</p>';
 
-        // Populate permit link
-        const permitLink = modal.querySelector('.modal-body a[data-permit]');
-        if (permit) {
-            permitLink.textContent = permit.split('/').pop(); // Extract filename
-            permitLink.href = permit; // Set file path
-            permitLink.target = '_blank'; // Open in new tab
-        } else {
-            permitLink.textContent = 'No permit file';
-            permitLink.removeAttribute('href');
-            permitLink.removeAttribute('target');
-        }
+            // Populate permit link
+            const permitLink = modal.querySelector('.modal-body a[data-permit]');
+            if (permit) {
+                permitLink.textContent = permit.split('/').pop(); // Extract filename
+                permitLink.href = permit; // Set file path
+                permitLink.target = '_blank'; // Open in new tab
+            } else {
+                permitLink.textContent = 'No permit file';
+                permitLink.removeAttribute('href');
+                permitLink.removeAttribute('target');
+            }
 
-        // Populate business logo link
-        const logoLink = modal.querySelector('.modal-body a[data-logo]');
-        if (logo) {
-            logoLink.textContent = logo.split('/').pop(); // Extract filename
-            logoLink.href = logo; // Set file path
-            logoLink.target = '_blank'; // Open in new tab
-        } else {
-            logoLink.textContent = 'No logo file';
-            logoLink.removeAttribute('href');
-            logoLink.removeAttribute('target');
-        }
-    });
-</script>
+            // Populate business logo link
+            const logoLink = modal.querySelector('.modal-body a[data-logo]');
+            if (logo) {
+                logoLink.textContent = logo.split('/').pop(); // Extract filename
+                logoLink.href = logo; // Set file path
+                logoLink.target = '_blank'; // Open in new tab
+            } else {
+                logoLink.textContent = 'No logo file';
+                logoLink.removeAttribute('href');
+                logoLink.removeAttribute('target');
+            }
+        });
+    </script>
+
 </main>
 <?php
     include_once 'footer.php'; 
