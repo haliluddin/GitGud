@@ -53,12 +53,6 @@ if (!empty($stall['stall_operating_hours'])) {
         }
     }
 }
-
-if (!$isOpen) {
-    // Redirect to park page if stall is closed using javascript
-    echo '<script>window.location.href = "park.php";</script>';
-    exit;
-}
 ?>
 <style>
   .liked {

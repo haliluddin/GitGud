@@ -17,36 +17,6 @@ date_default_timezone_set('Asia/Manila');
 $currentDay = date('l'); 
 $currentTime = date('H:i');
 
-
-$park = $parkObj->getPark($park_id);
-if ($park['business_status'] != 'Reject' && $park['business_status'] != 'Pending Approval') {
-    $isOpen = false;
-    $operatingHours = explode('; ', $park['operating_hours']); 
-
-    foreach ($operatingHours as $hours) {
-        list($days, $timeRange) = explode('<br>', $hours); 
-        $daysArray = array_map('trim', explode(',', $days)); 
-
-        if (in_array($currentDay, $daysArray)) { 
-            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-            
-            $openTime24 = date('H:i', strtotime($openTime));
-            $closeTime24 = date('H:i', strtotime($closeTime));
-
-            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                $isOpen = true;
-                break;
-            }
-        }
-    }
-
-    if (!$isOpen) {
-        // Redirect to index using JavaScript
-        echo "<script>window.location.href = 'index.php';</script>";
-        exit;
-    }
-}
-
 function getNextOpening($operatingHoursArray) {
     if (!empty($operatingHoursArray)) {
         $first = $operatingHoursArray[0];
@@ -317,13 +287,7 @@ function getNextOpening($operatingHoursArray) {
                 }
             ?>
                 <div class="col stall-card" data-is-open="<?= $isOpen ? '1' : '0'; ?>">
-                    <a
-                        <?php
-                            if ($isOpen) { ?>
-                                href="stall.php?id=<?= encrypt($stall['id']); ?>" <?php
-                            }
-                        ?>
-                        class="card-link text-decoration-none bg-white">
+                    <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="card-link text-decoration-none bg-white">
                         <div class="card" style="position: relative;">
                             <?php if (!$isOpen && !empty($stall['stall_operating_hours'])) { 
                                 $operatingHoursArray = explode('; ', $stall['stall_operating_hours']);
