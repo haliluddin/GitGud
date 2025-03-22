@@ -12,7 +12,7 @@ if (!$conn) {
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
-$sql = "SELECT id, email, profile_img FROM users JOIN verification ON users.id = verification.user_id WHERE email LIKE ? AND role != 'Admin' AND verification.is_verified = 1 LIMIT 10";
+$sql = "SELECT id, email, profile_img FROM users JOIN verification ON users.id = verification.user_id WHERE email LIKE ? AND verification.is_verified = 1 LIMIT 10";
 $stmt = $conn->prepare($sql);
 $searchTerm = "%" . $search . "%";
 $stmt->execute([$searchTerm]);
