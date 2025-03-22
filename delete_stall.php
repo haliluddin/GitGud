@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 include_once 'classes/park.class.php';
 include_once 'classes/encdec.class.php';
@@ -17,7 +17,7 @@ if (!isset($_POST['stall_id']) || empty($_POST['stall_id'])) {
 
 try {
     // Decrypt the stall ID
-    $stall_id = $_POST['stall_id'];
+    $stall_id = decrypt(urldecode($_POST['stall_id']));
     
     // Create park object
     $parkObj = new Park();
