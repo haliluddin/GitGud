@@ -295,25 +295,25 @@ class Product {
     
 
 
-    // function getProducts($stallId) {
-    //     $sql = "SELECT * FROM products WHERE stall_id = :stall_id;";
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->execute(array(':stall_id' => $stallId));
-    //     $result = $query->fetchAll();
+    function getProducts($stallId) {
+        $sql = "SELECT * FROM products WHERE stall_id = :stall_id;";
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute(array(':stall_id' => $stallId));
+        $result = $query->fetchAll();
 
-    //     if (empty($result)) {
-    //         return [];
-    //     }
+        if (empty($result)) {
+            return [];
+        }
     
-    //     foreach ($result as $key => $product) {
-    //         $category = $this->getCategory($product['category_id']);
-    //         if ($category) {
-    //             $result[$key]['category'] = $category['name'];
-    //         }
-    //     }
+        foreach ($result as $key => $product) {
+            $category = $this->getCategory($product['category_id']);
+            if ($category) {
+                $result[$key]['category'] = $category['name'];
+            }
+        }
     
-    //     return $result;
-    // }
+        return $result;
+    }
 
     function getProductById($productId) {
         $sql = "SELECT * FROM products WHERE id = :id;";
@@ -329,7 +329,6 @@ class Product {
         if ($category) {
             $result['category'] = $category['name'];
         }
-        $result['category_id'] = $result['category_id'];
     
         return $result;
     }
