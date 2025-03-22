@@ -15,17 +15,6 @@
     $stalllogo = $businessname = $description = $businessemail = $businessphonenumber = $website = '';
     $validInvitation = false;
 
-    // Debugging function
-    function debug_log($message, $data = null) {
-        echo "<pre style='background: #f5f5f5; padding: 10px; margin: 10px 0; border: 1px solid #ddd;'>";
-        echo "<strong>DEBUG:</strong> " . $message . "<br>";
-        if ($data !== null) {
-            echo "<strong>DATA:</strong> ";
-            print_r($data);
-        }
-        echo "</pre>";
-    }
-
     if (isset($_GET['oe']) && isset($_GET['oi']) && isset($_GET['pi']) && isset($_GET['token']) && isset($_GET['id'])) {
         $owner_email_encrypted = $_GET['oe'];
         $owner_id_encrypted = $_GET['oi'];
@@ -33,7 +22,6 @@
         $token_encrypted = $_GET['token'];
         $user_id_encrypted = $_GET['id'];
 
-        // Decrypt the parameters
         try {
             $owner_email = decrypt(urldecode($owner_email_encrypted));
             $owner_id = decrypt(urldecode($owner_id_encrypted));
@@ -41,16 +29,7 @@
             $user_id = decrypt(urldecode($user_id_encrypted));
             $token = decrypt(urldecode($token_encrypted));
 
-            // Store original encrypted values for comparison
-            // debug_log("Decrypted values:", [
-            //     'owner_email' => $owner_email,
-            //     'owner_id' => $owner_id,
-            //     'park_id' => $park_id,
-            //     'user_id' => $user_id,
-            //     'token' => $token
-            // ]);
 
-            // Verify the park_id exists in the business table
             $db = new Database();
             $conn = $db->connect();
             $sql = "SELECT COUNT(*) FROM business WHERE id = :park_id";
@@ -58,16 +37,7 @@
             $stmt->execute([':park_id' => $park_id]);
             $parkExists = $stmt->fetchColumn() > 0;
 
-            if (!$parkExists) {
-                debug_log("Error: Park ID does not exist in the business table", $park_id);
-                echo "<script>
-                    alert('Invalid park ID. The specified food park does not exist.');
-                    window.location.href = 'index.php';
-                </script>";
-                exit;
-            }
         } catch (Exception $e) {
-            debug_log("Error decrypting parameters", $e->getMessage());
             echo "<script>
                 alert('Error processing invitation link. Please try again or contact support.');
                 window.location.href = 'index.php';
@@ -110,11 +80,6 @@
                 exit;
             }
         } else {
-            debug_log("Invitation not found in database", [
-                'token' => $token,
-                'user_id' => $user_id,
-                'park_id' => $park_id
-            ]);
             echo "<script>
                 alert('Invalid invitation link. Please contact the food park owner for a new invitation.');
                 window.location.href = 'index.php';
@@ -158,7 +123,7 @@
         $operatingHours = json_decode($operatingHoursJson, true);
     
         // Pass categories and payment methods to addStall function
-        $stall = $parkObj->addStall($owner_id, $park_id, $businessname, $description, $businessemail, $businessphonenumber, $website, $stalllogo, $operatingHours, $categories, $payment_methods);
+        $stall = $parkObj->addStall($user_id, $park_id, $businessname, $description, $businessemail, $businessphonenumber, $website, $stalllogo, $operatingHours, $categories, $payment_methods);
 
         echo "<script>
             alert('Stall has been successfully added to your food park. The stall owner can now be part of the service.');
