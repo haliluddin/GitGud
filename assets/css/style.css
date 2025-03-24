@@ -265,7 +265,7 @@ nav ul li a{text-decoration: none;}
     align-items: center;
     justify-content: center;
     gap: 100px;
-    height: calc(100% - 65.61px);
+    height: 100vh;
 }
 .leftside{
     width: 35%;
@@ -526,27 +526,6 @@ h6{margin:0;}
 .last{
   font-size: 14px;
   line-height: 1.5;
-}
-.verify{
-  text-align: center;
-  width: 32%;
-  padding: 70px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1)
-}
-.verify h1{
-  font-weight: bold;
-  margin-bottom: 15px;
-}
-.verify img{
-  width: 360px;
-  height: 300px;
-  margin: 20px 0;
-}
-.verify p{
-  margin: 0;
-}
-.verify p a:hover{
-  text-decoration: underline;
 }
 .btn-primary{
   background-color: #CD5C08;

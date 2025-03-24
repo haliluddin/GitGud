@@ -60,11 +60,12 @@ class User {
         if (!($this->sex == "male" || $this->sex == "female"))
             return false;
 
-        $sql = "INSERT INTO users (first_name, last_name, birth_date, email, sex, phone, password) VALUES (:first_name, :last_name, :birth_date, :email, :sex, :phone, :password);";
+        $sql = "INSERT INTO users (first_name, middle_name, last_name, birth_date, email, sex, phone, password) VALUES (:first_name, :middle_name, :last_name, :birth_date, :email, :sex, :phone, :password);";
         $query = $this->db->connect()->prepare($sql);
         
         if ($query->execute(array(
             ':first_name' => $this->first_name,
+            ':middle_name' => $this->middle_name,
             ':last_name' => $this->last_name,
             ':birth_date' => $this->birth_date,
             ':email' => $this->email,

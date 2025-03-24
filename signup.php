@@ -16,11 +16,12 @@ include_once 'secondheader.php';
 require_once './classes/db.class.php';
 require_once './email/verification_token.class.php';
 $verificationObj = new Verification();
-$first_name = $last_name = $phone = $email = $dob = $sex = $password = $confirm_password = '';
-$first_name_err = $last_name_err = $phone_err = $email_err = $dob_err = $sex_err = $password_err = $confirm_password_err = '';
+$first_name = $middle_name = $last_name = $phone = $email = $dob = $sex = $password = $confirm_password = '';
+$first_name_err = $middle_name_err = $last_name_err = $phone_err = $email_err = $dob_err = $sex_err = $password_err = $confirm_password_err = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['firstname']) && isset($_POST['lastname']) && isset($_POST['phone']) && isset($_POST['email']) && isset($_POST['dob']) && isset($_POST['sex']) && isset($_POST['password']) && isset($_POST['confirm_password'])) {
+    if (isset($_POST['firstname']) && isset($_POST['middlename']) && isset($_POST['lastname']) && isset($_POST['phone']) && isset($_POST['email']) && isset($_POST['dob']) && isset($_POST['sex']) && isset($_POST['password']) && isset($_POST['confirm_password'])) {
         $first_name = htmlspecialchars(trim($_POST['firstname']));
+        $middle_name = htmlspecialchars(trim($_POST['middlename']));
         $last_name = htmlspecialchars(trim($_POST['lastname']));
         $phone = htmlspecialchars(trim($_POST['phone']));
         $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
@@ -34,13 +35,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!preg_match("/^[a-zA-Z-' ]*$/", $last_name)) {
             $last_name_err = "Only letters and white space allowed";
         }
+        if (!preg_match("/^[a-zA-Z-' ]*$/", $middle_name)) {
+            $middle_name_err = "Only letters and white space allowed";
+        }
         if ($password !== $confirm_password) {
             $password_err = 'Passwords do not match';
         } else if (strlen($password) < 8) {
             $password_err = 'Password must be at least 8 characters';
         }
-        if ($first_name_err == '' && $last_name_err == '' && $phone_err == '' && $email_err == '' && $dob_err == '' && $sex_err == '' && $password_err == '' && $confirm_password_err == '') {
+        if ($first_name_err == '' && $middle_name_err == '' && $last_name_err == '' && $phone_err == '' && $email_err == '' && $dob_err == '' && $sex_err == '' && $password_err == '' && $confirm_password_err == '') {
             $userObj->first_name = $first_name;
+            $userObj->middle_name = $middle_name;
             $userObj->last_name = $last_name;
             $userObj->phone = $phone;
             $userObj->email = $email;
@@ -105,8 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['firstname']))
         $first_name = $_GET['firstname'];
+    if (isset($_GET['middlename']))
+        $middle_name = $_GET['middlename'];
     if (isset($_GET['lastname']))
-        $last_name = $_GET['lastname'];
+    $last_name = $_GET['lastname'];
     if (isset($_GET['phone']))
         $phone = $_GET['phone'];
     if (isset($_GET['email']))
@@ -148,6 +155,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="firstname">First Name</label>
                 <input type="text" name="firstname" id="firstname" placeholder="Enter your first name" value="<?= $first_name ?>" required/>
                 <span class="text-danger small"><?= $first_name_err ?></span>
+            </div>
+            <div class="input-group">
+                <label for="middlename">Middle Name (Optional)</label>
+                <input type="text" name="middlename" id="middlename" placeholder="Enter your middle name" value="<?= $middle_name ?>"/>
+                <span class="text-danger small"><?= $middle_name_err ?></span>
             </div>
             <div class="input-group">
                 <label for="lastname">Last Name</label>

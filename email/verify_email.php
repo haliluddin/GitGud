@@ -10,6 +10,7 @@
 
     require_once 'resend_token.php';
 ?>
+<link rel="stylesheet" href="../assets/css/style.css?v=<?php echo time(); ?>">
 <style>
     main{
         height: calc(100vh - 65.61px); 
@@ -17,17 +18,25 @@
         justify-content: center;
         align-items: center;
     }
+ 
 </style>
 <main>
-    <div class="verify">
-        <h1>Verify your email</h1>
-        <p>You will need to verify your email to complete registration</p>
-        <img src="assets/images/email.jpg" alt="">
-        <p>An email has been sent to <span class="fw-bold"><?= $email ?></span> with a link to verify your account. If you have not received the email after a few minutes, please check your spam folder</p><br>
-        <p>Didn't receive it yet? <a href="" data-bs-toggle="modal" data-bs-target="#resend">Resend Verification Link</a> 
-        <!-- or <a href="" data-bs-toggle="modal" data-bs-target="#change">Change</a> the e-mail</p> -->
+    <div class="bg-white border p-5 w-50 rounded-2 text-center">
+        <img src="../assets/images/email.jpg" width="150" height="150">
+        <h2 class="my-4">Verify your email address</h2>
+        <p>A verification email has been sent to your email <span style="color: #CD5C08;"><?= $email ?></span><br>Please check your email and click the link provided in the email to complete your account registration.</p>
+        <div class="w-75 mx-auto my-4">
+            <span class="small">If you do not receive the email within the next 5 minutes, use the button below to resend the verification email.</span>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="user_id" value="<?= $_SESSION['user']['id'] ?>" />
+            <input type="hidden" name="first_name" value="<?= $user['first_name'] ?>" />
+            <input type="hidden" name="email" value="<?= $email ?>" />
+            <input type="submit" class="btn btn-primary w-50 p-3 rounded-5" value="Resend Verification Email" /> 
+        </form>
     </div>
-    <!-- Resend Modal -->
+
+    <!-- Resend Modal 
     <div class="modal fade" id="resend" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="width: 800px;">
             <div class="modal-content p-5">
@@ -47,7 +56,8 @@
                 </form>
             </div>
         </div>
-    </div>
+    </div> -->
+
     <!-- Change Modal -->
      <!-- !!! REMOVED !!! -->
     <!-- <div class="modal fade" id="change" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

@@ -123,62 +123,74 @@
     <br><br><br>
     <h2>All Food Parks in Zamboanga City</h2><br>
     
-    <div class="row row-cols-1 row-cols-md-4 g-3">
-        <?php 
-            $parks = $parkObj->getParks();
+    <?php 
+        $parks = $parkObj->getParks();
+        $validParks = array_filter($parks, function($park) {
+            return ($park['business_status'] != 'Reject' && $park['business_status'] != 'Pending Approval');
+        });
+
+        if (empty($validParks)) { 
+            echo "<p class='text-center my-5'>No food parks available at this time.</p>";
+        } else { 
             date_default_timezone_set('Asia/Manila'); 
             $currentDay = date('l'); 
             $currentTime = date('H:i');
-            foreach ($parks as $park) { 
-                if ($park['business_status'] != 'Reject' && $park['business_status'] != 'Pending Approval') {
-                    //$uniqueLink = "./park.php?id=" . $park['url'];
-                    
-                    $isOpen = false;
-                    $operatingHours = explode('; ', $park['operating_hours']); 
+    ?>
+            <div class="row row-cols-1 row-cols-md-4 g-3">
+                <?php 
+                    foreach ($validParks as $park) { 
+                        $isOpen = false;
+                        $operatingHours = explode('; ', $park['operating_hours']); 
 
-                    foreach ($operatingHours as $hours) {
-                        list($days, $timeRange) = explode('<br>', $hours); 
-                        $daysArray = array_map('trim', explode(',', $days)); 
+                        foreach ($operatingHours as $hours) {
+                            list($days, $timeRange) = explode('<br>', $hours); 
+                            $daysArray = array_map('trim', explode(',', $days)); 
 
-                        if (in_array($currentDay, $daysArray)) { 
-                            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                            
-                            $openTime24 = date('H:i', strtotime($openTime));
-                            $closeTime24 = date('H:i', strtotime($closeTime));
+                            if (in_array($currentDay, $daysArray)) { 
+                                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                                
+                                $openTime24 = date('H:i', strtotime($openTime));
+                                $closeTime24 = date('H:i', strtotime($closeTime));
 
-                            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                                $isOpen = true;
-                                break;
+                                if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                                    $isOpen = true;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                    $statusClass = $isOpen ? 'opennow' : 'cnow';
-                    $statusText = $isOpen ? 'Open Now' : 'Closed';
-                    ?>
-                    <div class="col">
-                        <div class="card">
-                            <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
-                                <img src="<?= $park['business_logo'] ?>" class="card-img-top" alt="...">
-                                <div class="card-body">
-                                    <h5 class="card-title text-dark"><?= $park['business_name'] ?></h5>
-                                    <p class="card-text text-muted"><i class="fa-solid fa-location-dot me-2"></i><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City</p>
-                                    <span class="<?= $statusClass ?>"><?= $statusText ?></span>
-                                </div>
-                            </a>
-                            <div class="text-center p-2 lpseemore rounded-4 mx-3 mb-3 small" data-bs-toggle="modal" data-bs-target="#seemorepark"
-                            data-email="<?= htmlspecialchars($park['business_email']) ?>"
-                            data-phone="<?= htmlspecialchars($park['business_phone']) ?>"
-                            data-hours="<?= htmlspecialchars($park['operating_hours']) ?>">See more...</div>
+                        $statusClass = $isOpen ? 'opennow' : 'cnow';
+                        $statusText = $isOpen ? 'Open Now' : 'Closed';
+                ?>
+                        <div class="col">
+                            <div class="card">
+                                <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
+                                    <img src="<?= $park['business_logo'] ?>" class="card-img-top" alt="...">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-dark"><?= $park['business_name'] ?></h5>
+                                        <p class="card-text text-muted">
+                                            <i class="fa-solid fa-location-dot me-2"></i>
+                                            <?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City
+                                        </p>
+                                        <span class="<?= $statusClass ?>"><?= $statusText ?></span>
+                                    </div>
+                                </a>
+                                <div class="text-center p-2 lpseemore rounded-4 mx-3 mb-3 small" data-bs-toggle="modal" data-bs-target="#seemorepark"
+                                data-email="<?= htmlspecialchars($park['business_email']) ?>"
+                                data-phone="<?= htmlspecialchars($park['business_phone']) ?>"
+                                data-hours="<?= htmlspecialchars($park['operating_hours']) ?>">See more...</div>
+                            </div>
                         </div>
-                    </div>
-            <?php 
-                }
-            }
-            ?>
-    </div>
-    <br><br><br>
+                <?php 
+                    }
+                ?>
+            </div>
+    <?php 
+        }
+    ?>
+    <br><br><br><br><br>
 </section>
+
 <?php
     include_once 'footer.php'; 
 ?>

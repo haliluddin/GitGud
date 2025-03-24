@@ -16,7 +16,7 @@
         <?php
             $currentDir = dirname($_SERVER['SCRIPT_NAME']);
             if (strpos($currentDir, 'email') !== false) {
-                echo '<img src="../assets/images/logo.png" alt="GitGud">';
+                echo '<img src="../assets/images/logo.png" alt="GitGud" width="150">';
             } else {
                 echo '<img src="assets/images/logo.png" alt="GitGud">';
             }
