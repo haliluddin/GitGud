@@ -40,6 +40,7 @@ if ($user['role'] == 'Park Owner') {
 }
 
 $first_name = $user['first_name'];
+$middle_name = $user['middle_name'];
 $last_name = $user['last_name'];
 $email = $user['email'];
 $phone = $user['phone'];
@@ -50,6 +51,7 @@ $phone_cb = false;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $first_name = htmlspecialchars(trim($_POST['firstname']), ENT_QUOTES, 'UTF-8');
+    $middle_name = htmlspecialchars(trim($_POST['middlename']), ENT_QUOTES, 'UTF-8');
     $last_name = htmlspecialchars(trim($_POST['lastname']), ENT_QUOTES, 'UTF-8');
     $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
     $phone = filter_var(trim($_POST['phonenumber']), FILTER_SANITIZE_STRING);
@@ -191,6 +193,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="form-floating mb-4">
                     <input type="text" class="form-control c" id="firstname" name="firstname" placeholder="First Name" value="<?= $first_name ?>" required readonly>
                     <label for="firstname">First Name <span style="color: #CD5C08;">*</span></label>
+                </div>
+                <div class="form-floating mb-4">
+                    <input type="text" class="form-control c" id="middlename" name="middlename" placeholder="Middle Name" value="<?= $middle_name ?>" required readonly>
+                    <label for="middlename">Middle Name <span style="color: #CD5C08;">*</span></label>
                 </div>
                 <div class="form-floating mb-4">
                     <input type="text" class="form-control c" id="lastname" name="lastname" placeholder="Last Name" value="<?= $last_name ?>" required readonly>
@@ -472,9 +478,111 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <label for="rpc">Region, Province, City <span style="color: #CD5C08;">*</span></label>
                 </div>
                 <div class="form-floating mb-4">
-                    <input type="text" class="form-control" id="barangay" name="barangay" placeholder="Barangay">
+                    <select class="form-select" id="barangay" name="barangay" required aria-label="Barangay select">
+                        <option value="" disabled selected>Select</option>
+                        <option value="Arena Blanco">Arena Blanco</option>
+                        <option value="Ayala">Ayala</option>
+                        <option value="Baliwasan">Baliwasan</option>
+                        <option value="Baluno">Baluno</option>
+                        <option value="Barangay Zone I (Pob.)">Barangay Zone I (Pob.)</option>
+                        <option value="Barangay Zone II (Pob.)">Barangay Zone II (Pob.)</option>
+                        <option value="Barangay Zone III (Pob.)">Barangay Zone III (Pob.)</option>
+                        <option value="Barangay Zone IV (Pob.)">Barangay Zone IV (Pob.)</option>
+                        <option value="Boalan">Boalan</option>
+                        <option value="Bolong">Bolong</option>
+                        <option value="Buenavista">Buenavista</option>
+                        <option value="Bunguiao">Bunguiao</option>
+                        <option value="Busay (Sacol Island)">Busay (Sacol Island)</option>
+                        <option value="Cabaluay">Cabaluay</option>
+                        <option value="Cabatangan">Cabatangan</option>
+                        <option value="Cacao">Cacao</option>
+                        <option value="Calabasa">Calabasa</option>
+                        <option value="Calarian">Calarian</option>
+                        <option value="Camino Nuevo">Camino Nuevo</option>
+                        <option value="Campo Islam">Campo Islam</option>
+                        <option value="Canelar">Canelar</option>
+                        <option value="Capisan">Capisan</option>
+                        <option value="Cawit">Cawit</option>
+                        <option value="Culianan">Culianan</option>
+                        <option value="Curuan">Curuan</option>
+                        <option value="Dita">Dita</option>
+                        <option value="Divisoria">Divisoria</option>
+                        <option value="Dulian (Upper Bunguiao)">Dulian (Upper Bunguiao)</option>
+                        <option value="Dulian (Upper Pasonanca)">Dulian (Upper Pasonanca)</option>
+                        <option value="Guisao">Guisao</option>
+                        <option value="Guiwan">Guiwan</option>
+                        <option value="Kasanyangan">Kasanyangan</option>
+                        <option value="La Paz">La Paz</option>
+                        <option value="Labuan">Labuan</option>
+                        <option value="Lamisahan">Lamisahan</option>
+                        <option value="Landang Gua">Landang Gua</option>
+                        <option value="Landang Laum">Landang Laum</option>
+                        <option value="Lanzones">Lanzones</option>
+                        <option value="Lapakan">Lapakan</option>
+                        <option value="Latuan (Curuan)">Latuan (Curuan)</option>
+                        <option value="Licomo">Licomo</option>
+                        <option value="Limaong">Limaong</option>
+                        <option value="Limpapa">Limpapa</option>
+                        <option value="Lubigan">Lubigan</option>
+                        <option value="Lumayang">Lumayang</option>
+                        <option value="Lumbangan">Lumbangan</option>
+                        <option value="Lunzuran">Lunzuran</option>
+                        <option value="Maasin">Maasin</option>
+                        <option value="Malagutay">Malagutay</option>
+                        <option value="Mampang">Mampang</option>
+                        <option value="Manalipa">Manalipa</option>
+                        <option value="Mangusu">Mangusu</option>
+                        <option value="Manicahan">Manicahan</option>
+                        <option value="Mariki">Mariki</option>
+                        <option value="Mercedes">Mercedes</option>
+                        <option value="Muti">Muti</option>
+                        <option value="Pamucutan">Pamucutan</option>
+                        <option value="Pangapuyan">Pangapuyan</option>
+                        <option value="Panubigan">Panubigan</option>
+                        <option value="Pasilmanta (Sacol Island)">Pasilmanta (Sacol Island)</option>
+                        <option value="Pasobolong">Pasobolong</option>
+                        <option value="Pasonanca">Pasonanca</option>
+                        <option value="Patalon">Patalon</option>
+                        <option value="Putik">Putik</option>
+                        <option value="Quiniput">Quiniput</option>
+                        <option value="Recodo">Recodo</option>
+                        <option value="Rio Hondo">Rio Hondo</option>
+                        <option value="Salaan">Salaan</option>
+                        <option value="San Jose Cawa-Cawa">San Jose Cawa-Cawa</option>
+                        <option value="San Jose Gusu">San Jose Gusu</option>
+                        <option value="San Roque">San Roque</option>
+                        <option value="Sangali">Sangali</option>
+                        <option value="Santa Barbara">Santa Barbara</option>
+                        <option value="Santa Catalina">Santa Catalina</option>
+                        <option value="Santa Maria">Santa Maria</option>
+                        <option value="Santo Nino">Santo Nino</option>
+                        <option value="Sibulao (Caruan)">Sibulao (Caruan)</option>
+                        <option value="Sinubung">Sinubung</option>
+                        <option value="Sinunoc">Sinunoc</option>
+                        <option value="Tagasilay">Tagasilay</option>
+                        <option value="Taguiti">Taguiti</option>
+                        <option value="Talabaan">Talabaan</option>
+                        <option value="Talisayan">Talisayan</option>
+                        <option value="Talon-Talon">Talon-Talon</option>
+                        <option value="Taluksangay">Taluksangay</option>
+                        <option value="Tetuan">Tetuan</option>
+                        <option value="Tictapul">Tictapul</option>
+                        <option value="Tigbalabag">Tigbalabag</option>
+                        <option value="Tigtabon">Tigtabon</option>
+                        <option value="Tolosa">Tolosa</option>
+                        <option value="Tugbungan">Tugbungan</option>
+                        <option value="Tulungatung">Tulungatung</option>
+                        <option value="Tumaga">Tumaga</option>
+                        <option value="Tumalutab">Tumalutab</option>
+                        <option value="Tumitus">Tumitus</option>
+                        <option value="Victoria">Victoria</option>
+                        <option value="Vitali">Vitali</option>
+                        <option value="Zambowood">Zambowood</option>
+                    </select>
+
                     <label for="barangay">Barangay <span style="color: #CD5C08;">*</span></label>
                 </div>
+
                 <div class="form-floating">
                     <input type="text" class="form-control" id="sbh" name="sbh" placeholder="Street Name, Building, House No.">
                     <label for="sbh">Street Name, Building, House No. <span style="color: #CD5C08;">*</span></label>
@@ -523,6 +631,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="mb-2">
                         <span class="text-muted">First Name</span>
                         <span class="first-name">N/A</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted">Middle Name</span>
+                        <span class="middle-name">N/A</span>
                     </div>
                     <div class="mb-2">
                         <span class="text-muted">Last Name</span>
@@ -653,6 +765,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         const formData = {
             firstName: "",
+            middleName: "",
             lastName: "",
             email: "",
             phone: "",
@@ -670,7 +783,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             btn.addEventListener("click", (event) => {
                 event.preventDefault();  // Prevent default form behavior
 
-                const currentStepInputs = formSteps[formStepsNum].querySelectorAll("input");
+                const currentStepInputs = formSteps[formStepsNum].querySelectorAll("input, select");
                 const errors = validateInputs(currentStepInputs);
 
                 if (errors.length > 0) {
@@ -723,6 +836,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 if (id) {
                     if (id === "firstname") formData.firstName = value;
+                    else if (id === "middlename") formData.middleName = value;
                     else if (id === "lastname") formData.lastName = value;
                     else if (id === "email") formData.email = value;
                     else if (id === "phonenumber") formData.phone = value;
@@ -785,7 +899,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     errors.push("The business name is required.");
                 }
 
-                if (id === "barangay" && value === "") {
+                if (id === "barangay" && (value === "" || value === "Select")) {
                     errors.push("The barangay is required.");
                 }
 
@@ -868,6 +982,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         function updateReviewStep() {
             // Other fields
             document.querySelector(".first-name").textContent = formData.firstName;
+            document.querySelector(".middle-name").textContent = formData.middleName;
             document.querySelector(".last-name").textContent = formData.lastName;
             document.querySelector(".email").textContent = formData.email;
             document.querySelector(".phone").textContent = formData.phone;

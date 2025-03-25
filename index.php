@@ -6,18 +6,21 @@ include_once 'modals.php';
 require_once __DIR__ . '/classes/db.class.php';
 require_once __DIR__ . '/classes/park.class.php';
 require_once __DIR__ . '/classes/encdec.class.php';
+require_once __DIR__ . '/classes/user.class.php';
 
 $userObj = new User();
 $parkObj = new Park();
 $isLoggedIn = false;
-
 if (isset($_SESSION['user'])) {
+    $user = $userObj->getUser($_SESSION['user']['id']);
     if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
         $isLoggedIn = true;
     } else {
         echo '<script> window.location.href = "email/verify_email.php" </script>';
         exit();
     }
+} else {
+    $user = ['role' => 'Guest'];
 }
 
 if (isset($_POST['report_submit'])) {
@@ -34,10 +37,11 @@ if (isset($_POST['report_submit'])) {
         echo "<script>alert('You must be logged in to report.');</script>";
     }
 }
+$currentDateTime = date("l, F j, Y h:i A");
 ?>
 <title>GitGud PMS</title>
 <style>
-.lpseemore{
+.lpseemore {
     background-color: #e5e5e5;
     cursor: pointer;
 }
@@ -69,7 +73,6 @@ if (isset($_POST['report_submit'])) {
     margin-right: 15px;
 }
 .search-info {
-    
 }
 .search-name {
     margin: 0 !important;
@@ -112,22 +115,36 @@ if (isset($_POST['report_submit'])) {
                 We'll list your stalls' menus online and simplify the ordering process, helping you reach hungry customers quickly. From street food to local favorites, we'll boost your park's visibility.<br><br>
                 Ready to grow your audience? Let's partner today!
             </p>
-            <?php if ($isLoggedIn) { ?>
-                <button onclick="window.location.href='parkregistration.php'">Get Started</button>
-            <?php } else { ?>
-                <button onclick="window.location.href='signup.php'">Get Started</button>
-            <?php } ?>
+            <?php 
+            if ($isLoggedIn && ($user['role'] != 'Admin' && $user['role'] != 'Stall Owner')) {
+                $status = $userObj->getBusinessStatus($user['id']);
+                if ($status == 'Pending Approval') {
+                    $url = 'pendingapproval.php';
+                } else if ($status == 'Rejected') {
+                    $url = 'rejected.php';
+                } else {
+                    $url = 'parkregistration.php';
+                }
+                echo '<button onclick="window.location.href=\'' . $url . '\'">Get Started</button>';
+            } elseif ($isLoggedIn && ($user['role'] == 'Admin' || $user['role'] == 'Stall Owner')) { 
+                echo '<button disabled>Get Started</button>';
+            } else { 
+                echo '<button onclick="window.location.href=\'signup.php\'">Get Started</button>';
+            } 
+            ?>
+
         </div>
     </div>
 </section>
+
 <section class="third">
     <br><br><br>
     <h2>All Food Parks in Zamboanga City</h2><br>
     <?php 
         $parks = $parkObj->getParks();
         $validParks = array_filter($parks, function($park) {
-            return ($park['business_status'] != 'Reject' && $park['business_status'] != 'Pending Approval');
-        });
+            return $park['business_status'] === 'Approved';
+        });        
         if (empty($validParks)) { 
             echo "<p class='text-center my-5'>No food parks available at this time.</p>";
         } else { 

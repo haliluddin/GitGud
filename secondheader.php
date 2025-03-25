@@ -12,7 +12,7 @@
     }
 </style>
 <div class="bottom d-flex justify-content-between align-items-center">
-    <a href="../index.php"><i class="fa-solid fa-arrow-left-from-bracket"></i> 
+    <a href="index.php"><i class="fa-solid fa-arrow-left-from-bracket"></i> 
         <?php
             $currentDir = dirname($_SERVER['SCRIPT_NAME']);
             if (strpos($currentDir, 'email') !== false) {
