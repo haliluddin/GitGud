@@ -489,7 +489,18 @@ class User {
             return [];
         }
     }
-
+    
+    public function reportFoodParkOwner($reported_by, $reported_user, $reason) {
+        $sql = "INSERT INTO reports (reported_by, reported_user, reason) 
+                VALUES (:reported_by, :reported_user, :reason)";
+        $query = $this->db->connect()->prepare($sql);
+        return $query->execute([
+            ':reported_by' => $reported_by,
+            ':reported_user' => $reported_user,
+            ':reason' => $reason
+        ]);
+    }
+    
     
 
     // function getStatusMessage($status) {

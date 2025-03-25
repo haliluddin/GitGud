@@ -1,53 +1,52 @@
 <?php
 session_start();
-
 include_once 'links.php'; 
 include_once 'secondheader.php';
 require_once './classes/db.class.php';
 $userObj = new User();
 
-$first_name = $last_name = $email = $phone = $business_name = $business_type = $branches = $business_email = $business_phone = $region_province_city = $barangay = $street_building_house = $business_permit = $business_logo = '';
-//$err = $first_name_err = $last_name_err = $email_err = $phone_err = $business_name_err = $business_type_err = $branches_err = $business_email_err = $business_phone_err = $region_province_city_err = $barangay_err = $street_building_house_err = $business_permit_err = '';
-
-$business_email = '';
-$business_phone = '';
-$email_cb = false;
-$phone_cb = false;
-
-if (isset($_SESSION['user']['id'])) {
-    if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
-        $user = $userObj->getUser($_SESSION['user']['id']);
-        if ($user) {
-            if ($user['role'] == 'Park Owner') {
-                $status = $userObj->getBusinessStatus($_SESSION['user']['id']);
-                if ($status == 'Pending Approval') {
-                    header('Location: pendingapproval.php');
-                    exit();
-                } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
-                    header('Location: parkregistration.php');
-                    exit();
-                } else if ($status == 'Rejected') {
-                    echo 'Your business registration has been rejected.';
-                    exit();
-                }
-            }
-            
-            $first_name = $user['first_name'];
-            $last_name = $user['last_name'];
-            $email = $user['email'];
-            $phone = $user['phone'];
-        } else {
-            header('Location: email/verify_email.php');
-            exit();
-        }
-    } else {
-        header('Location: email/verify_email.php');
-        exit();
-    }
+if (isset($_GET['user_id'])) {
+    $owner_id = $_GET['user_id'];
+} elseif (isset($_SESSION['user']['id'])) {
+    $owner_id = $_SESSION['user']['id'];
 } else {
     header('Location: signin.php');
     exit();
 }
+
+if ($userObj->isVerified($owner_id) != 1) {
+    header('Location: email/verify_email.php');
+    exit();
+}
+
+$user = $userObj->getUser($owner_id);
+if (!$user) {
+    header('Location: email/verify_email.php');
+    exit();
+}
+
+if ($user['role'] == 'Park Owner') {
+    $status = $userObj->getBusinessStatus($owner_id);
+    if ($status == 'Pending Approval') {
+        header('Location: pendingapproval.php');
+        exit();
+    } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
+        header('Location: parkregistration.php');
+        exit();
+    } else if ($status == 'Rejected') {
+        echo 'Your business registration has been rejected.';
+        exit();
+    }
+}
+
+$first_name = $user['first_name'];
+$last_name = $user['last_name'];
+$email = $user['email'];
+$phone = $user['phone'];
+
+$business_name = $business_type = $branches = $business_email = $business_phone = $region_province_city = $barangay = $street_building_house = $business_permit = $business_logo = '';
+$email_cb = false;
+$phone_cb = false;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $first_name = htmlspecialchars(trim($_POST['firstname']), ENT_QUOTES, 'UTF-8');
@@ -56,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $phone = filter_var(trim($_POST['phonenumber']), FILTER_SANITIZE_STRING);
     $business_name = filter_var(trim($_POST['businessname']), FILTER_SANITIZE_STRING);
     $business_type = filter_var(trim($_POST['businesstype']), FILTER_SANITIZE_STRING);
-    //$branches = filter_var(trim($_POST['branches']), FILTER_SANITIZE_STRING);
     
     $email_cb = isset($_POST['flexCheckEmail']);
     $phone_cb = isset($_POST['flexCheckPhone']);
@@ -81,14 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (isset($_FILES['businesspermit']) && $_FILES['businesspermit']['error'] == UPLOAD_ERR_OK) {
         $uploadDir = 'uploads/business/';
-    
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
-    
         $fileExtension = pathinfo($_FILES['businesspermit']['name'], PATHINFO_EXTENSION);
         $uniqueFileName = $uploadDir . uniqid('permit_', true) . '.' . $fileExtension;
-    
         if (move_uploaded_file($_FILES['businesspermit']['tmp_name'], $uniqueFileName)) {
             $business_permit = $uniqueFileName;
         } else {
@@ -98,14 +93,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (isset($_FILES['businesslogo']) && $_FILES['businesslogo']['error'] == UPLOAD_ERR_OK) {
         $uploadDir = 'uploads/business/';
-    
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
-    
         $fileExtension = pathinfo($_FILES['businesslogo']['name'], PATHINFO_EXTENSION);
         $uniqueFileName = $uploadDir . uniqid('logo_', true) . '.' . $fileExtension;
-    
         if (move_uploaded_file($_FILES['businesslogo']['tmp_name'], $uniqueFileName)) {
             $business_logo = $uniqueFileName;
         } else {
@@ -113,18 +105,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }    
 
-    $user_id = $_SESSION['user']['id'];
-
     $operatingHoursJson = $_POST['operating_hours'];
     $operatingHours = json_decode($operatingHoursJson, true);
     
-    $business_id = $userObj->registerBusiness($user_id, $business_name, $business_type, $region_province_city, $barangay, $street_building_house, $business_phone, $business_email, $business_permit, $business_logo, $operatingHours);
+    $business_id = $userObj->registerBusiness($owner_id, $business_name, $business_type, $region_province_city, $barangay, $street_building_house, $business_phone, $business_email, $business_permit, $business_logo, $operatingHours);
     if ($business_id) {
         header('Location: pendingapproval.php');
-        //var_dump($business_id);
         exit();
     } else if ($business_id == "Park Owner") {
-        $status = $userObj->getBusinessStatus($user_id);
+        $status = $userObj->getBusinessStatus($owner_id);
         if ($status == 'Pending Approval') {
             header('Location: pendingapproval.php');
             exit();
@@ -134,15 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else if ($status == 'Rejected') {
             echo 'Your business registration has been rejected.';
         }
-    } /*else if ($business_id == "Existing Business") {
-        echo 'Business already exists';
-    } else if ($business_id == "Existing Email") {
-        echo 'Email already exists';
-    } else if ($business_id == "Existing Phone") {
-        echo 'Phone already exists';
-    } else {
-        echo 'Failed to register business';
-    }*/
+    }
 }
 ?>
 <style>

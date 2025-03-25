@@ -1,36 +1,47 @@
 <?php
-    session_start();
-    
-    //include_once 'header.php';
-    include_once 'landingheader.php';
-    include_once 'links.php'; 
-    include_once 'modals.php';
-    require_once __DIR__ . '/classes/db.class.php';
-    require_once __DIR__ . '/classes/park.class.php';
-    require_once __DIR__ . '/classes/encdec.class.php';
+session_start();
+include_once 'landingheader.php';
+include_once 'links.php';
+include_once 'modals.php';
+require_once __DIR__ . '/classes/db.class.php';
+require_once __DIR__ . '/classes/park.class.php';
+require_once __DIR__ . '/classes/encdec.class.php';
 
-    $userObj = new User();
-    $parkObj = new Park();
-    $isLoggedIn = false;
-    
-    if (isset($_SESSION['user'])) {
-        if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
-            $isLoggedIn = true;
-        } else {
-            // Redirect to verify email page using javascript
-            echo '<script> window.location.href = "email/verify_email.php" </script>';
-            exit();
-        }
+$userObj = new User();
+$parkObj = new Park();
+$isLoggedIn = false;
+
+if (isset($_SESSION['user'])) {
+    if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
+        $isLoggedIn = true;
+    } else {
+        echo '<script> window.location.href = "email/verify_email.php" </script>';
+        exit();
     }
+}
+
+if (isset($_POST['report_submit'])) {
+    if (isset($_SESSION['user'])) {
+        $reported_by = $_SESSION['user']['id'];
+        $reported_user = $_POST['reported_user'];
+        $reason = $_POST['reason'];
+        if ($userObj->reportFoodParkOwner($reported_by, $reported_user, $reason)) {
+            echo "<script>alert('Report submitted successfully.');</script>";
+        } else {
+            echo "<script>alert('Error submitting report.');</script>";
+        }
+    } else {
+        echo "<script>alert('You must be logged in to report.');</script>";
+    }
+}
 ?>
 <title>GitGud PMS</title>
-
 <style>
-    .lpseemore{
-        background-color: #e5e5e5;
-        cursor: pointer;
-    }
-    #searchResults {
+.lpseemore{
+    background-color: #e5e5e5;
+    cursor: pointer;
+}
+#searchResults {
     position: absolute;
     background: white;
     border: 1px solid #ccc;
@@ -40,7 +51,6 @@
     z-index: 1000;
     border-radius: 10px;
 }
-
 .search-item {
     display: flex;
     align-items: center;
@@ -49,39 +59,32 @@
     border-bottom: 1px solid #ddd;
     width: 100% !important;
 }
-
 .search-item:hover {
     background: #f5f5f5;
 }
-
 .search-logo {
     width: 60px !important;
     height: 60px !important;
     border-radius: 50%;
     margin-right: 15px;
 }
-
 .search-info {
     
 }
-
 .search-name {
     margin: 0 !important;
     margin-bottom: 7px;
 }
-
 .search-location {
     margin: 0 !important;
     font-size: small !important;
     color: gray;
 }
-
 .no-results {
     padding: 10px;
     color: gray;
     text-align: center;
 }
-
 </style>
 <section class="first">
     <br>
@@ -99,7 +102,6 @@
     </div>
     <br>
 </section>
-
 <section class="second">
     <div class="secondinside">
         <img src="assets/images/owner.jpg">
@@ -118,17 +120,14 @@
         </div>
     </div>
 </section>
-
 <section class="third">
     <br><br><br>
     <h2>All Food Parks in Zamboanga City</h2><br>
-    
     <?php 
         $parks = $parkObj->getParks();
         $validParks = array_filter($parks, function($park) {
             return ($park['business_status'] != 'Reject' && $park['business_status'] != 'Pending Approval');
         });
-
         if (empty($validParks)) { 
             echo "<p class='text-center my-5'>No food parks available at this time.</p>";
         } else { 
@@ -140,25 +139,20 @@
                 <?php 
                     foreach ($validParks as $park) { 
                         $isOpen = false;
-                        $operatingHours = explode('; ', $park['operating_hours']); 
-
+                        $operatingHours = explode('; ', $park['operating_hours']);
                         foreach ($operatingHours as $hours) {
-                            list($days, $timeRange) = explode('<br>', $hours); 
-                            $daysArray = array_map('trim', explode(',', $days)); 
-
-                            if (in_array($currentDay, $daysArray)) { 
+                            list($days, $timeRange) = explode('<br>', $hours);
+                            $daysArray = array_map('trim', explode(',', $days));
+                            if (in_array($currentDay, $daysArray)) {
                                 list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                                
                                 $openTime24 = date('H:i', strtotime($openTime));
                                 $closeTime24 = date('H:i', strtotime($closeTime));
-
                                 if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
                                     $isOpen = true;
                                     break;
                                 }
                             }
                         }
-
                         $statusClass = $isOpen ? 'opennow' : 'cnow';
                         $statusText = $isOpen ? 'Open Now' : 'Closed';
                 ?>
@@ -175,10 +169,7 @@
                                         <span class="<?= $statusClass ?>"><?= $statusText ?></span>
                                     </div>
                                 </a>
-                                <div class="text-center p-2 lpseemore rounded-4 mx-3 mb-3 small" data-bs-toggle="modal" data-bs-target="#seemorepark"
-                                data-email="<?= htmlspecialchars($park['business_email']) ?>"
-                                data-phone="<?= htmlspecialchars($park['business_phone']) ?>"
-                                data-hours="<?= htmlspecialchars($park['operating_hours']) ?>">See more...</div>
+                                <div class="text-center p-2 lpseemore rounded-4 mx-3 mb-3 small" data-bs-toggle="modal" data-bs-target="#seemorepark" data-email="<?= htmlspecialchars($park['business_email']) ?>" data-phone="<?= htmlspecialchars($park['business_phone']) ?>" data-hours="<?= htmlspecialchars($park['operating_hours']) ?>" data-reported_user="<?= htmlspecialchars($park['user_id']) ?>">See more...</div>
                             </div>
                         </div>
                 <?php 
@@ -190,12 +181,9 @@
     ?>
     <br><br><br><br><br>
 </section>
-
 <?php
-    include_once 'footer.php'; 
+include_once 'footer.php';
 ?>
-
-<!-- See more food park -->
 <div class="modal fade" id="seemorepark" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -217,61 +205,61 @@
                 </div>
                 <h5 class="fw-bold mb-3">Operating Hours</h5>
                 <div class="mb-4" data-hours>
-                    <!-- Dynamically added operating hours -->
                 </div>
-
                 <button class="border-0 py-2 px-3 rounded-5 me-2"><i class="fa-regular fa-copy me-2 fs-5"></i>Share Link</button>
-                <button class="border-0 py-2 px-3 rounded-5" data-bs-toggle="modal" data-bs-target="#report"><i class="fa-regular fa-flag me-2 fs-5"></i>Report</button>
+                <button class="border-0 py-2 px-3 rounded-5" data-bs-toggle="modal" data-bs-target="#report" data-reported_user=""> <i class="fa-regular fa-flag me-2 fs-5"></i>Report</button>
             </div>
         </div>
     </div>
 </div>
-<!-- Report -->
 <div class="modal fade" id="report" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-<div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-body">
-        <div class="d-flex justify-content-end">
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="text-center">
-            <h4 class="fw-bold mb-4">Why are you reporting this?</h4>
-            <div class="form-floating m-0">
-                <textarea class="form-control" placeholder="Reason" id="reason" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
-                <label for="reason">Reason</label>
-            </div>
-            <div class="mt-4 mb-3">
-                <input type="submit" value="Submit" class="button" />
-            </div>
+  <form method="POST" action="">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="d-flex justify-content-end">
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="text-center">
+              <h4 class="fw-bold mb-4">Why are you reporting this?</h4>
+              <div class="form-floating m-0">
+                  <textarea class="form-control" name="reason" placeholder="Reason" id="reason" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                  <label for="reason">Reason</label>
+              </div>
+              <input type="hidden" name="reported_user" id="reported_user" value="">
+              <div class="mt-4 mb-3">
+                  <input type="submit" name="report_submit" value="Submit" class="button" />
+              </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </form>
 </div>
-
 <script>
-    const modal = document.getElementById('seemorepark');
-
-    modal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-
-        // Get data attributes
-        const email = button.getAttribute('data-email');
-        const phone = button.getAttribute('data-phone');
-        const hours = button.getAttribute('data-hours');
-
-        // Populate modal fields
-        modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
-        modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
-
-        // Populate operating hours
-        const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
-        hoursContainer.innerHTML = hours
-            ? hours.split('; ').map(hour => `<p>${hour}</p>`).join('')
-            : '<p>No operating hours available</p>';
-    });
+const modal = document.getElementById('seemorepark');
+modal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const email = button.getAttribute('data-email');
+    const phone = button.getAttribute('data-phone');
+    const hours = button.getAttribute('data-hours');
+    const reportedUser = button.getAttribute('data-reported_user');
+    modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
+    modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
+    const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
+    hoursContainer.innerHTML = hours ? hours.split('; ').map(hour => "<p>" + hour + "</p>").join('') : '<p>No operating hours available</p>';
+    const reportButton = modal.querySelector('button[data-bs-target="#report"]');
+    if(reportButton) {
+        reportButton.setAttribute('data-reported_user', reportedUser);
+    }
+});
+const reportModal = document.getElementById('report');
+reportModal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const reportedUser = button.getAttribute('data-reported_user');
+    document.getElementById('reported_user').value = reportedUser ? reportedUser : '';
+});
 </script>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
@@ -290,8 +278,6 @@ $(document).ready(function() {
             $("#searchResults").hide();
         }
     });
-
-    // Handle selection from dropdown
     $(document).on("click", ".search-item", function() {
         window.location.href = $(this).data("url");
     });

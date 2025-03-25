@@ -122,9 +122,10 @@ class Admin {
     }
 
     public function getUserReportsActivity($user_id) {
-        $sql = "SELECT CONCAT('reported user ID: ', reported_user) AS reported_entity, reason, created_at 
-                FROM reports 
-                WHERE reported_by = :user_id";
+        $sql = "SELECT r.id, CONCAT('reported ', ru.first_name, ' ', ru.last_name) AS reported_entity, r.reason, r.created_at 
+                FROM reports r
+                JOIN users ru ON r.reported_user = ru.id
+                WHERE r.reported_by = :user_id";
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->bindValue(':user_id', $user_id);
         $stmt->execute();
@@ -238,4 +239,95 @@ class Admin {
 
         return $activities;
     }
+
+    public function updateReportStatus($report_id, $newStatus) {
+        $sql = "UPDATE reports SET status = :newStatus WHERE id = :report_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        return $stmt->execute([':newStatus' => $newStatus, ':report_id' => $report_id]);
+    }
+    
+    public function getReports() {
+        $sql = "SELECT r.id, r.reported_by, r.reported_user, r.reason, r.status, r.created_at,
+                       u1.first_name as reporter_first, u1.last_name as reporter_last,
+                       u2.first_name as reported_first, u2.last_name as reported_last
+                FROM reports r
+                JOIN users u1 ON r.reported_by = u1.id
+                JOIN users u2 ON r.reported_user = u2.id
+                ORDER BY r.created_at DESC";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function searchBusinesses($search = null) {
+        $sql = "
+            SELECT 
+                business.id, 
+                business.business_name, 
+                business.business_type, 
+                business.region_province_city, 
+                business.barangay, 
+                business.street_building_house, 
+                business.business_status, 
+                business.business_email, 
+                business.business_phone, 
+                business.business_permit,
+                business.business_logo, 
+                business.created_at, 
+                CONCAT(users.first_name, ' ', users.last_name) AS owner_name,
+                GROUP_CONCAT(DISTINCT CONCAT(operating_hours.days, '<br>', operating_hours.open_time, ' - ', operating_hours.close_time) SEPARATOR '; ') AS operating_hours
+            FROM business
+            INNER JOIN users ON business.user_id = users.id
+            LEFT JOIN operating_hours ON operating_hours.business_id = business.id
+        ";
+        
+        if ($search) {
+            $sql .= " WHERE CONCAT(users.first_name, ' ', users.last_name) LIKE :search
+                      OR business.business_name LIKE :search
+                      OR business.region_province_city LIKE :search
+                      OR business.barangay LIKE :search
+                      OR business.street_building_house LIKE :search
+                      OR business.created_at LIKE :search
+                      OR business.business_status LIKE :search";
+        }
+        
+        $sql .= " GROUP BY business.id";
+        
+        $query = $this->db->connect()->prepare($sql);
+        if ($search) {
+            $query->bindValue(':search', "%" . $search . "%");
+        }
+        $query->execute();
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    public function searchReports($search = null) {
+        $sql = "SELECT r.id, r.reported_by, r.reported_user, r.reason, r.status, r.created_at,
+                       u1.first_name as reporter_first, u1.last_name as reporter_last,
+                       u2.first_name as reported_first, u2.last_name as reported_last
+                FROM reports r
+                JOIN users u1 ON r.reported_by = u1.id
+                JOIN users u2 ON r.reported_user = u2.id";
+        
+        if ($search) {
+            $sql .= " WHERE u1.first_name LIKE :search
+                      OR u1.last_name LIKE :search
+                      OR u2.first_name LIKE :search
+                      OR u2.last_name LIKE :search
+                      OR r.reason LIKE :search
+                      OR r.created_at LIKE :search
+                      OR r.status LIKE :search";
+        }
+        
+        $sql .= " ORDER BY r.created_at DESC";
+        
+        $stmt = $this->db->connect()->prepare($sql);
+        if ($search) {
+            $stmt->bindValue(':search', "%" . $search . "%");
+        }
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    
+    
 }
