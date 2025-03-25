@@ -38,18 +38,23 @@
         $categories = isset($_POST['categories']) ? $_POST['categories'] : []; // Get categories
         $paymentMethods = isset($_POST['payment_methods']) ? $_POST['payment_methods'] : []; // Get payment methods
     
-        if (isset($_FILES['stalllogo']) && $_FILES['stalllogo']['error'] == UPLOAD_ERR_OK) {
+        if (isset($_FILES['stalllogo']) && $_FILES['stalllogo']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = 'uploads/business/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
-    
+        
             $fileExtension = pathinfo($_FILES['stalllogo']['name'], PATHINFO_EXTENSION);
             $uniqueFileName = uniqid('stall_', true) . '.' . $fileExtension;
             $uploadPath = $uploadDir . $uniqueFileName;
-    
+        
             if (move_uploaded_file($_FILES['stalllogo']['tmp_name'], $uploadPath)) {
                 $stalllogo = $uploadPath;
+            }
+        } else {
+            $record = $parkObj->fetchRecord($id);
+            if (!empty($record)) {
+                $stalllogo = $record['logo'];
             }
         }
     
