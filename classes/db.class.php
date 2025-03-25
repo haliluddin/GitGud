@@ -157,11 +157,12 @@ class User {
         }
     }
 
-    public function updateUser($user_id, $first_name, $last_name, $birth_date, $sex) {
-        $sql = "UPDATE users SET first_name = :first_name, last_name = :last_name, birth_date = :birth_date, sex = :sex WHERE id = :id";
+    public function updateUser($user_id, $first_name, $middle_name, $last_name, $birth_date, $sex) {
+        $sql = "UPDATE users SET first_name = :first_name, middle_name = :middle_name, last_name = :last_name, birth_date = :birth_date, sex = :sex WHERE id = :id";
         $stmt = $this->db->connect()->prepare($sql);
         return $stmt->execute([
             ':first_name' => $first_name,
+            ':middle_name' => $middle_name,
             ':last_name' => $last_name,
             ':birth_date' => $birth_date,
             ':sex' => $sex,
@@ -488,6 +489,8 @@ class User {
             return [];
         }
     }
+
+    
 
     // function getStatusMessage($status) {
     //     $messages = [

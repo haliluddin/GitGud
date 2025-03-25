@@ -3,7 +3,6 @@
 session_start();
 include_once 'landingheader.php';
 include_once 'links.php';
-include_once 'modals.php';
 require_once __DIR__ . '/classes/admin.class.php';
 require_once __DIR__ . '/classes/db.class.php';
 require_once __DIR__ . '/classes/user.class.php';
@@ -26,16 +25,17 @@ $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 $verificationObj = new Verification();
 
-$first_name = $last_name = $phone = $email = $dob = $sex = $password = $confirm_password = '';
-$first_name_err = $last_name_err = $phone_err = $email_err = $dob_err = $sex_err = $password_err = $confirm_password_err = '';
+$first_name = $middle_name = $last_name = $phone = $email = $dob = $sex = $password = $confirm_password = '';
+$first_name_err = $middle_name_err = $last_name_err = $phone_err = $email_err = $dob_err = $sex_err = $password_err = $confirm_password_err = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_user'])) {
         $user_id = $_POST['edit_user_id'];
         $first_name = htmlspecialchars(trim($_POST['edit_first_name']));
+        $middle_name = htmlspecialchars(trim($_POST['edit_middle_name']));
         $last_name = htmlspecialchars(trim($_POST['edit_last_name']));
         $birth_date = $_POST['edit_birth_date'];
         $sex = $_POST['edit_sex'];
-        $update = $userObj->updateUser($user_id, $first_name, $last_name, $birth_date, $sex);
+        $update = $userObj->updateUser($user_id, $first_name, $middle_name, $last_name, $birth_date, $sex);
         if ($update) {
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();
@@ -43,8 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo '<script>alert("Update failed")</script>';
         }
     }
-    if (isset($_POST['firstname']) && isset($_POST['lastname']) && isset($_POST['phone']) && isset($_POST['email']) && isset($_POST['dob']) && isset($_POST['sex']) && isset($_POST['password']) && isset($_POST['confirm_password'])) {
+    if (isset($_POST['firstname']) && isset($_POST['middlename']) && isset($_POST['lastname']) && isset($_POST['phone']) && isset($_POST['email']) && isset($_POST['dob']) && isset($_POST['sex']) && isset($_POST['password']) && isset($_POST['confirm_password'])) {
         $first_name = htmlspecialchars(trim($_POST['firstname']));
+        $middle_name = htmlspecialchars(trim($_POST['middlename']));
         $last_name = htmlspecialchars(trim($_POST['lastname']));
         $phone = htmlspecialchars(trim($_POST['phone']));
         $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
@@ -63,8 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else if (strlen($password) < 8) {
             $password_err = 'Password must be at least 8 characters';
         }
-        if ($first_name_err == '' && $last_name_err == '' && $phone_err == '' && $email_err == '' && $dob_err == '' && $sex_err == '' && $password_err == '' && $confirm_password_err == '') {
+        if ($first_name_err == '' && $middle_name_err == '' && $last_name_err == '' && $phone_err == '' && $email_err == '' && $dob_err == '' && $sex_err == '' && $password_err == '' && $confirm_password_err == '') {
             $userObj->first_name = $first_name;
+            $userObj->middle_name = $middle_name;
             $userObj->last_name = $last_name;
             $userObj->phone = $phone;
             $userObj->email = $email;
@@ -167,10 +169,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         echo '<div class="dropdown position-relative">';
                         echo '<i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>';
                         echo '<ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">';
-                        echo '<li><a class="dropdown-item edit-user" href="#" data-bs-toggle="modal" data-bs-target="#edituser" data-user-id="' . $user['id'] . '" data-first-name="' . htmlspecialchars($user['first_name']) . '" data-last-name="' . htmlspecialchars($user['last_name']) . '" data-email="' . htmlspecialchars($user['email']) . '" data-phone="' . htmlspecialchars($user['phone']) . '" data-birth-date="' . $user['birth_date'] . '" data-sex="' . htmlspecialchars($user['sex']) . '">Edit</a></li>';
+                        echo '<li><a class="dropdown-item edit-user" href="#" data-bs-toggle="modal" data-bs-target="#edituser" data-user-id="' . $user['id'] . '" data-first-name="' . htmlspecialchars($user['first_name']) . '" data-middle-name="' . htmlspecialchars($user['middle_name']) . '" data-last-name="' . htmlspecialchars($user['last_name']) . '" data-email="' . htmlspecialchars($user['email']) . '" data-phone="' . htmlspecialchars($user['phone']) . '" data-birth-date="' . $user['birth_date'] . '" data-sex="' . htmlspecialchars($user['sex']) . '">Edit</a></li>';
                         echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser" data-user-id="' . $user['id'] . '">Delete</a></li>';
                         echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deactivateuser">Deactivate</a></li>';
-                        echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#activitylog">Activity</a></li>';
+                        echo '<li><a class="dropdown-item activity-log" href="#" data-bs-toggle="modal" data-bs-target="#activitylog" data-user-id="' . $user['id'] . '">Activity</a></li>';
                         echo '<li><a class="dropdown-item" href="parkregistration.php?user_id=' . $user['id'] . '">Create Park</a></li>';
                         echo '</ul>';
                         echo '</div>';
@@ -344,6 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Pagination will be dynamically generated -->
         </div>
     </div>
+
     <div class="modal fade" id="adduser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-4">
@@ -365,6 +368,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label for="firstname">First Name</label>
                                 <input type="text" name="firstname" id="firstname" placeholder="Enter your first name" value="<?= $first_name ?>" required/>
                                 <span class="text-danger small"><?= $first_name_err ?></span>
+                            </div>
+                            <div class="input-group">
+                                <label for="middlename">Middle Name (Optional)</label>
+                                <input type="text" name="middlename" id="middlename" placeholder="Enter your middle name" value="<?= $middle_name ?>"/>
+                                <span class="text-danger small"><?= $middle_name_err ?></span>
                             </div>
                             <div class="input-group">
                                 <label for="lastname">Last Name</label>
@@ -451,6 +459,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="text" name="edit_first_name" id="editFirstName" class="form-control" required>
                         </div>
                         <div class="mb-2">
+                            <label for="editMiddleName" class="form-label">Middle Name</label>
+                            <input type="text" name="edit_middle_name" id="editMiddleName" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
                             <label for="editLastName" class="form-label">Last Name</label>
                             <input type="text" name="edit_last_name" id="editLastName" class="form-control" required>
                         </div>
@@ -500,6 +512,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="activitylog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-custom-width">
+            <div class="modal-content">
+                <div class="p-3 d-flex justify-content-between align-items-center">
+                    <h1 class="modal-title fs-5 fw-bold" id="staticBackdropLabel">Activity Log</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-scrollable pt-0">
+                </div>
             </div>
         </div>
     </div>
@@ -615,6 +639,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         var button = $(event.relatedTarget);
         var userId = button.data('user-id');
         var firstName = button.data('first-name');
+        var middleName = button.data('middle-name');
         var lastName = button.data('last-name');
         var email = button.data('email');
         var phone = button.data('phone');
@@ -622,6 +647,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         var sex = button.data('sex');
         $('#editUserId').val(userId);
         $('#editFirstName').val(firstName);
+        $('#editMiddleName').val(middleName);
         $('#editLastName').val(lastName);
         $('#editEmail').val(email);
         $('#editPhone').val(phone);
@@ -633,6 +659,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         var userId = button.data('user-id');
         $('#modalUserId').val(userId);
     });
+
+    $(document).ready(function() {
+        $('input[name="search"]').on('keyup', function() {
+            var searchValue = $(this).val();
+
+            $.ajax({
+                url: 'search_users.php',
+                type: 'POST',
+                data: { search: searchValue },
+                success: function(response) {
+                    $('#userTableBody').html(response);
+                },
+                error: function() {
+                    console.error('An error occurred while fetching search results.');
+                }
+            });
+        });
+    });
+
+    $(document).ready(function () {
+        $('.activity-log').on('click', function () {
+            var userId = $(this).data('user-id');
+            $('#activitylog .modal-body').html('<p class="text-center py-5">Loading...</p>');
+            $.ajax({
+                url: 'getActivityLog.php',
+                type: 'GET',
+                data: { user_id: userId },
+                success: function (data) {
+                    $('#activitylog .modal-body').html(data);
+                },
+                error: function () {
+                    $('#activitylog .modal-body').html('<p class="text-center py-5">Error loading activity.</p>');
+                }
+            });
+        });
+    });
+
     </script>
     <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/adminresponse.js?v=<?php echo time(); ?>"></script>

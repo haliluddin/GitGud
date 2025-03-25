@@ -70,4 +70,172 @@ class Admin {
         $query->bindParam(':id', $id);
         return $query->execute();
     }
+
+    public function getUserName($user_id) {
+        $sql = "SELECT first_name, last_name, profile_img FROM users WHERE id = :user_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetch();
+    }
+
+    public function getUserBusinessActivity($user_id) {
+        $sql = "SELECT business_name AS food_park_name, created_at FROM business WHERE user_id = :user_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getUserCartActivity($user_id) {
+        $sql = "SELECT GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names, c.created_at 
+                FROM cart c 
+                JOIN products p ON c.product_id = p.id 
+                WHERE c.user_id = :user_id 
+                GROUP BY c.created_at";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getUserNotifications($user_id) {
+        $sql = "SELECT message, created_at FROM notifications WHERE user_id = :user_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getUserOrdersActivity($user_id) {
+        $sql = "SELECT GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names, o.created_at 
+                FROM orders o 
+                JOIN order_stalls os ON o.id = os.order_id 
+                JOIN order_items oi ON os.id = oi.order_stall_id 
+                JOIN products p ON oi.product_id = p.id 
+                WHERE o.user_id = :user_id 
+                GROUP BY o.id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getUserReportsActivity($user_id) {
+        $sql = "SELECT CONCAT('reported user ID: ', reported_user) AS reported_entity, reason, created_at 
+                FROM reports 
+                WHERE reported_by = :user_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getUserStallsActivity($user_id) {
+        $sql = "SELECT name AS food_stall_name, created_at FROM stalls WHERE user_id = :user_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getUserStallLikesActivity($user_id) {
+        $sql = "SELECT s.name AS food_stall_name, sl.created_at 
+                FROM stall_likes sl 
+                JOIN stalls s ON sl.stall_id = s.id 
+                WHERE sl.user_id = :user_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getUserActivities($user_id) {
+        $activities = [];
+        $userData = $this->getUserName($user_id);
+        $userFullName = $userData ? trim($userData['first_name'] . ' ' . $userData['last_name']) : '';
+
+        $business = $this->getUserBusinessActivity($user_id);
+        if ($business) {
+            foreach ($business as $b) {
+                $activities[] = [
+                    'message'    => $userFullName . ' registered their food park',
+                    'detail'     => '"' . $b['food_park_name'] . '"',
+                    'created_at' => $b['created_at']
+                ];
+            }
+        }
+
+        $cart = $this->getUserCartActivity($user_id);
+        if ($cart) {
+            foreach ($cart as $c) {
+                $activities[] = [
+                    'message'    => $userFullName . ' added to cart',
+                    'detail'     => '"' . $c['product_names'] . '"',
+                    'created_at' => $c['created_at']
+                ];
+            }
+        }
+
+        $notifications = $this->getUserNotifications($user_id);
+        if ($notifications) {
+            foreach ($notifications as $n) {
+                $activities[] = [
+                    'message'    => $userFullName . ' received notification',
+                    'detail'     => '"' . $n['message'] . '"',
+                    'created_at' => $n['created_at']
+                ];
+            }
+        }
+
+        $orders = $this->getUserOrdersActivity($user_id);
+        if ($orders) {
+            foreach ($orders as $o) {
+                $activities[] = [
+                    'message'    => $userFullName . ' ordered',
+                    'detail'     => '"' . $o['product_names'] . '"',
+                    'created_at' => $o['created_at']
+                ];
+            }
+        }
+
+        $reports = $this->getUserReportsActivity($user_id);
+        if ($reports) {
+            foreach ($reports as $r) {
+                $activities[] = [
+                    'message'    => $userFullName . ' ' . $r['reported_entity'],
+                    'detail'     => '"' . $r['reason'] . '"',
+                    'created_at' => $r['created_at']
+                ];
+            }
+        }
+
+        $stalls = $this->getUserStallsActivity($user_id);
+        if ($stalls) {
+            foreach ($stalls as $s) {
+                $activities[] = [
+                    'message'    => $userFullName . ' registered their food stall',
+                    'detail'     => '"' . $s['food_stall_name'] . '"',
+                    'created_at' => $s['created_at']
+                ];
+            }
+        }
+
+        $stallLikes = $this->getUserStallLikesActivity($user_id);
+        if ($stallLikes) {
+            foreach ($stallLikes as $l) {
+                $activities[] = [
+                    'message'    => $userFullName . ' liked',
+                    'detail'     => '"' . $l['food_stall_name'] . '"',
+                    'created_at' => $l['created_at']
+                ];
+            }
+        }
+
+        usort($activities, function($a, $b) {
+            return strtotime($b['created_at']) - strtotime($a['created_at']);
+        });
+
+        return $activities;
+    }
 }

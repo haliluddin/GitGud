@@ -1107,25 +1107,3 @@
     });
 </script>
 
-<!-- Report -->
-<div class="modal fade" id="report" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-<div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-body">
-        <div class="d-flex justify-content-end">
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="text-center">
-            <h4 class="fw-bold mb-4">Why are you reporting this?</h4>
-            <div class="form-floating m-0">
-                <textarea class="form-control" placeholder="Reason" id="reason" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
-                <label for="reason">Reason</label>
-            </div>
-            <div class="mt-4 mb-3">
-                <input type="submit" value="Submit" class="button" />
-            </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
