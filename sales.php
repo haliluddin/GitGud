@@ -21,16 +21,13 @@ $currentDate  = date("Y-m-d");
 
 $daysOld = (strtotime($currentDate) - strtotime($createdDate))/(60*60*24);
 
-// Define period for Today:
 $todayStart = $currentDate . " 00:00:00";
 $todayEnd   = $currentDate . " 23:59:59";
 
-// Yesterday always shows the complete day before today:
 $yesterdayDate  = date("Y-m-d", strtotime("-1 day", strtotime($currentDate)));
 $yesterdayStart = $yesterdayDate . " 00:00:00";
 $yesterdayEnd   = $yesterdayDate . " 23:59:59";
 
-// Initialize time periods with Today
 $timePeriods = [
     'today' => [
         'label'   => 'Today',
@@ -41,7 +38,6 @@ $timePeriods = [
     ]
 ];
 
-// Only add Yesterday if at least one day has passed
 if($daysOld >= 1) {
     $timePeriods['yesterday'] = [
         'label'   => 'Yesterday',
@@ -52,10 +48,8 @@ if($daysOld >= 1) {
     ];
 }
 
-// Calculate complete 7-day periods (anchored at creation)
 $completeWeeks = floor((($daysOld + 1) / 7));
 if($completeWeeks >= 1) {
-    // Get the latest complete week period
     $weekNumber = $completeWeeks; 
     $sevenStart = date("Y-m-d", strtotime($createdDate . " + " . (7 * ($weekNumber - 1)) . " days"));
     $sevenEnd   = date("Y-m-d", strtotime($sevenStart . " + 6 days"));
@@ -68,7 +62,6 @@ if($completeWeeks >= 1) {
     ];
 }
 
-// Calculate complete 30-day periods
 $complete30Days = floor((($daysOld + 1) / 30));
 if($complete30Days >= 1) {
     $periodNumber = $complete30Days;
@@ -83,7 +76,6 @@ if($complete30Days >= 1) {
     ];
 }
 
-// Calculate complete 1-year periods
 $completeYears = floor((($daysOld + 1) / 365));
 if($completeYears >= 1) {
     $yearNumber = $completeYears;
@@ -135,9 +127,6 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
                             <h5 class="m-0 fw-bold">Sales <?php echo $period['label']; ?></h5>
                             <span class="small text-muted">(<?php echo $period['display']; ?>)</span>
                         </div>
-                        <span class="small" style="color: #CD5C08; cursor: pointer;">
-                            Download Report <i class="fa-regular fa-circle-down ms-2"></i>
-                        </span>
                     </div>
                     <div class="w-25 text-end">
                         <h4 class="m-0 fw-bold"><?php echo $period['sales']['totalOrders']; ?></h4>
