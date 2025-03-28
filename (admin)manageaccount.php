@@ -116,6 +116,70 @@ if (isset($_POST['report_update'])) {
     header("Location: " . $_SERVER['PHP_SELF'] . "#reports");
     exit();
 }
+
+if (isset($_POST['deactivate_user'])) {
+    $user_id = $_POST['deactivate_user_id'];
+    $deactivation_reason = htmlspecialchars(trim($_POST['deactivation_reason']));
+    $duration = $_POST['deactivation_duration'];
+    
+    // Calculate deactivation end date based on selected duration
+    $today = new DateTime();
+    $deactivated_until = clone $today;
+    
+    switch ($duration) {
+        case '3days':
+            $deactivated_until->add(new DateInterval('P3D'));
+            break;
+        case '7days':
+            $deactivated_until->add(new DateInterval('P7D'));
+            break;
+        case '1month':
+            $deactivated_until->add(new DateInterval('P1M'));
+            break;
+        case 'forever':
+            $deactivated_until = new DateTime('9999-12-31'); // Far future date for "forever"
+            break;
+        default:
+            $deactivated_until->add(new DateInterval('P3D')); // Default to 3 days
+    }
+    
+    $deactivated_until_str = $deactivated_until->format('Y-m-d');
+    
+    // Update user status and add to deactivation table
+    $deactivate = $adminObj->deactivateUser($user_id, $deactivated_until_str, $deactivation_reason);
+    
+    if ($deactivate) {
+        echo "
+        <script>
+            Swal.fire({
+                title: 'User Deactivated',
+                text: 'The user has been deactivated successfully.',
+                icon: 'success',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '" . $_SERVER['PHP_SELF'] . "';
+                }
+            });
+        </script>";
+    } else {
+        echo "
+        <script>
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to deactivate user.',
+                icon: 'failed',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '" . $_SERVER['PHP_SELF'] . "';
+                }
+            });
+        </script>";
+    }
+}
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
@@ -155,6 +219,7 @@ if (isset($_POST['report_update'])) {
                 <th>Birthday</th>
                 <th>Sex</th>
                 <th>Status</th>
+                <th>Deactivated Until</th>
                 <th>Role</th>
                 <th>Date Created</th>
                 <th>Action</th>
@@ -162,6 +227,16 @@ if (isset($_POST['report_update'])) {
             <tbody id="userTableBody">
                 <?php
                 $users = $adminObj->getUsers($searchTerm);
+                $getStatusRecords = $adminObj->getDeactivationRecords();
+
+                $statusMap = [];
+                foreach ($getStatusRecords as $record) {
+                    $statusMap[$record['user_id']] = [
+                        'status' => $record['status'],
+                        'deactivated_until' => $record['deactivated_until']
+                    ];
+                }
+                
                 if ($users) {
                     foreach ($users as $user) {
                         echo '<tr>';
@@ -171,7 +246,11 @@ if (isset($_POST['report_update'])) {
                         echo '<td class="fw-normal small py-3 px-4">' . "+63" . htmlspecialchars($user['phone']) . '</td>';
                         echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['birth_date']) . '</td>';
                         echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['sex']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['status']) . '</td>';
+                        $status = isset($statusMap[$user['id']]) ? $statusMap[$user['id']]['status'] : 'Active';
+                        $deactivatedUntil = isset($statusMap[$user['id']]) ? $statusMap[$user['id']]['deactivated_until'] : 'N/A';
+
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($status) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($deactivatedUntil) . '</td>';
                         echo '<td class="fw-normal small py-3 px-4 w-25"> 
                             <span class="small rounded-pill text-success border border-success px-3 py-1 fw-bold d-inline-flex align-items-center text-wrap">' . 
                             htmlspecialchars($user['role']) . 
@@ -185,7 +264,7 @@ if (isset($_POST['report_update'])) {
                         echo '<ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">';
                         echo '<li><a class="dropdown-item edit-user" href="#" data-bs-toggle="modal" data-bs-target="#edituser" data-user-id="' . $user['id'] . '" data-first-name="' . htmlspecialchars($user['first_name']) . '" data-middle-name="' . htmlspecialchars($user['middle_name']) . '" data-last-name="' . htmlspecialchars($user['last_name']) . '" data-email="' . htmlspecialchars($user['email']) . '" data-phone="' . htmlspecialchars($user['phone']) . '" data-birth-date="' . $user['birth_date'] . '" data-sex="' . htmlspecialchars($user['sex']) . '">Edit</a></li>';
                         echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser" data-user-id="' . $user['id'] . '">Delete</a></li>';
-                        echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deactivateuser">Deactivate</a></li>';
+                        echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deactivateuser" data-user-id="' . $user['id'] . '">Deactivate</a></li>';
                         echo '<li><a class="dropdown-item activity-log" href="#" data-bs-toggle="modal" data-bs-target="#activitylog" data-user-id="' . $user['id'] . '">Activity</a></li>';
                         if ($user['role'] == 'Customer') {
                             echo '<li><a class="dropdown-item" href="parkregistration.php?user_id=' . $user['id'] . '">Create Park</a></li>';
@@ -601,36 +680,43 @@ if (isset($_POST['report_update'])) {
         </div>
     </div>
 
-    <!-- Suspend User -->
+    <!-- Deactivate User -->
     <div class="modal fade" id="deactivateuser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="modal-title m-0 fw-bold">Select Duration of Deactivation</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <form action="" method="POST">
+                    <input type="hidden" name="deactivate_user_id" id="deactivateUserId" value="">
+                    <div class="modal-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="modal-title m-0 fw-bold">Select Duration of Deactivation</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="deactivation_duration" id="3days" value="3days">
+                            <label class="form-check-label" for="3days">3 Days</label>
+                        </div><br>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="deactivation_duration" id="7days" value="7days">
+                            <label class="form-check-label" for="7days">7 Days</label>
+                        </div><br>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="deactivation_duration" id="1month" value="1month">
+                            <label class="form-check-label" for="1month">1 Month</label>
+                        </div><br>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="deactivation_duration" id="forever" value="forever">
+                            <label class="form-check-label" for="forever">Forever</label>
+                        </div><br>
+                        <div class="mb-3">
+                            <label for="deactivation_reason" class="form-label">Reason for Deactivation</label>
+                            <textarea class="form-control" name="deactivation_reason" id="deactivation_reason" rows="3" required></textarea>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">Close</button>
+                            <button type="submit" name="deactivate_user" class="btn btn-primary">Deactivate</button> 
+                        </div>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="3days">
-                        <label class="form-check-label" for="3days">3 Days</label>
-                    </div><br>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="7days">
-                        <label class="form-check-label" for="7days">7 Days</label>
-                    </div><br>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="1month">
-                        <label class="form-check-label" for="1month">1 Month</label>
-                    </div><br>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="forever">
-                        <label class="form-check-label" for="forever">Forever</label>
-                    </div><br>
-                    <div class="text-center mt-4">
-                        <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">Close</button>
-                        <button type="button" class="btn btn-primary">Deactivate</button> 
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -854,6 +940,12 @@ if (isset($_POST['report_update'])) {
         });
     });
 
+    $('#deactivateuser').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var userId = button.data('user-id');
+        $('#deactivateUserId').val(userId);
+    });
+
     </script>
     <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/adminresponse.js?v=<?php echo time(); ?>"></script>
@@ -863,6 +955,8 @@ if (isset($_POST['report_update'])) {
     <!-- ACTIVATE AND DEACTIVATE USER -->
     <script src="assets/js/activate.js?v=<?php echo time(); ?>"></script>
     
+    
+</script>
     <br><br><br><br>
 </main>
 <?php
