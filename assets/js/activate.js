@@ -48,25 +48,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     activateModal.querySelector(".btn-primary").addEventListener("click", () => {
         if (currentRow) {
-            const statusCell = currentRow.querySelector("td:nth-child(7)");
-            const actionCell = currentRow.querySelector("td:nth-child(10)");
+            const userId = currentRow.querySelector("[data-user-id]").getAttribute("data-user-id");
 
-            // Reset to Active Status
-            statusCell.textContent = "Active";
-
-            // Update Action to Deactivate
-            actionCell.innerHTML = `
-                <div class="dropdown position-relative">
-                    <i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>
-                    <ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edituser">Edit</a></li>
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser">Delete</a></li>
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deactivateuser">Deactivate</a></li>
-                        <li><a class="dropdown-item" href="#">Activity</a></li>
-                    </ul>
-                </div>`;
-            // Close the modal
-            bootstrap.Modal.getInstance(activateModal).hide();
+            fetch("classes/activate.user.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `action=activateUser&user_id=${userId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'User Activated',
+                        text: 'The user has been activated successfully.',
+                        icon: 'success',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to activate user.',
+                        icon: 'failed',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.reload();
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error("Error:", error));
         }
     });
 });

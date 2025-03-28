@@ -376,4 +376,24 @@ class Admin {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function activateUser($user_id) {
+        try {
+            $db = $this->db->connect();
+            $db->beginTransaction();
+    
+            // Remove user from deactivation table
+            $deleteDeactivationQuery = "DELETE FROM deactivation WHERE user_id = :user_id";
+            $stmt = $db->prepare($deleteDeactivationQuery);
+            $stmt->execute([':user_id' => $user_id]);
+    
+            $db->commit();
+            return ["success" => true];
+        } catch (PDOException $e) {
+            $db->rollBack();
+            error_log("Error activating user: " . $e->getMessage());
+            return ["success" => false, "error" => $e->getMessage()];
+        }
+    }
+    
 }
