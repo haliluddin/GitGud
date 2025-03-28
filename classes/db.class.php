@@ -408,8 +408,19 @@ class User {
         return $result ? $result['business_status'] : null;
     }
     
+    public function getRejectionReason($user_id) {
+        $sql = "SELECT rejection_reason 
+                FROM business 
+                WHERE user_id = :user_id 
+                  AND business_status = 'Rejected'
+                ORDER BY created_at DESC 
+                LIMIT 1";
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute([':user_id' => $user_id]);
+        $result = $query->fetch();
+        return $result ? $result['rejection_reason'] : '';
+    }
     
-
     public function getOrders($user_id, $search = null) {
         try {
             $sql = "SELECT 

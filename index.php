@@ -105,9 +105,11 @@ $currentDateTime = date("l, F j, Y h:i A");
     </div>
     <br>
 </section>
+
+<?php if (!($isLoggedIn && ($user['role'] == 'Admin' || $user['role'] == 'Stall Owner'))): ?>
 <section class="second">
     <div class="secondinside">
-        <img src="assets/images/owner.jpg">
+        <img src="assets/images/owner.jpg" alt="Food Park Owner">
         <div>
             <h1>Promote Your Food Park with Us!</h1>
             <p>
@@ -126,16 +128,14 @@ $currentDateTime = date("l, F j, Y h:i A");
                     $url = 'parkregistration.php';
                 }
                 echo '<button onclick="window.location.href=\'' . $url . '\'">Get Started</button>';
-            } elseif ($isLoggedIn && ($user['role'] == 'Admin' || $user['role'] == 'Stall Owner')) { 
-                echo '<button disabled>Get Started</button>';
-            } else { 
+            } elseif (!$isLoggedIn) { 
                 echo '<button onclick="window.location.href=\'signup.php\'">Get Started</button>';
             } 
             ?>
-
         </div>
     </div>
 </section>
+<?php endif; ?>
 
 <section class="third">
     <br><br><br>

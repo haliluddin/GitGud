@@ -273,23 +273,74 @@ if (isset($_POST['report_update'])) {
         <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3"></div>
     </div>
 
-    <!-- Approve/Deny Confirmation Modal -->
-    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to <span id="actionText"></span> this application?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmAction">Yes, Proceed</button>
-                </div>
+    <!-- Approval Confirmation Modal (for Approve action) -->
+    <div class="modal fade" id="approvalConfirmModal" tabindex="-1" aria-labelledby="approvalConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="approvalConfirmModalLabel">Confirm Action</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            Are you sure you want to <span id="approvalActionText"></span> this application?
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirmApproval">Yes, Proceed</button>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Rejection Reason Modal (for Deny action) -->
+    <div class="modal fade" id="rejectReasonModal" tabindex="-1" role="dialog" aria-labelledby="rejectReasonModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="rejectReasonModalLabel">Select Rejection Reason</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p>Select the eligibility criteria that were not met:</p>
+            <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="reasonName">
+            <label class="form-check-label" for="reasonName">Name</label>
+            </div>
+            <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="reasonEmail">
+            <label class="form-check-label" for="reasonEmail">Email</label>
+            </div>
+            <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="reasonPhone">
+            <label class="form-check-label" for="reasonPhone">Phone</label>
+            </div>
+            <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="reasonLogo">
+            <label class="form-check-label" for="reasonLogo">Logo</label>
+            </div>
+            <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="reasonHours">
+            <label class="form-check-label" for="reasonHours">Operating Hours</label>
+            </div>
+            <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="reasonBarangay">
+            <label class="form-check-label" for="reasonBarangay">Barangay</label>
+            </div>
+            <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="reasonStreet">
+            <label class="form-check-label" for="reasonStreet">Street, Building, House</label>
+            </div>
+            <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="reasonPermit">
+            <label class="form-check-label" for="reasonPermit">Permit</label>
             </div>
         </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="saveRejection">Save changes</button>
+        </div>
+        </div>
+    </div>
     </div>
 
     <!-- Reports Section -->
@@ -545,6 +596,61 @@ if (isset($_POST['report_update'])) {
         </div>
     </div>
 
+    <!-- Suspend User -->
+    <div class="modal fade" id="deactivateuser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="modal-title m-0 fw-bold">Select Duration of Deactivation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="3days">
+                        <label class="form-check-label" for="3days">3 Days</label>
+                    </div><br>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="7days">
+                        <label class="form-check-label" for="7days">7 Days</label>
+                    </div><br>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="1month">
+                        <label class="form-check-label" for="1month">1 Month</label>
+                    </div><br>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="forever">
+                        <label class="form-check-label" for="forever">Forever</label>
+                    </div><br>
+                    <div class="text-center mt-4">
+                        <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">Close</button>
+                        <button type="button" class="btn btn-primary">Deactivate</button> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activate User -->
+    <div class="modal fade" id="activateuser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="fw-bold mb-4"><i class="fa-solid fa-check"></i> Activate User</h4>
+                        <span>You are about to activate this user.<br>Are you sure?</span>
+                        <div class="mt-5 mb-3">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary">Activate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- More Park Info -->
     <div class="modal fade" id="moreparkinfo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -748,7 +854,10 @@ if (isset($_POST['report_update'])) {
     <script src="assets/js/adminresponse.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/pagination.js?v=<?php echo time(); ?>"></script>
+
+    <!-- ACTIVATE AND DEACTIVATE USER -->
     <script src="assets/js/activate.js?v=<?php echo time(); ?>"></script>
+    
     <br><br><br><br>
 </main>
 <?php

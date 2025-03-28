@@ -62,12 +62,18 @@ class Admin {
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    
-    function updateBusinessStatus($id, $status) {
-        $sql = "UPDATE business SET business_status = :status WHERE id = :id";
+    function updateBusinessStatus($id, $status, $rejection_reason = null) {
+        if ($status == 'Rejected') {
+           $sql = "UPDATE business SET business_status = :status, rejection_reason = :rejection_reason WHERE id = :id";
+        } else {
+           $sql = "UPDATE business SET business_status = :status WHERE id = :id";
+        }
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':status', $status);
         $query->bindParam(':id', $id);
+        if ($status == 'Rejected') {
+            $query->bindParam(':rejection_reason', $rejection_reason);
+        }
         return $query->execute();
     }
 

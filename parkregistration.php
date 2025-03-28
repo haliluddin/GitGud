@@ -27,15 +27,17 @@ if (!$user) {
 
 if ($user['role'] == 'Park Owner') {
     $status = $userObj->getBusinessStatus($owner_id);
-    if ($status == 'Pending Approval') {
-        header('Location: pendingapproval.php');
-        exit();
-    } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
-        header('Location: parkregistration.php');
-        exit();
-    } else if ($status == 'Rejected') {
-        echo 'Your business registration has been rejected.';
-        exit();
+    if (!isset($_GET['reapply'])) {
+        if ($status == 'Pending Approval') {
+            header('Location: pendingapproval.php');
+            exit();
+        } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
+            header('Location: parkregistration.php');
+            exit();
+        } else if ($status == 'Rejected') {
+            header('Location: rejected.php');
+            exit();
+        }
     }
 }
 
@@ -123,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Location: parkregistration.php');
             exit();
         } else if ($status == 'Rejected') {
-            echo 'Your business registration has been rejected.';
+            header('Location: rejected.php');
         }
     }
 }
