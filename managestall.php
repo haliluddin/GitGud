@@ -120,21 +120,6 @@
             $currentDay = date('l'); 
             $currentTime = date('H:i');
             foreach ($stalls as $stall) { 
-                $isOpen = false;
-                $operatingHours = explode('; ', $stall['stall_operating_hours']); 
-                foreach ($operatingHours as $hours) {
-                    list($days, $timeRange) = explode('<br>', $hours); 
-                    $daysArray = array_map('trim', explode(',', $days)); 
-                    if (in_array($currentDay, $daysArray)) { 
-                        list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                        $openTime24 = date('H:i', strtotime($openTime));
-                        $closeTime24 = date('H:i', strtotime($closeTime));
-                        if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                            $isOpen = true;
-                            break;
-                        }
-                    }
-                }
                 ?>
                 <div class="col">
                     <div class="card h-100">
@@ -162,17 +147,14 @@
                                     <h5 class="card-title my-2 fw-bold"><?= $stall['name'] ?></h5>
                                     <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
                                 </div>
-                                <?php if ($isOpen) { ?>
-                                    <div class="smopen">
-                                        <i class="fa-solid fa-clock"></i>
-                                        <span>OPEN</span>
+                                
+                                <div class="dropdown">
+                                    <button class="dropdown-toggle bg-white border-0 m-0 p-0" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-circle text-success me-2" style="font-size: 10px;"></i>Active</button>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        <a class="dropdown-item" href="#"><i class="fa-solid fa-circle text-success me-2" style="font-size: 10px;"></i>Active</a>
+                                        <a class="dropdown-item" href="#"><i class="fa-solid fa-circle text-danger me-2" style="font-size: 10px;"></i>Inactive</a>
                                     </div>
-                                <?php } else { ?>
-                                    <div class="smclose">
-                                        <i class="fa-solid fa-door-closed"></i>
-                                        <span>CLOSED</span>
-                                    </div>
-                                <?php } ?>
+                                </div>
                             </div>
                             <div class="accordion accordion-flush" id="accCol<?= $stall['id'] ?>">
                                 <div class="accordion-item">

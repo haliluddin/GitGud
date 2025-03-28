@@ -4,15 +4,13 @@ include_once __DIR__ . '/classes/park.class.php';
 include_once __DIR__ . '/classes/encdec.class.php';
 
 if (isset($_GET['park_id']) && isset($_GET['search'])) {
-    $park_id   = intval($_GET['park_id']);
+    $park_id    = intval($_GET['park_id']);
     $searchTerm = trim($_GET['search']);
     
     $parkObj = new Park();
     
-    // Get the matching stalls using your searchStalls() method
     $results = $parkObj->searchStalls($park_id, $searchTerm);
     
-    // Also retrieve popular, promo and new stalls arrays to show badges
     $popularStalls = $parkObj->getPopularStalls($park_id);
     $promoStalls   = $parkObj->getPromoStalls($park_id);
     $newProdStalls = $parkObj->getNewProductStalls($park_id);
@@ -22,10 +20,9 @@ if (isset($_GET['park_id']) && isset($_GET['search'])) {
     $newProdIds = array_column($newProdStalls, 'id');
     
     date_default_timezone_set('Asia/Manila'); 
-    $currentDay = date('l'); 
+    $currentDay  = date('l'); 
     $currentTime = date('H:i');
     
-    // A helper function to determine the next opening time from operating hours
     function getNextOpening($operatingHoursArray) {
         if (!empty($operatingHoursArray)) {
             $first = $operatingHoursArray[0];
@@ -40,22 +37,50 @@ if (isset($_GET['park_id']) && isset($_GET['search'])) {
         return "N/A";
     }
     
-    // Loop through the matching stalls and output the card for each
+    $park = $parkObj->getPark($park_id);
+    $parkOperatingHours = [];
+    if (!empty($park['operating_hours'])) {
+        $parkOperatingHours = explode('; ', $park['operating_hours']);
+    }
+    
+    $parkIsOpen = false;
+    foreach ($parkOperatingHours as $hours) {
+        if (strpos($hours, '<br>') !== false) {
+            list($days, $timeRange) = explode('<br>', $hours);
+            $daysArray = array_map('trim', explode(',', $days));
+            if (in_array($currentDay, $daysArray)) {
+                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                $openTime24  = date('H:i', strtotime($openTime));
+                $closeTime24 = date('H:i', strtotime($closeTime));
+                if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                    $parkIsOpen = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    $parkNextOpening = getNextOpening($parkOperatingHours);
+    
     foreach ($results as $stall) {
-        $isOpen = true;
-        if (!empty($stall['stall_operating_hours'])) {
-            $operatingHours = explode('; ', $stall['stall_operating_hours']);
+        if (!$parkIsOpen) {
             $isOpen = false;
-            foreach ($operatingHours as $hours) {
-                list($days, $timeRange) = explode('<br>', $hours);
-                $daysArray = array_map('trim', explode(',', $days));
-                if (in_array($currentDay, $daysArray)) {
-                    list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                    $openTime24 = date('H:i', strtotime($openTime));
-                    $closeTime24 = date('H:i', strtotime($closeTime));
-                    if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                        $isOpen = true;
-                        break;
+        } else {
+            $isOpen = true;
+            if (!empty($stall['stall_operating_hours'])) {
+                $operatingHours = explode('; ', $stall['stall_operating_hours']);
+                $isOpen = false;
+                foreach ($operatingHours as $hours) {
+                    list($days, $timeRange) = explode('<br>', $hours);
+                    $daysArray = array_map('trim', explode(',', $days));
+                    if (in_array($currentDay, $daysArray)) {
+                        list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                        $openTime24  = date('H:i', strtotime($openTime));
+                        $closeTime24 = date('H:i', strtotime($closeTime));
+                        if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                            $isOpen = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -64,18 +89,25 @@ if (isset($_GET['park_id']) && isset($_GET['search'])) {
         <div class="col stall-card" data-is-open="<?= $isOpen ? '1' : '0'; ?>">
             <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="card-link text-decoration-none bg-white">
                 <div class="card" style="position: relative;">
-                    <?php if (!$isOpen && !empty($stall['stall_operating_hours'])) { 
+                    <?php 
+                    if ((!$parkIsOpen || !$isOpen) && !empty($stall['stall_operating_hours'])) { 
                         $operatingHoursArray = explode('; ', $stall['stall_operating_hours']);
+                        $closedMessage = !$parkIsOpen ? $parkNextOpening : getNextOpening($operatingHoursArray);
                     ?>
-                        <div class="closed">Closed until <?= getNextOpening($operatingHoursArray) ?></div>
+                         <div class="closed text-center">
+                            <div>
+                                <span>Closed until <?= $closedMessage ?></span>
+                                <button class="rounded bg-white small border-0 px-3 py-1 mt-2" style="color:#CD5C08;">Order for later</button>
+                            </div> 
+                        </div>
                     <?php } ?>
                     <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="<?= htmlspecialchars($stall['name']); ?>">
                     
                     <div class="card-body">
                         <div class="d-flex gap-2 align-items-center">
                             <?php 
-                                $stall_categories = explode(',', $stall['stall_categories']); 
-                                foreach ($stall_categories as $index => $category) { 
+                            $stall_categories = explode(',', $stall['stall_categories']); 
+                            foreach ($stall_categories as $index => $category) { 
                             ?>
                                 <p class="card-text text-muted m-0"><?= trim($category) ?></p>
                                 <?php if ($index !== array_key_last($stall_categories)) { ?>

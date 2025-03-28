@@ -22,11 +22,22 @@ class Park {
     }
 
     function getPark($park_id) {
-        $sql = "SELECT * FROM business WHERE id = ?";
+        $sql = "
+            SELECT 
+                business.*, 
+                GROUP_CONCAT(
+                    DISTINCT CONCAT(operating_hours.days, '<br>', operating_hours.open_time, ' - ', operating_hours.close_time)
+                    SEPARATOR '; '
+                ) AS operating_hours
+            FROM business
+            LEFT JOIN operating_hours ON operating_hours.business_id = business.id
+            WHERE business.id = ?
+            GROUP BY business.id
+        ";
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->execute([$park_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC); 
-    }
+    }    
 
     public function getPopularStalls($parkId) {
         $db = $this->db->connect();

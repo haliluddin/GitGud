@@ -51,6 +51,14 @@
             </ul>
         </div>
     </div>
+
+    <?php
+        if (empty($products)) {
+            echo '<div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">
+                     Add your first product to get started. 
+                  </div>';
+        } else {
+    ?>
     <div class="accordion" id="categoryAccordion">
         <?php foreach ($categories as $index => $category): ?>
             <div class="accordion-item">
@@ -241,7 +249,8 @@
             </div>
         <?php endforeach; ?>
     </div>
-    <br><br><br><br><br><br>
+    <?php } ?>
+    <br><br><br><br><br>
 
     <!-- Add Category Modal -->
     <div class="modal fade" id="addcategory" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

@@ -17,6 +17,29 @@ date_default_timezone_set('Asia/Manila');
 $currentDay = date('l'); 
 $currentTime = date('H:i');
 
+$park = $parkObj->getPark($park_id); 
+$parkOperatingHours = [];
+if (!empty($park['operating_hours'])) {
+    $parkOperatingHours = explode('; ', $park['operating_hours']);
+}
+
+$parkIsOpen = false;
+foreach ($parkOperatingHours as $hours) {
+    if (strpos($hours, '<br>') !== false) {
+        list($days, $timeRange) = explode('<br>', $hours);
+        $daysArray = array_map('trim', explode(',', $days));
+        if (in_array($currentDay, $daysArray)) {
+            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+            $openTime24 = date('H:i', strtotime($openTime));
+            $closeTime24 = date('H:i', strtotime($closeTime));
+            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                $parkIsOpen = true;
+                break;
+            }
+        }
+    }
+}
+
 function getNextOpening($operatingHoursArray) {
     if (!empty($operatingHoursArray)) {
         $first = $operatingHoursArray[0];
@@ -30,6 +53,8 @@ function getNextOpening($operatingHoursArray) {
     }
     return "N/A";
 }
+
+$parkNextOpening = getNextOpening($parkOperatingHours);
 ?>
 
 <style>
@@ -267,20 +292,24 @@ function getNextOpening($operatingHoursArray) {
         
         <div id="stallsContainer" class="row row-cols-1 row-cols-md-3 g-3">
             <?php foreach ($allStalls as $stall) { 
-                $isOpen = true;
-                if (!empty($stall['stall_operating_hours'])) {
-                    $operatingHours = explode('; ', $stall['stall_operating_hours']);
+                if (!$parkIsOpen) {
                     $isOpen = false;
-                    foreach ($operatingHours as $hours) {
-                        list($days, $timeRange) = explode('<br>', $hours);
-                        $daysArray = array_map('trim', explode(',', $days));
-                        if (in_array($currentDay, $daysArray)) {
-                            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                            $openTime24 = date('H:i', strtotime($openTime));
-                            $closeTime24 = date('H:i', strtotime($closeTime));
-                            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                                $isOpen = true;
-                                break;
+                } else {
+                    $isOpen = true;
+                    if (!empty($stall['stall_operating_hours'])) {
+                        $operatingHours = explode('; ', $stall['stall_operating_hours']);
+                        $isOpen = false;
+                        foreach ($operatingHours as $hours) {
+                            list($days, $timeRange) = explode('<br>', $hours);
+                            $daysArray = array_map('trim', explode(',', $days));
+                            if (in_array($currentDay, $daysArray)) {
+                                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                                $openTime24 = date('H:i', strtotime($openTime));
+                                $closeTime24 = date('H:i', strtotime($closeTime));
+                                if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                                    $isOpen = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -289,13 +318,18 @@ function getNextOpening($operatingHoursArray) {
                 <div class="col stall-card" data-is-open="<?= $isOpen ? '1' : '0'; ?>">
                     <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="card-link text-decoration-none bg-white">
                         <div class="card" style="position: relative;">
-                            <?php if (!$isOpen && !empty($stall['stall_operating_hours'])) { 
-                                $operatingHoursArray = explode('; ', $stall['stall_operating_hours']);
+                            <?php 
+                            if (!$parkIsOpen || (!$isOpen && !empty($stall['stall_operating_hours']))) { 
+                                $closedMessage = !$parkIsOpen ? $parkNextOpening : getNextOpening(explode('; ', $stall['stall_operating_hours']));
                             ?>
-                                <div class="closed">Closed until <?= getNextOpening($operatingHoursArray) ?></div>
+                                 <div class="closed text-center">
+                                    <div>
+                                        <span>Closed until <?= $closedMessage ?></span>
+                                        <button class="rounded bg-white small border-0 px-3 py-1 mt-2" style="color:#CD5C08;">Order for later</button>
+                                    </div> 
+                                </div>
                             <?php } ?>
                             <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="...">
-
                             <div class="card-body">
                                 <div class="d-flex gap-2 align-items-center">
                                     <?php 

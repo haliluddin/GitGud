@@ -184,7 +184,7 @@ if (isset($_POST['deactivate_user'])) {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
     main{ padding: 20px 120px; }
-    .salestable th{ padding-top: 10px; width: 10%; }
+    .salestable th{ padding-top: 10px; }
     .dropdown-menu-center { left: 50% !important; transform: translateX(-50%) !important; }
     .acchead a{ text-decoration: none; color: black; margin-bottom: 8px; }
     button:disabled { background-color: #D3d3d3 !important; }
@@ -240,25 +240,25 @@ if (isset($_POST['deactivate_user'])) {
                 if ($users) {
                     foreach ($users as $user) {
                         echo '<tr>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['first_name']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['last_name']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['email']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . "+63" . htmlspecialchars($user['phone']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['birth_date']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['sex']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-2">' . htmlspecialchars($user['first_name']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-2">' . htmlspecialchars($user['last_name']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-2">' . htmlspecialchars($user['email']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-2">' . "+63" . htmlspecialchars($user['phone']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-2">' . htmlspecialchars($user['birth_date']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-2">' . htmlspecialchars($user['sex']) . '</td>';
                         $status = isset($statusMap[$user['id']]) ? $statusMap[$user['id']]['status'] : 'Active';
                         $deactivatedUntil = isset($statusMap[$user['id']]) ? $statusMap[$user['id']]['deactivated_until'] : 'N/A';
 
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($status) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($deactivatedUntil) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4 w-25"> 
-                            <span class="small rounded-pill text-success border border-success px-3 py-1 fw-bold d-inline-flex align-items-center text-wrap">' . 
+                        echo '<td class="fw-normal small py-3 px-2">' . htmlspecialchars($status) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-2">' . htmlspecialchars($deactivatedUntil) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-2"> 
+                            <span class="small rounded-pill text-success border border-success p-1 fw-bold d-inline-flex align-items-center text-wrap">' . 
                             htmlspecialchars($user['role']) . 
                             '</span>
                         </td>';
 
-                        echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['created_at']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">';
+                        echo '<td class="fw-normal small py-3 px-2">' . htmlspecialchars($user['created_at']) . '</td>';
+                        echo '<td class="fw-normal small py-3 px-2">';
                         echo '<div class="dropdown position-relative">';
                         echo '<i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>';
                         echo '<ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">';
@@ -792,40 +792,6 @@ if (isset($_POST['deactivate_user'])) {
     </div>
 
     <script>
-        $(document).ready(function () {
-            var businessId, action, statusCell;
-            $('.approve-btn, .deny-btn').click(function () {
-                businessId = $(this).data('id');
-                action = $(this).hasClass('approve-btn') ? 'approve' : 'deny';
-                $('#actionText').text(action === 'approve' ? 'approve' : 'deny');
-                statusCell = $(this).closest('tr').find('td.status-cell');
-                $('#confirmModal').modal('show');
-            });
-            $('#confirmAction').click(function () {
-                $.ajax({
-                    url: 'adminresponse.php',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ business_id: businessId, action: action }),
-                    success: function (response) {
-                        if (response.success) {
-                            if (action === 'approve') {
-                                statusCell.html('<span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Accepted</span>');
-                            } else if (action === 'deny') {
-                                statusCell.html('<span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span>');
-                            }
-                            alert(response.message);
-                        } else {
-                            alert('Error: ' + response.message);
-                        }
-                    },
-                    error: function () {
-                        alert('Error processing request.');
-                    }
-                });
-                $('#confirmModal').modal('hide');
-            });
-        });
         $('#moreparkinfo').on('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             const email = button.getAttribute('data-email');

@@ -37,7 +37,31 @@ if (isset($_POST['report_submit'])) {
         echo "<script>alert('You must be logged in to report.');</script>";
     }
 }
+
+date_default_timezone_set('Asia/Manila');
 $currentDateTime = date("l, F j, Y h:i A");
+$currentDay = date('l'); 
+$currentTime = date('H:i');
+
+function getNextOpening($operatingHoursArray) {
+    if (!empty($operatingHoursArray)) {
+        $first = $operatingHoursArray[0];
+        if (strpos($first, '<br>') !== false) {
+            list($days, $timeRange) = explode('<br>', $first);
+            $daysArray = array_map('trim', explode(',', $days));
+            $day = !empty($daysArray) ? $daysArray[0] : 'Unknown';
+            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+            return $day . ' ' . date('g:i A', strtotime($openTime));
+        }
+    }
+    return "N/A";
+}
+
+$parks = $parkObj->getParks();
+$validParks = array_filter($parks, function($park) {
+    return $park['business_status'] === 'Approved';
+});
+
 ?>
 <title>GitGud PMS</title>
 <style>
@@ -87,6 +111,9 @@ $currentDateTime = date("l, F j, Y h:i A");
     padding: 10px;
     color: gray;
     text-align: center;
+}
+.closed {
+    z-index: 2;
 }
 </style>
 <section class="first">
@@ -140,61 +167,65 @@ $currentDateTime = date("l, F j, Y h:i A");
 <section class="third">
     <br><br><br>
     <h2>All Food Parks in Zamboanga City</h2><br>
+
+    <div class="mb-3">
+        <button id="openBtn" class="btn btn-outline-secondary me-2">Open</button>
+        <button id="closedBtn" class="btn btn-outline-secondary">Closed</button>
+    </div>
+    
     <?php 
-        $parks = $parkObj->getParks();
-        $validParks = array_filter($parks, function($park) {
-            return $park['business_status'] === 'Approved';
-        });        
-        if (empty($validParks)) { 
-            echo "<p class='text-center my-5'>No food parks available at this time.</p>";
-        } else { 
-            date_default_timezone_set('Asia/Manila'); 
-            $currentDay = date('l'); 
-            $currentTime = date('H:i');
+    if (empty($validParks)) { 
+        echo "<p class='text-center my-5'>No food parks available at this time.</p>";
+    } else { 
     ?>
-            <div class="row row-cols-1 row-cols-md-4 g-3">
-                <?php 
-                    foreach ($validParks as $park) { 
-                        $isOpen = false;
-                        $operatingHours = explode('; ', $park['operating_hours']);
-                        foreach ($operatingHours as $hours) {
-                            list($days, $timeRange) = explode('<br>', $hours);
-                            $daysArray = array_map('trim', explode(',', $days));
-                            if (in_array($currentDay, $daysArray)) {
-                                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                                $openTime24 = date('H:i', strtotime($openTime));
-                                $closeTime24 = date('H:i', strtotime($closeTime));
-                                if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                                    $isOpen = true;
-                                    break;
-                                }
+        <div class="row row-cols-1 row-cols-md-4 g-3">
+            <?php 
+                foreach ($validParks as $park) { 
+                    $isOpen = false;
+                    $operatingHours = explode('; ', $park['operating_hours']);
+                    foreach ($operatingHours as $hours) {
+                        list($days, $timeRange) = explode('<br>', $hours);
+                        $daysArray = array_map('trim', explode(',', $days));
+                        if (in_array($currentDay, $daysArray)) {
+                            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                            $openTime24 = date('H:i', strtotime($openTime));
+                            $closeTime24 = date('H:i', strtotime($closeTime));
+                            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                                $isOpen = true;
+                                break;
                             }
                         }
-                        $statusClass = $isOpen ? 'opennow' : 'cnow';
-                        $statusText = $isOpen ? 'Open Now' : 'Closed';
-                ?>
-                        <div class="col">
-                            <div class="card">
-                                <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
-                                    <img src="<?= $park['business_logo'] ?>" class="card-img-top" alt="...">
-                                    <div class="card-body">
-                                        <h5 class="card-title text-dark"><?= $park['business_name'] ?></h5>
-                                        <p class="card-text text-muted">
-                                            <i class="fa-solid fa-location-dot me-2"></i>
-                                            <?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City
-                                        </p>
-                                        <span class="<?= $statusClass ?>"><?= $statusText ?></span>
-                                    </div>
-                                </a>
-                                <div class="text-center p-2 lpseemore rounded-4 mx-3 mb-3 small" data-bs-toggle="modal" data-bs-target="#seemorepark" data-email="<?= htmlspecialchars($park['business_email']) ?>" data-phone="<?= htmlspecialchars($park['business_phone']) ?>" data-hours="<?= htmlspecialchars($park['operating_hours']) ?>" data-reported_user="<?= htmlspecialchars($park['user_id']) ?>">See more...</div>
-                            </div>
-                        </div>
-                <?php 
                     }
-                ?>
-            </div>
+                    ?>
+                    <div class="col park-card border rounded p-0 mx-2" data-is-open="<?= $isOpen ? '1' : '0'; ?>">
+                        <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
+                            <div class="card border-0" style="position: relative;">
+                                <?php if (!$isOpen) { ?>
+                                    <div class="closed text-center">
+                                        <div>
+                                            <span>Closed until <?= getNextOpening($operatingHours) ?></span>
+                                            <button class="rounded bg-white small border-0 px-3 py-1 mt-2" style="color:#CD5C08;">Order for later</button>
+                                        </div> 
+                                    </div>
+                                <?php } ?>
+                                <img src="<?= $park['business_logo'] ?>" class="card-img-top" alt="...">
+                                <div class="card-body">
+                                    <h5 class="card-title text-dark"><?= $park['business_name'] ?></h5>
+                                    <p class="card-text text-muted">
+                                        <i class="fa-solid fa-location-dot me-1"></i>
+                                        <?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                        <div class="text-center p-2 lpseemore rounded-4 mx-3 mb-3 small" data-bs-toggle="modal" data-bs-target="#seemorepark" data-email="<?= htmlspecialchars($park['business_email']) ?>" data-phone="<?= htmlspecialchars($park['business_phone']) ?>" data-hours="<?= htmlspecialchars($park['operating_hours']) ?>" data-reported_user="<?= htmlspecialchars($park['user_id']) ?>">See more...</div> 
+                    </div>
+            <?php 
+                }
+            ?>
+        </div>
     <?php 
-        }
+    }
     ?>
     <br><br><br><br><br>
 </section>
@@ -223,7 +254,6 @@ include_once 'footer.php';
                 <h5 class="fw-bold mb-3">Operating Hours</h5>
                 <div class="mb-4" data-hours>
                 </div>
-                <button class="border-0 py-2 px-3 rounded-5 me-2"><i class="fa-regular fa-copy me-2 fs-5"></i>Share Link</button>
                 <button class="border-0 py-2 px-3 rounded-5" data-bs-toggle="modal" data-bs-target="#report" data-reported_user=""> <i class="fa-regular fa-flag me-2 fs-5"></i>Report</button>
             </div>
         </div>
@@ -253,6 +283,48 @@ include_once 'footer.php';
     </div>
   </form>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        const openBtn = document.getElementById('openBtn');
+        const closedBtn = document.getElementById('closedBtn');
+        const parkCards = document.querySelectorAll('.park-card');
+
+        function filterParks(status) {
+            parkCards.forEach(card => {
+                const isOpen = card.getAttribute('data-is-open') === '1';
+                if(status === 'open') {
+                    card.style.display = isOpen ? '' : 'none';
+                } else if(status === 'closed') {
+                    card.style.display = !isOpen ? '' : 'none';
+                } else {
+                    card.style.display = '';
+                }
+            });
+        }
+
+        openBtn.addEventListener('click', function(){
+            if(openBtn.classList.contains('active')){
+                openBtn.classList.remove('active');
+                filterParks('all');
+            } else {
+                openBtn.classList.add('active');
+                closedBtn.classList.remove('active');
+                filterParks('open');
+            }
+        });
+
+        closedBtn.addEventListener('click', function(){
+            if(closedBtn.classList.contains('active')){
+                closedBtn.classList.remove('active');
+                filterParks('all');
+            } else {
+                closedBtn.classList.add('active');
+                openBtn.classList.remove('active');
+                filterParks('closed');
+            }
+        });
+    });
+</script>
 <script>
 const modal = document.getElementById('seemorepark');
 modal.addEventListener('show.bs.modal', function (event) {
