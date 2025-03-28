@@ -172,7 +172,7 @@ if (isset($_POST['report_update'])) {
                         echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['birth_date']) . '</td>';
                         echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['sex']) . '</td>';
                         echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['status']) . '</td>';
-                        echo '<td class="fw-normal small py-3 px-1"><span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">' . htmlspecialchars($user['role']) . '</span></td>';
+                        echo '<td class="fw-normal small py-3 px-1"> <span class="small rounded-pill text-success border border-success px-2 py-1 fw-bold d-inline-block text-nowrap">' . htmlspecialchars($user['role']) . '</span></td>';
                         echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($user['created_at']) . '</td>';
                         echo '<td class="fw-normal small py-3 px-4">';
                         echo '<div class="dropdown position-relative">';
