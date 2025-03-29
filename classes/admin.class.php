@@ -128,9 +128,9 @@ class Admin {
     }
 
     public function getUserReportsActivity($user_id) {
-        $sql = "SELECT r.id, CONCAT('reported ', ru.first_name, ' ', ru.last_name) AS reported_entity, r.reason, r.created_at 
+        $sql = "SELECT r.id, CONCAT('reported ', b.business_name) AS reported_entity, r.reason, r.created_at 
                 FROM reports r
-                JOIN users ru ON r.reported_user = ru.id
+                JOIN business b ON r.reported_park = b.id
                 WHERE r.reported_by = :user_id";
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->bindValue(':user_id', $user_id);
@@ -253,17 +253,17 @@ class Admin {
     }
     
     public function getReports() {
-        $sql = "SELECT r.id, r.reported_by, r.reported_user, r.reason, r.status, r.created_at,
+        $sql = "SELECT r.id, r.reported_by, r.reported_park, r.reason, r.status, r.created_at,
                        u1.first_name as reporter_first, u1.last_name as reporter_last,
-                       u2.first_name as reported_first, u2.last_name as reported_last
+                       b.business_name as reported_park_name
                 FROM reports r
                 JOIN users u1 ON r.reported_by = u1.id
-                JOIN users u2 ON r.reported_user = u2.id
+                JOIN business b ON r.reported_park = b.id
                 ORDER BY r.created_at DESC";
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
-    }
+    }    
 
     public function searchBusinesses($search = null) {
         $sql = "

@@ -450,7 +450,7 @@ if (isset($_POST['deactivate_user'])) {
         <table class="salestable w-100 text-center border-top">
             <tr>
                 <th>Reported By</th>
-                <th>Reported User</th>
+                <th>Reported Park</th>
                 <th>Reason</th>
                 <th>Date Reported</th>
                 <th>Status</th>
@@ -462,10 +462,10 @@ if (isset($_POST['deactivate_user'])) {
                 if ($reports) {
                     foreach ($reports as $report) {
                         $fullReporter = htmlspecialchars($report['reporter_first'] . ' ' . $report['reporter_last']);
-                        $fullReported = htmlspecialchars($report['reported_first'] . ' ' . $report['reported_last']);
+                        $reportedParkName = htmlspecialchars($report['reported_park_name']);
                         echo '<tr>';
                         echo '<td class="fw-normal small py-3 px-4">' . $fullReporter . '</td>';
-                        echo '<td class="fw-normal small py-3 px-4">' . $fullReported . '</td>';
+                        echo '<td class="fw-normal small py-3 px-4">' . $reportedParkName . '</td>';
                         echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($report['reason']) . '</td>';
                         echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($report['created_at']) . '</td>';
                         $status = $report['status'];
@@ -483,15 +483,15 @@ if (isset($_POST['deactivate_user'])) {
                                     <input type="hidden" name="report_id" value="' . $report['id'] . '">
                                     <input type="hidden" name="action" value="resolve">
                                     <input type="submit" name="report_update" value="Resolve" class="bg-success text-white border-0 small py-1 rounded-1" style="width:60px;">
-                                  </form>';
+                                </form>';
                             echo '<form method="POST" action="" style="display:inline-block;">
                                     <input type="hidden" name="report_id" value="' . $report['id'] . '">
                                     <input type="hidden" name="action" value="reject">
                                     <input type="submit" name="report_update" value="Reject" class="bg-danger text-white border-0 small py-1 rounded-1" style="width:60px;">
-                                  </form>';
+                                </form>';
                         } else {
                             echo '<input type="button" value="Resolve" class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px;" disabled>
-                                  <input type="button" value="Reject" class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px;" disabled>';
+                                <input type="button" value="Reject" class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px;" disabled>';
                         }
                         echo '</td>';
                         echo '</tr>';
@@ -504,7 +504,7 @@ if (isset($_POST['deactivate_user'])) {
         </table>
         <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3"></div>
     </div>
-
+    
     <div class="modal fade" id="adduser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-4">

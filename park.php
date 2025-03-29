@@ -81,11 +81,6 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
         <span class="text-muted small">GITGUD</span>
     </form>
 
-    <section id="searchResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none; ">
-        <h3 id="searchHeader" class="mb-3"></h3>
-        <div id="searchResultsContainer" class="row row-cols-1 row-cols-md-3 g-3"></div>
-    </section>
-
     <section class="bg-white border rounded-2 px-5 py-4 mb-3">
         <h3 class="mb-3">Categories</h3>
         <div class="tpdiv position-relative">
@@ -147,221 +142,242 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
 
     </section>
 
-    <section id="filterResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none;"></section>
-
-    <!-- Popular Section -->
-    <?php if (!empty($popularStalls)) { ?>
-        <section class="bg-white border rounded-2 px-5 py-4 mb-3">
-            <h3 class="mb-3">Popular</h3>
-            <div class="tpdiv position-relative">
-                <i class="fa-solid fa-arrow-left scroll-arrow left-arrow" style="display: none;"></i>
-                <div class="d-flex rightfilter gap-3">
-                    <?php foreach ($popularStalls as $stall) { ?>
-                        <a href="stall.php?id=<?= urlencode(encrypt($stall['id'])) ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
-                            <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
-                            <div class="p-3" style="width:400px;">
-                                <div class="d-flex gap-2 align-items-center">
-                                    <?php 
-                                        $stall_categories = explode(',', $stall['stall_categories']); 
-                                        foreach ($stall_categories as $index => $category) { 
-                                    ?>
-                                        <p class="card-text text-muted m-0"><?= trim($category) ?></p>
-                                        <?php if ($index !== array_key_last($stall_categories)) { ?>
-                                            <span class="dot text-muted"></span>
-                                        <?php } ?>
-                                    <?php } ?>
-                                </div>
-                                <h5 class="card-title my-2" style="color: black;"><?= $stall['name'] ?></h5>
-                                <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
-                                <div class="mt-2">
-                                    <?php if (in_array($stall['id'], $popularIds)) { ?>
-                                        <span class="opennow">Popular</span>
-                                    <?php } ?>
-                                    <?php if (in_array($stall['id'], $promoIds)) { ?>
-                                        <span class="discount">With Promo</span>
-                                    <?php } ?>
-                                    <?php if (in_array($stall['id'], $newProdIds)) { ?>
-                                        <span class="newopen">New Arrival</span>
-                                    <?php } ?>
-                                </div>
-                            </div>
-                        </a>
-                    <?php } ?>
-                </div>
-                <i class="fa-solid fa-arrow-right scroll-arrow right-arrow"></i>
-            </div>
+    <div class="disabled" <?php if(isset($park['status']) && $park['status'] === 'Unavailable') { echo 'style="pointer-events: none; opacity: 0.5;"'; } ?>>
+        <section id="searchResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none; ">
+            <h3 id="searchHeader" class="mb-3"></h3>
+            <div id="searchResultsContainer" class="row row-cols-1 row-cols-md-3 g-3"></div>
         </section>
-    <?php } ?>
 
-    <!-- With Promo Section -->
-    <?php if (!empty($promoStalls)) { ?>
-        <section class="bg-white border rounded-2 px-5 py-4 mb-3">
-            <h3 class="mb-3">With Promo</h3>
-            <div class="tpdiv position-relative">
-                <i class="fa-solid fa-arrow-left scroll-arrow left-arrow" style="display: none;"></i>
-                <div class="d-flex rightfilter gap-3">
-                    <?php foreach ($promoStalls as $stall) { ?>
-                        <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
-                            <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
-                            <div class="p-3" style="width:400px;">
-                                <div class="d-flex gap-2 align-items-center">
-                                    <?php 
-                                        $stall_categories = explode(',', $stall['stall_categories']); 
-                                        foreach ($stall_categories as $index => $category) { 
-                                    ?>
-                                        <p class="card-text text-muted m-0"><?= trim($category) ?></p>
-                                        <?php if ($index !== array_key_last($stall_categories)) { ?>
-                                            <span class="dot text-muted"></span>
+        <section id="filterResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none;"></section>
+
+        <!-- Popular Section -->
+        <?php if (!empty($popularStalls)) { ?>
+            <section class="bg-white border rounded-2 px-5 py-4 mb-3">
+                <h3 class="mb-3">Popular</h3>
+                <div class="tpdiv position-relative">
+                    <i class="fa-solid fa-arrow-left scroll-arrow left-arrow" style="display: none;"></i>
+                    <div class="d-flex rightfilter gap-3">
+                        <?php foreach ($popularStalls as $stall) { ?>
+                            <a href="stall.php?id=<?= urlencode(encrypt($stall['id'])) ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
+                                <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
+                                <div class="p-3" style="width:400px;">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <?php 
+                                            $stall_categories = explode(',', $stall['stall_categories']); 
+                                            foreach ($stall_categories as $index => $category) { 
+                                        ?>
+                                            <p class="card-text text-muted m-0"><?= trim($category) ?></p>
+                                            <?php if ($index !== array_key_last($stall_categories)) { ?>
+                                                <span class="dot text-muted"></span>
+                                            <?php } ?>
                                         <?php } ?>
-                                    <?php } ?>
-                                </div>
-                                <h5 class="card-title my-2" style="color: black;"><?= $stall['name'] ?></h5>
-                                <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
-                                <div class="mt-2">
-                                    <?php if (in_array($stall['id'], $popularIds)) { ?>
-                                        <span class="opennow">Popular</span>
-                                    <?php } ?>
-                                    <?php if (in_array($stall['id'], $promoIds)) { ?>
-                                        <span class="discount">With Promo</span>
-                                    <?php } ?>
-                                    <?php if (in_array($stall['id'], $newProdIds)) { ?>
-                                        <span class="newopen">New Arrival</span>
-                                    <?php } ?>
-                                </div>
-                            </div>
-                        </a>
-                    <?php } ?>
-                </div>
-                <i class="fa-solid fa-arrow-right scroll-arrow right-arrow"></i>
-            </div>
-        </section>
-    <?php } ?>
-
-    <!-- New Arrival Section -->
-    <?php if (!empty($newProdStalls)) { ?>
-        <section class="bg-white border rounded-2 px-5 py-4 mb-3">
-            <h3 class="mb-3">New Arrival</h3>
-            <div class="tpdiv position-relative">
-                <i class="fa-solid fa-arrow-left scroll-arrow left-arrow" style="display: none;"></i>
-                <div class="d-flex rightfilter gap-3">
-                    <?php foreach ($newProdStalls as $stall) { ?>
-                        <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
-                            <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
-                            <div class="p-3" style="width:400px;">
-                                <div class="d-flex gap-2 align-items-center">
-                                    <?php 
-                                        $stall_categories = explode(',', $stall['stall_categories']); 
-                                        foreach ($stall_categories as $index => $category) { 
-                                    ?>
-                                        <p class="card-text text-muted m-0"><?= trim($category) ?></p>
-                                        <?php if ($index !== array_key_last($stall_categories)) { ?>
-                                            <span class="dot text-muted"></span>
+                                    </div>
+                                    <h5 class="card-title my-2" style="color: black;"><?= $stall['name'] ?></h5>
+                                    <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
+                                    <div class="mt-2">
+                                        <?php if (in_array($stall['id'], $popularIds)) { ?>
+                                            <span class="opennow">Popular</span>
                                         <?php } ?>
-                                    <?php } ?>
+                                        <?php if (in_array($stall['id'], $promoIds)) { ?>
+                                            <span class="discount">With Promo</span>
+                                        <?php } ?>
+                                        <?php if (in_array($stall['id'], $newProdIds)) { ?>
+                                            <span class="newopen">New Arrival</span>
+                                        <?php } ?>
+                                    </div>
                                 </div>
-                                <h5 class="card-title my-2" style="color: black;"><?= $stall['name'] ?></h5>
-                                <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
-                                <div class="mt-2">
-                                    <?php if (in_array($stall['id'], $popularIds)) { ?>
-                                        <span class="opennow">Popular</span>
-                                    <?php } ?>
-                                    <?php if (in_array($stall['id'], $promoIds)) { ?>
-                                        <span class="discount">With Promo</span>
-                                    <?php } ?>
-                                    <?php if (in_array($stall['id'], $newProdIds)) { ?>
-                                        <span class="newopen">New Arrival</span>
-                                    <?php } ?>
-                                </div>
-                            </div>
-                        </a>
-                    <?php } ?>
+                            </a>
+                        <?php } ?>
+                    </div>
+                    <i class="fa-solid fa-arrow-right scroll-arrow right-arrow"></i>
                 </div>
-                <i class="fa-solid fa-arrow-right scroll-arrow right-arrow"></i>
-            </div>
-        </section>
-    <?php } ?>
+            </section>
+        <?php } ?>
 
-    <section class="bg-white border rounded-2 px-5 py-4 m-0">
-        <div class="mb-3 d-flex justify-content-between align-items-center">
-            <h3 class="m-0 p-0">All Food Stalls</h3>
-            <div class="oc"> 
-                <button id="openBtn" class="btn btn-outline-secondary">Open</button>
-                <button id="closedBtn" class="btn btn-outline-secondary">Closed</button>
+        <!-- With Promo Section -->
+        <?php if (!empty($promoStalls)) { ?>
+            <section class="bg-white border rounded-2 px-5 py-4 mb-3">
+                <h3 class="mb-3">With Promo</h3>
+                <div class="tpdiv position-relative">
+                    <i class="fa-solid fa-arrow-left scroll-arrow left-arrow" style="display: none;"></i>
+                    <div class="d-flex rightfilter gap-3">
+                        <?php foreach ($promoStalls as $stall) { ?>
+                            <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
+                                <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
+                                <div class="p-3" style="width:400px;">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <?php 
+                                            $stall_categories = explode(',', $stall['stall_categories']); 
+                                            foreach ($stall_categories as $index => $category) { 
+                                        ?>
+                                            <p class="card-text text-muted m-0"><?= trim($category) ?></p>
+                                            <?php if ($index !== array_key_last($stall_categories)) { ?>
+                                                <span class="dot text-muted"></span>
+                                            <?php } ?>
+                                        <?php } ?>
+                                    </div>
+                                    <h5 class="card-title my-2" style="color: black;"><?= $stall['name'] ?></h5>
+                                    <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
+                                    <div class="mt-2">
+                                        <?php if (in_array($stall['id'], $popularIds)) { ?>
+                                            <span class="opennow">Popular</span>
+                                        <?php } ?>
+                                        <?php if (in_array($stall['id'], $promoIds)) { ?>
+                                            <span class="discount">With Promo</span>
+                                        <?php } ?>
+                                        <?php if (in_array($stall['id'], $newProdIds)) { ?>
+                                            <span class="newopen">New Arrival</span>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            </a>
+                        <?php } ?>
+                    </div>
+                    <i class="fa-solid fa-arrow-right scroll-arrow right-arrow"></i>
+                </div>
+            </section>
+        <?php } ?>
+
+        <!-- New Arrival Section -->
+        <?php if (!empty($newProdStalls)) { ?>
+            <section class="bg-white border rounded-2 px-5 py-4 mb-3">
+                <h3 class="mb-3">New Arrival</h3>
+                <div class="tpdiv position-relative">
+                    <i class="fa-solid fa-arrow-left scroll-arrow left-arrow" style="display: none;"></i>
+                    <div class="d-flex rightfilter gap-3">
+                        <?php foreach ($newProdStalls as $stall) { ?>
+                            <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
+                                <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
+                                <div class="p-3" style="width:400px;">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <?php 
+                                            $stall_categories = explode(',', $stall['stall_categories']); 
+                                            foreach ($stall_categories as $index => $category) { 
+                                        ?>
+                                            <p class="card-text text-muted m-0"><?= trim($category) ?></p>
+                                            <?php if ($index !== array_key_last($stall_categories)) { ?>
+                                                <span class="dot text-muted"></span>
+                                            <?php } ?>
+                                        <?php } ?>
+                                    </div>
+                                    <h5 class="card-title my-2" style="color: black;"><?= $stall['name'] ?></h5>
+                                    <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
+                                    <div class="mt-2">
+                                        <?php if (in_array($stall['id'], $popularIds)) { ?>
+                                            <span class="opennow">Popular</span>
+                                        <?php } ?>
+                                        <?php if (in_array($stall['id'], $promoIds)) { ?>
+                                            <span class="discount">With Promo</span>
+                                        <?php } ?>
+                                        <?php if (in_array($stall['id'], $newProdIds)) { ?>
+                                            <span class="newopen">New Arrival</span>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            </a>
+                        <?php } ?>
+                    </div>
+                    <i class="fa-solid fa-arrow-right scroll-arrow right-arrow"></i>
+                </div>
+            </section>
+        <?php } ?>
+
+        <section class="bg-white border rounded-2 px-5 py-4 m-0">
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+                <h3 class="m-0 p-0">All Food Stalls</h3>
+                <div class="oc"> 
+                    <button id="openBtn" class="btn btn-outline-secondary">Open</button>
+                    <button id="closedBtn" class="btn btn-outline-secondary">Closed</button>
+                    <button id="unavailableBtn" class="btn btn-outline-secondary">Unavailable</button>
+                </div>
+
             </div>
-        </div>
-        
-        <div id="stallsContainer" class="row row-cols-1 row-cols-md-3 g-3">
-            <?php foreach ($allStalls as $stall) { 
-                if (!$parkIsOpen) {
-                    $isOpen = false;
-                } else {
-                    $isOpen = true;
-                    if (!empty($stall['stall_operating_hours'])) {
-                        $operatingHours = explode('; ', $stall['stall_operating_hours']);
+            
+            <div id="stallsContainer" class="row row-cols-1 row-cols-md-3 g-3">
+                <?php foreach ($allStalls as $stall) { 
+                    if (!$parkIsOpen) {
                         $isOpen = false;
-                        foreach ($operatingHours as $hours) {
-                            list($days, $timeRange) = explode('<br>', $hours);
-                            $daysArray = array_map('trim', explode(',', $days));
-                            if (in_array($currentDay, $daysArray)) {
-                                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                                $openTime24 = date('H:i', strtotime($openTime));
-                                $closeTime24 = date('H:i', strtotime($closeTime));
-                                if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                                    $isOpen = true;
-                                    break;
+                    } else {
+                        $isOpen = true;
+                        if (!empty($stall['stall_operating_hours'])) {
+                            $operatingHours = explode('; ', $stall['stall_operating_hours']);
+                            $isOpen = false;
+                            foreach ($operatingHours as $hours) {
+                                list($days, $timeRange) = explode('<br>', $hours);
+                                $daysArray = array_map('trim', explode(',', $days));
+                                if (in_array($currentDay, $daysArray)) {
+                                    list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                                    $openTime24 = date('H:i', strtotime($openTime));
+                                    $closeTime24 = date('H:i', strtotime($closeTime));
+                                    if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                                        $isOpen = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            ?>
-                <div class="col stall-card" data-is-open="<?= $isOpen ? '1' : '0'; ?>">
-                    <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="card-link text-decoration-none bg-white">
-                        <div class="card" style="position: relative;">
-                            <?php 
-                            if (!$parkIsOpen || (!$isOpen && !empty($stall['stall_operating_hours']))) { 
-                                $closedMessage = !$parkIsOpen ? $parkNextOpening : getNextOpening(explode('; ', $stall['stall_operating_hours']));
-                            ?>
-                                 <div class="closed text-center">
-                                    <div>
-                                        <span>Closed until <?= $closedMessage ?></span>
-                                        <button class="rounded bg-white small border-0 px-3 py-1 mt-2" style="color:#CD5C08;">Order for later</button>
-                                    </div> 
-                                </div>
-                            <?php } ?>
-                            <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="...">
-                            <div class="card-body">
-                                <div class="d-flex gap-2 align-items-center">
-                                    <?php 
-                                        $stall_categories = explode(',', $stall['stall_categories']); 
-                                        foreach ($stall_categories as $index => $category) { 
-                                    ?>
-                                        <p class="card-text text-muted m-0"><?= trim($category) ?></p>
-                                        <?php if ($index !== array_key_last($stall_categories)) { ?>
-                                            <span class="dot text-muted"></span>
+                    
+                    if (isset($stall['status']) && $stall['status'] === 'Unavailable') {
+                        $status = 'unavailable';
+                    } else {
+                        $status = $isOpen ? 'open' : 'closed';
+                    }
+                ?>
+                    <div class="col stall-card" data-status="<?= $status; ?>">
+                        <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="card-link text-decoration-none bg-white">
+                            <div class="card" style="position: relative;">
+                                <?php if ($status === 'unavailable') { ?>
+                                    <div class="closed text-center">
+                                        <span>Unavailable</span>
+                                    </div>
+                                <?php } elseif ($status === 'closed') { 
+                                    // Display closed message (for the park or the stall)
+                                    $closedMessage = !$parkIsOpen ? $parkNextOpening : getNextOpening(explode('; ', $stall['stall_operating_hours']));
+                                ?>
+                                    <div class="closed text-center">
+                                        <div>
+                                            <span>Closed until <?= $closedMessage ?></span>
+                                            <button class="rounded bg-white small border-0 px-3 py-1 mt-2" style="color:#CD5C08;">Order for later</button>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                                <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="...">
+                                <div class="card-body">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <?php 
+                                            $stall_categories = explode(',', $stall['stall_categories']); 
+                                            foreach ($stall_categories as $index => $category) { 
+                                        ?>
+                                            <p class="card-text text-muted m-0"><?= trim($category) ?></p>
+                                            <?php if ($index !== array_key_last($stall_categories)) { ?>
+                                                <span class="dot text-muted"></span>
+                                            <?php } ?>
                                         <?php } ?>
-                                    <?php } ?>
-                                </div>
-                                <h5 class="card-title my-2"><?= $stall['name'] ?></h5>
-                                <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
-                                <div class="mt-2">
-                                    <?php if (in_array($stall['id'], $popularIds)) { ?>
-                                        <span class="opennow">Popular</span>
-                                    <?php } ?>
-                                    <?php if (in_array($stall['id'], $promoIds)) { ?>
-                                        <span class="discount">With Promo</span>
-                                    <?php } ?>
-                                    <?php if (in_array($stall['id'], $newProdIds)) { ?>
-                                        <span class="newopen">New Arrival</span>
-                                    <?php } ?>
+                                    </div>
+                                    <h5 class="card-title my-2"><?= $stall['name'] ?></h5>
+                                    <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
+                                    <div class="mt-2">
+                                        <?php if (in_array($stall['id'], $popularIds)) { ?>
+                                            <span class="opennow">Popular</span>
+                                        <?php } ?>
+                                        <?php if (in_array($stall['id'], $promoIds)) { ?>
+                                            <span class="discount">With Promo</span>
+                                        <?php } ?>
+                                        <?php if (in_array($stall['id'], $newProdIds)) { ?>
+                                            <span class="newopen">New Arrival</span>
+                                        <?php } ?>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-            <?php } ?>
-        </div>
-    </section>
+                        </a>
+                    </div>
+                <?php } ?>
+
+            </div>
+        </section>
+
+    </div>
 
     <br><br><br><br><br><br>
 
@@ -373,17 +389,16 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
     document.addEventListener("DOMContentLoaded", function(){
         const openBtn = document.getElementById('openBtn');
         const closedBtn = document.getElementById('closedBtn');
+        const unavailableBtn = document.getElementById('unavailableBtn');
         const stallCards = document.querySelectorAll('.stall-card');
 
         function filterStalls(status) {
             stallCards.forEach(card => {
-                const isOpen = card.getAttribute('data-is-open') === '1';
-                if(status === 'open') {
-                    card.style.display = isOpen ? '' : 'none';
-                } else if(status === 'closed') {
-                    card.style.display = !isOpen ? '' : 'none';
-                } else {
+                const stallStatus = card.getAttribute('data-status');
+                if(status === 'all'){
                     card.style.display = '';
+                } else {
+                    card.style.display = (stallStatus === status) ? '' : 'none';
                 }
             });
         }
@@ -395,6 +410,7 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
             } else {
                 openBtn.classList.add('active');
                 closedBtn.classList.remove('active');
+                unavailableBtn.classList.remove('active');
                 filterStalls('open');
             }
         });
@@ -406,7 +422,20 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
             } else {
                 closedBtn.classList.add('active');
                 openBtn.classList.remove('active');
+                unavailableBtn.classList.remove('active');
                 filterStalls('closed');
+            }
+        });
+
+        unavailableBtn.addEventListener('click', function(){
+            if(unavailableBtn.classList.contains('active')){
+                unavailableBtn.classList.remove('active');
+                filterStalls('all');
+            } else {
+                unavailableBtn.classList.add('active');
+                openBtn.classList.remove('active');
+                closedBtn.classList.remove('active');
+                filterStalls('unavailable');
             }
         });
     });

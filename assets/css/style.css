@@ -244,6 +244,7 @@ nav ul li a{text-decoration: none;}
     display: flex;
     gap: 10px;
     margin-bottom: 10px;
+    justify-content: center;
 }
 .closed {
     position: absolute;
@@ -805,9 +806,10 @@ h6{margin:0;}
 }
 .variation-btn, .choice-group-btn  {all: unset;}
 .rename:hover, .variation-btn.delete:hover, .variation-btn.addrem:hover,
-.remove-btn:hover, .edit-btn:hover, .choice-group-btn.delete:hover, .choice-group-btn.addrem:hover{
+.remove-btn:hover, .edit-btn:hover, .choice-group-btn.delete:hover, .choice-group-btn.addrem:hover, .mores:hover{
   background-color: #e5e5e5 !important;
   border-radius: 50px;
+  cursor: pointer;
 }
 .variation-btn.addvar:hover, .choice-group-btn.addgroup:hover{
   color: black;

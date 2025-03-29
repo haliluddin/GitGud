@@ -480,6 +480,40 @@ class Park {
         }
     }
     
+
+    public function updateStallStatus($stallId, $status){
+        if (!in_array($status, ['Available', 'Unavailable'])) {
+            return false;
+        }
+        $sql = "UPDATE stalls SET status = :status WHERE id = :id;";
+        $query = $this->db->connect()->prepare($sql);
+        return $query->execute([':status' => $status, ':id' => $stallId]);
+    }
+
+    function getStallReports($park_id) {
+        $sql = "SELECT sr.id, sr.reported_by, sr.reported_stall, sr.reason, sr.status, sr.created_at,
+                       u.profile_img, u.first_name, u.last_name,
+                       s.name AS stall_name
+                FROM stall_reports sr
+                JOIN users u ON sr.reported_by = u.id
+                JOIN stalls s ON sr.reported_stall = s.id
+                WHERE s.park_id = :park_id
+                ORDER BY sr.created_at DESC";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':park_id', $park_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    
+    function updateStallReportStatus($report_id, $newStatus) {
+        $sql = "UPDATE stall_reports SET status = :status WHERE id = :report_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        return $stmt->execute([
+            ':status' => $newStatus,
+            ':report_id' => $report_id
+        ]);
+    }
+    
     /*
     function addPark($name, $description, $location, $image, $ownerName, $contactNumber, $email, $openingTime, $closingTime, $priceRange, $status) {
         $uniqueUrl = uniqid();

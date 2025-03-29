@@ -486,16 +486,27 @@ class User {
         }
     }
     
-    public function reportFoodParkOwner($reported_by, $reported_user, $reason) {
-        $sql = "INSERT INTO reports (reported_by, reported_user, reason) 
-                VALUES (:reported_by, :reported_user, :reason)";
+    public function reportFoodPark($reported_by, $reported_park, $reason) {
+        $sql = "INSERT INTO reports (reported_by, reported_park, reason) 
+                VALUES (:reported_by, :reported_park, :reason)";
         $query = $this->db->connect()->prepare($sql);
         return $query->execute([
-            ':reported_by' => $reported_by,
-            ':reported_user' => $reported_user,
-            ':reason' => $reason
+            ':reported_by'   => $reported_by,
+            ':reported_park' => $reported_park,
+            ':reason'        => $reason
         ]);
     }
+    public function reportFoodStall($reported_by, $reported_stall, $reason) {
+        $sql = "INSERT INTO stall_reports (reported_by, reported_stall, reason) 
+                VALUES (:reported_by, :reported_stall, :reason)";
+        $stmt = $this->db->connect()->prepare($sql);
+        return $stmt->execute([
+            ':reported_by'   => $reported_by,
+            ':reported_stall' => $reported_stall,
+            ':reason'        => $reason
+        ]);
+    }
+    
     
     
 

@@ -25,10 +25,10 @@ if (isset($_SESSION['user'])) {
 
 if (isset($_POST['report_submit'])) {
     if (isset($_SESSION['user'])) {
-        $reported_by = $_SESSION['user']['id'];
-        $reported_user = $_POST['reported_user'];
-        $reason = $_POST['reason'];
-        if ($userObj->reportFoodParkOwner($reported_by, $reported_user, $reason)) {
+        $reported_by  = $_SESSION['user']['id'];
+        $reported_park = $_POST['reported_park']; 
+        $reason       = $_POST['reason'];
+        if ($userObj->reportFoodPark($reported_by, $reported_park, $reason)) {
             echo "<script>alert('Report submitted successfully.');</script>";
         } else {
             echo "<script>alert('Error submitting report.');</script>";
@@ -37,6 +37,7 @@ if (isset($_POST['report_submit'])) {
         echo "<script>alert('You must be logged in to report.');</script>";
     }
 }
+
 
 date_default_timezone_set('Asia/Manila');
 $currentDateTime = date("l, F j, Y h:i A");
@@ -166,11 +167,12 @@ $validParks = array_filter($parks, function($park) {
 
 <section class="third">
     <br><br><br>
-    <h2>All Food Parks in Zamboanga City</h2><br>
+    <h2>All Food Parks in Zamboanga City</h2>
 
-    <div class="mb-3">
-        <button id="openBtn" class="btn btn-outline-secondary me-2">Open</button>
+    <div class="oc mt-4 mb-5"> 
+        <button id="openBtn" class="btn btn-outline-secondary">Open</button>
         <button id="closedBtn" class="btn btn-outline-secondary">Closed</button>
+        <button id="unavailableBtn" class="btn btn-outline-secondary">Unavailable</button>
     </div>
     
     <?php 
@@ -179,50 +181,70 @@ $validParks = array_filter($parks, function($park) {
     } else { 
     ?>
         <div class="row row-cols-1 row-cols-md-4 g-3">
-            <?php 
-                foreach ($validParks as $park) { 
-                    $isOpen = false;
-                    $operatingHours = explode('; ', $park['operating_hours']);
-                    foreach ($operatingHours as $hours) {
-                        list($days, $timeRange) = explode('<br>', $hours);
-                        $daysArray = array_map('trim', explode(',', $days));
-                        if (in_array($currentDay, $daysArray)) {
-                            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                            $openTime24 = date('H:i', strtotime($openTime));
-                            $closeTime24 = date('H:i', strtotime($closeTime));
-                            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                                $isOpen = true;
-                                break;
-                            }
+        <?php 
+            foreach ($validParks as $park) { 
+                $isOpen = false;
+                $operatingHours = explode('; ', $park['operating_hours']);
+                foreach ($operatingHours as $hours) {
+                    list($days, $timeRange) = explode('<br>', $hours);
+                    $daysArray = array_map('trim', explode(',', $days));
+                    if (in_array($currentDay, $daysArray)) {
+                        list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                        $openTime24 = date('H:i', strtotime($openTime));
+                        $closeTime24 = date('H:i', strtotime($closeTime));
+                        if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                            $isOpen = true;
+                            break;
                         }
                     }
-                    ?>
-                    <div class="col park-card border rounded p-0 mx-2" data-is-open="<?= $isOpen ? '1' : '0'; ?>">
-                        <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
-                            <div class="card border-0" style="position: relative;">
-                                <?php if (!$isOpen) { ?>
-                                    <div class="closed text-center">
-                                        <div>
-                                            <span>Closed until <?= getNextOpening($operatingHours) ?></span>
-                                            <button class="rounded bg-white small border-0 px-3 py-1 mt-2" style="color:#CD5C08;">Order for later</button>
-                                        </div> 
+                }
+                if (isset($park['status']) && $park['status'] === 'Unavailable') {
+                    $status = 'unavailable';
+                } else {
+                    $status = $isOpen ? 'open' : 'closed';
+                }
+                ?>
+                <div class="col park-card border rounded p-0 mx-2" data-status="<?= $status; ?>">
+                    <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
+                        <div class="card border-0" style="position: relative;">
+                            <?php 
+                            // Display overlay based on status
+                            if ($status === 'closed') { 
+                                $closedMessage = getNextOpening($operatingHours);
+                            ?>
+                                <div class="closed text-center">
+                                    <div>
+                                        <span>Closed until <?= $closedMessage ?></span>
+                                        <button class="rounded bg-white small border-0 px-3 py-1 mt-2" style="color:#CD5C08;">Order for later</button>
                                     </div>
-                                <?php } ?>
-                                <img src="<?= $park['business_logo'] ?>" class="card-img-top" alt="...">
-                                <div class="card-body">
-                                    <h5 class="card-title text-dark"><?= $park['business_name'] ?></h5>
-                                    <p class="card-text text-muted">
-                                        <i class="fa-solid fa-location-dot me-1"></i>
-                                        <?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City
-                                    </p>
                                 </div>
+                            <?php } elseif ($status === 'unavailable') { ?>
+                                <div class="closed text-center">
+                                    <span>Unavailable</span>
+                                </div>
+                            <?php } ?>
+                            <img src="<?= $park['business_logo'] ?>" class="card-img-top" alt="...">
+                            <div class="card-body">
+                                <h5 class="card-title text-dark"><?= $park['business_name'] ?></h5>
+                                <p class="card-text text-muted">
+                                    <i class="fa-solid fa-location-dot me-1"></i>
+                                    <?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City
+                                </p>
                             </div>
-                        </a>
-                        <div class="text-center p-2 lpseemore rounded-4 mx-3 mb-3 small" data-bs-toggle="modal" data-bs-target="#seemorepark" data-email="<?= htmlspecialchars($park['business_email']) ?>" data-phone="<?= htmlspecialchars($park['business_phone']) ?>" data-hours="<?= htmlspecialchars($park['operating_hours']) ?>" data-reported_user="<?= htmlspecialchars($park['user_id']) ?>">See more...</div> 
+                        </div>
+                    </a>
+                    <div class="text-center p-2 lpseemore rounded-4 mx-3 mb-3 small" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#seemorepark" 
+                        data-email="<?= htmlspecialchars($park['business_email']) ?>" 
+                        data-phone="<?= htmlspecialchars($park['business_phone']) ?>" 
+                        data-hours="<?= htmlspecialchars($park['operating_hours']) ?>" 
+                        data-reported_park="<?= htmlspecialchars($park['id']) ?>">See more...</div>
                     </div>
             <?php 
-                }
+            }
             ?>
+
         </div>
     <?php 
     }
@@ -254,7 +276,9 @@ include_once 'footer.php';
                 <h5 class="fw-bold mb-3">Operating Hours</h5>
                 <div class="mb-4" data-hours>
                 </div>
-                <button class="border-0 py-2 px-3 rounded-5" data-bs-toggle="modal" data-bs-target="#report" data-reported_user=""> <i class="fa-regular fa-flag me-2 fs-5"></i>Report</button>
+                <?php if ($isLoggedIn && $user['role'] == 'Customer'): ?>
+                    <button class="border-0 py-2 px-3 rounded-5" data-bs-toggle="modal" data-bs-target="#report" data-reported_user=""> <i class="fa-regular fa-flag me-2 fs-5"></i>Report</button>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -273,7 +297,7 @@ include_once 'footer.php';
                   <textarea class="form-control" name="reason" placeholder="Reason" id="reason" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
                   <label for="reason">Reason</label>
               </div>
-              <input type="hidden" name="reported_user" id="reported_user" value="">
+              <input type="hidden" name="reported_park" id="reported_park" value="">
               <div class="mt-4 mb-3">
                   <input type="submit" name="report_submit" value="Submit" class="button" />
               </div>
@@ -283,21 +307,21 @@ include_once 'footer.php';
     </div>
   </form>
 </div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function(){
         const openBtn = document.getElementById('openBtn');
         const closedBtn = document.getElementById('closedBtn');
+        const unavailableBtn = document.getElementById('unavailableBtn');
         const parkCards = document.querySelectorAll('.park-card');
 
         function filterParks(status) {
             parkCards.forEach(card => {
-                const isOpen = card.getAttribute('data-is-open') === '1';
-                if(status === 'open') {
-                    card.style.display = isOpen ? '' : 'none';
-                } else if(status === 'closed') {
-                    card.style.display = !isOpen ? '' : 'none';
-                } else {
+                const cardStatus = card.getAttribute('data-status');
+                if(status === 'all'){
                     card.style.display = '';
+                } else {
+                    card.style.display = (cardStatus === status) ? '' : 'none';
                 }
             });
         }
@@ -309,6 +333,7 @@ include_once 'footer.php';
             } else {
                 openBtn.classList.add('active');
                 closedBtn.classList.remove('active');
+                unavailableBtn.classList.remove('active');
                 filterParks('open');
             }
         });
@@ -320,11 +345,26 @@ include_once 'footer.php';
             } else {
                 closedBtn.classList.add('active');
                 openBtn.classList.remove('active');
+                unavailableBtn.classList.remove('active');
                 filterParks('closed');
             }
         });
+
+        unavailableBtn.addEventListener('click', function(){
+            if(unavailableBtn.classList.contains('active')){
+                unavailableBtn.classList.remove('active');
+                filterParks('all');
+            } else {
+                unavailableBtn.classList.add('active');
+                openBtn.classList.remove('active');
+                closedBtn.classList.remove('active');
+                filterParks('unavailable');
+            }
+        });
     });
+
 </script>
+
 <script>
 const modal = document.getElementById('seemorepark');
 modal.addEventListener('show.bs.modal', function (event) {
@@ -332,24 +372,27 @@ modal.addEventListener('show.bs.modal', function (event) {
     const email = button.getAttribute('data-email');
     const phone = button.getAttribute('data-phone');
     const hours = button.getAttribute('data-hours');
-    const reportedUser = button.getAttribute('data-reported_user');
+    const reportedPark = button.getAttribute('data-reported_park'); // change here
     modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
     modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
     const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
     hoursContainer.innerHTML = hours ? hours.split('; ').map(hour => "<p>" + hour + "</p>").join('') : '<p>No operating hours available</p>';
     const reportButton = modal.querySelector('button[data-bs-target="#report"]');
     if(reportButton) {
-        reportButton.setAttribute('data-reported_user', reportedUser);
+        reportButton.setAttribute('data-reported_park', reportedPark); // update attribute here
     }
 });
+
 const reportModal = document.getElementById('report');
 reportModal.addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;
-    const reportedUser = button.getAttribute('data-reported_user');
-    document.getElementById('reported_user').value = reportedUser ? reportedUser : '';
+    const reportedPark = button.getAttribute('data-reported_park'); // change here
+    document.getElementById('reported_park').value = reportedPark ? reportedPark : '';
 });
 </script>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
 $(document).ready(function() {
     $("#searchInput").keyup(function() {

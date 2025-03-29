@@ -1,6 +1,6 @@
 <?php  
-    include_once 'header.php';
     include_once 'links.php'; 
+    include_once 'header.php';
     include_once 'nav.php';
     include_once 'bootstrap.php'; 
     include_once 'modals.php';
@@ -12,11 +12,34 @@
     }
 
     if (!isset($park_id)) {
-        // Redirect to index using javascript
         echo '<script> window.location.href = "index.php" </script>';
         exit();
     }
     $park = $parkObj->getPark($park_id);
+
+    if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
+        $stallId = $_POST['stallId'];
+        $newStatus = $_POST['status'];
+    
+        $result = $parkObj->updateStallStatus($stallId, $newStatus);
+    
+        header('Content-Type: application/json');
+        if ($result) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false]);
+        }
+        exit();
+    }
+
+    if (isset($_POST['action']) && $_POST['action'] === 'update_report_status') {
+        $report_id = $_POST['report_id'];
+        $newStatus = $_POST['new_status'];
+        $result = $parkObj->updateStallReportStatus($report_id, $newStatus);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $result]);
+        exit();
+    }
 
 ?>
 
@@ -63,22 +86,20 @@
     .select2-results__option--highlighted{
         background-color: #e0e0e0 !important;
     }
-    
+    .disabled{
+        color: #ccc !important;
+        pointer-events: none;
+    }
+    .hover:hover{
+        transform: scale(1.02);
+        opacity: 0.8;
+    }
 </style>
 
 <main>
-    <div class="d-flex mb-3 align-items-center gap-3">
-        <div class="py-2 px-3 rounded-2 border w-100 bg-white d-flex align-items-center justify-content-between" data-bs-toggle="offcanvas" data-bs-target="#foodparkbranch" aria-controls="foodparkbranch" style="cursor: pointer;">
-            <div class="d-flex align-items-center gap-3">
-                <img src="<?= $park['business_logo'] ?>" width="50px" height="50px" class="rounded-5">
-                <div>
-                    <p class="m-0 fw-bold"><?= $park['business_name'] ?></p>
-                    <span class="text-muted small"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City</span>
-                </div>
-            </div>
-            <i class="fa-solid fa-angle-down"></i>
-        </div>
+    <div class="d-flex mb-3 align-items-center justify-content-end gap-3">
         <button class="addpro flex-shrink-0" type="button" data-bs-toggle="modal" data-bs-target="#invitestall">+ Add Stall</button>
+        <i class="fa-solid fa-circle-user fs-1 hover" data-bs-toggle="offcanvas" data-bs-target="#foodparkbranch" aria-controls="foodparkbranch" style="cursor: pointer;"></i>
     </div>
     <div class="offcanvas offcanvas-end" tabindex="-1" id="foodparkbranch" aria-labelledby="foodparkbranchLabel" style="width: 40%;">
         <div class="offcanvas-header">
@@ -103,9 +124,67 @@
                 <button class="variation-btn addrem m-2" data-bs-toggle="modal" data-bs-target="#editfoodpark">Edit Park</button>
                 <button class="variation-btn addrem" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button>
             </div>
+            <h5 class="fw-bold m-0">Reports</h5>
+            <span class="small text-muted">Resolve or reject customer's report on your stalls</span>
+            <?php 
+            $reports = $parkObj->getStallReports($park_id);
+            foreach ($reports as $report): 
+                if ($report['status'] == 'Pending') {
+                    $statusIcon = '<i class="fa-solid fa-circle text-warning" style="font-size:9px;"></i>';
+                } elseif ($report['status'] == 'Resolved') {
+                    $statusIcon = '<i class="fa-solid fa-circle text-success" style="font-size:9px;"></i>';
+                } elseif ($report['status'] == 'Rejected') {
+                    $statusIcon = '<i class="fa-solid fa-circle text-danger" style="font-size:9px;"></i>';
+                }
+            ?>
+            <div class="d-flex align-items-center border gap-4 rounded-2 p-3 mt-2" id="report-<?= $report['id']; ?>">
+                <?= $statusIcon; ?>
+                <div class="d-flex gap-3 w-100">
+                    <img src="<?= htmlspecialchars($report['profile_img']); ?>" width="40px" height="40px" style="border-radius:50%;">
+                    <div>
+                        <h6><?= htmlspecialchars($report['first_name'] . ' ' . $report['last_name']); ?> reported <?= htmlspecialchars($report['stall_name']); ?></h6>
+                        <p class="text-muted m-0 my-1" style="font-size:12px;">"<?= htmlspecialchars($report['reason']); ?>"</p>
+                        <span style="font-size:12px;"><?= htmlspecialchars($report['created_at']); ?></span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2" id="actions-<?= $report['id']; ?>">
+                    <?php if ($report['status'] == 'Pending'): ?>
+                        <i class="fa-solid fa-check text-success rename update-status" data-report_id="<?= $report['id']; ?>" data-new_status="Resolved" style="cursor:pointer;"></i>
+                        <i class="fa-solid fa-xmark text-danger rename update-status" data-report_id="<?= $report['id']; ?>" data-new_status="Rejected" style="cursor:pointer;"></i>
+                    <?php else: ?>
+                        <i class="fa-solid fa-check text-success rename disabled"></i>
+                        <i class="fa-solid fa-xmark text-danger rename disabled"></i>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
         </div>
     </div>
-
+    <script>
+    $(document).ready(function(){
+        $('.update-status').click(function(){
+            var report_id = $(this).data('report_id');
+            var new_status = $(this).data('new_status');
+            $.ajax({
+                url: '',
+                method: 'POST',
+                dataType: 'json',
+                data: { action: 'update_report_status', report_id: report_id, new_status: new_status },
+                success: function(response) {
+                    if(response.success) {
+                        var container = $('#report-' + report_id);
+                        if(new_status === 'Resolved') {
+                            container.find('i.fa-solid.fa-circle').replaceWith('<i class="fa-solid fa-circle text-success" style="font-size:9px;"></i>');
+                        } else if(new_status === 'Rejected') {
+                            container.find('i.fa-solid.fa-circle').replaceWith('<i class="fa-solid fa-circle text-danger" style="font-size:9px;"></i>');
+                        }
+                        $('#actions-' + report_id).html('<i class="fa-solid fa-check text-success rename disabled" style="cursor:not-allowed;"></i><i class="fa-solid fa-xmark text-danger rename disabled" style="cursor:not-allowed;"></i>');
+                    }
+                }
+            });
+        });
+    });
+    </script>
     <?php
         $stalls = $parkObj->getStalls($park_id); 
         if (empty($stalls)) {
@@ -149,12 +228,25 @@
                                 </div>
                                 
                                 <div class="dropdown">
-                                    <button class="dropdown-toggle bg-white border-0 m-0 p-0" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-circle text-success me-2" style="font-size: 10px;"></i>Active</button>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <a class="dropdown-item" href="#"><i class="fa-solid fa-circle text-success me-2" style="font-size: 10px;"></i>Active</a>
-                                        <a class="dropdown-item" href="#"><i class="fa-solid fa-circle text-danger me-2" style="font-size: 10px;"></i>Inactive</a>
+                                    <button class="dropdown-toggle bg-white border-0 m-0 p-0 d-flex align-items-center" 
+                                            id="dropdownMenuButton<?= $stall['id'] ?>" 
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fa-solid fa-circle <?= ($stall['status'] === 'Available') ? 'text-success' : 'text-danger' ?> me-2" 
+                                        style="font-size: 9px;" id="statusIcon<?= $stall['id'] ?>"></i>
+                                        <span class="pe-3" id="statusText<?= $stall['id'] ?>"><?= $stall['status'] ?></span>
+                                    </button>
+                                    <div class="dropdown-menu py-0" aria-labelledby="dropdownMenuButton<?= $stall['id'] ?>">
+                                        <a class="dropdown-item update-status d-flex align-items-center" href="#" data-stallid="<?= $stall['id'] ?>" data-status="Available">
+                                            <i class="fa-solid fa-circle text-success me-2" style="font-size: 9px;"></i>
+                                            <span>Available</span>
+                                        </a>
+                                        <a class="dropdown-item update-status d-flex align-items-center" href="#" data-stallid="<?= $stall['id'] ?>" data-status="Unavailable">
+                                            <i class="fa-solid fa-circle text-danger me-2" style="font-size: 9px;"></i>
+                                            <span>Unavailable</span>
+                                        </a>
                                     </div>
                                 </div>
+
                             </div>
                             <div class="accordion accordion-flush" id="accCol<?= $stall['id'] ?>">
                                 <div class="accordion-item">
@@ -321,371 +413,400 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-
-$(document).ready(function () {
-    $("#emailSelect").select2({
-        placeholder: "Add emails to send invitation link",
-        allowClear: true,
-        templateResult: formatEmailWithImage, // For dropdown items
-        templateSelection: formatSelectedEmail, // For selected items
-        dropdownParent: $("#invitestall"), // Ensure it renders within the modal
-        ajax: {
-            url: "fetch_emails.php",
-            type: "GET",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return { search: params.term };
-            },
-            processResults: function (data) {
-                return { 
-                    results: data.map(user => ({
-                        id: user.id,  // Use user ID instead of email as ID
-                        text: user.email,
-                        profile_img: user.profile_img
-                    }))
-                };
-            },
-            cache: true
-        }
-    });
-
-    // Format items in dropdown with an image
-    function formatEmailWithImage(item) {
-        if (!item.id) return item.text; // If no ID, show plain text
-
-        let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
-        return $(
-            `<div style="display: flex; align-items: center;">
-                <img src="${imgSrc}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
-                <span>${item.text}</span>
-            </div>`
-        );
-    }
-
-    // Format the selected items inside the box
-    function formatSelectedEmail(item) {
-        if (!item.id) return item.text;
-
-        let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
-        return $(
-            `<div style="display: flex; align-items: center; gap: 5px;">
-                <img src="${imgSrc}" style="width: 20px; height: 20px; border-radius: 50%;">
-                <span>${item.text}</span>
-            </div>`
-        );
-    }
-
-    $('#invitestall').on('shown.bs.modal', function () {
-        $("#emailSelect").val(null).trigger("change"); // Reset selection
-    });
-
-    $("#createStallBtn").on("click", function () {
-        let selectedUsers = $("#emailSelect").select2("data"); // Get selected user objects
-        let parkId = "<?php echo $_SESSION['current_park_id']; ?>"; // Get park ID
-
-        if (!selectedUsers || selectedUsers.length === 0) {
-            Swal.fire({
-                title: 'Hold up! ⚠️',
-                text: 'You haven’t selected any users yet. Let’s fix that and try again!',
-                icon: 'error',
-                confirmButtonText: 'Alright, selecting now!'
+    $(document).ready(function(){
+        $('.update-status').on('click', function(e) {
+            e.preventDefault();
+            var newStatus = $(this).data('status');
+            var stallId = $(this).data('stallid');
+            
+            $.ajax({
+                url: '', 
+                type: 'POST',
+                dataType: 'json',
+                data: { 
+                    action: 'update_status', 
+                    stallId: stallId, 
+                    status: newStatus 
+                },
+                success: function(response) {
+                    if(response.success){
+                        location.reload();
+                    } else {
+                        console.error('Error updating status.');
+                    }
+                },
+                error: function(){
+                    console.error('There was an error processing your request.');
+                }
             });
-            return;
-        }
+        });
+    });
+</script>
 
-        // Show loading state
-        Swal.fire({
-            title: 'Sending invitations...',
-            text: 'Processing your request',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
+<script>
+    $(document).ready(function () {
+        $("#emailSelect").select2({
+            placeholder: "Add emails to send invitation link",
+            allowClear: true,
+            templateResult: formatEmailWithImage, // For dropdown items
+            templateSelection: formatSelectedEmail, // For selected items
+            dropdownParent: $("#invitestall"), // Ensure it renders within the modal
+            ajax: {
+                url: "fetch_emails.php",
+                type: "GET",
+                dataType: "json",
+                delay: 250,
+                data: function (params) {
+                    return { search: params.term };
+                },
+                processResults: function (data) {
+                    return { 
+                        results: data.map(user => ({
+                            id: user.id,  // Use user ID instead of email as ID
+                            text: user.email,
+                            profile_img: user.profile_img
+                        }))
+                    };
+                },
+                cache: true
             }
         });
 
-        // Prepare data for AJAX
-        let userData = selectedUsers.map(user => ({
-            id: user.id,
-            email: user.text
-        }));
+        // Format items in dropdown with an image
+        function formatEmailWithImage(item) {
+            if (!item.id) return item.text; // If no ID, show plain text
 
-        // Send AJAX request
-        $.ajax({
-            url: 'email/process_stall_invitations.php',
-            type: 'POST',
-            data: {
-                users: userData,
-                park_id: parkId
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    // We have URLs for each user
-                    if (response.urls && response.urls.length > 0) {
-                        let successCount = 0;
-                        let successfulUrls = [];
-                        
-                        // Collect successful URLs
-                        response.urls.forEach(function(item) {
-                            if (item.success && item.url) {
-                                successfulUrls.push({
-                                    email: item.email,
-                                    url: item.url
-                                });
-                                successCount++;
-                            }
-                        });
-                        
-                        // Function to open URLs with a delay to avoid popup blockers
-                        function openUrlsSequentially(urls, index) {
-                            if (index < urls.length) {
-                                window.open(urls[index].url, "_blank");
-                                setTimeout(function() {
-                                    openUrlsSequentially(urls, index + 1);
-                                }, 500);
-                            }
-                        }
-                        
-                        // Try to open URLs sequentially
-                        if (successfulUrls.length > 0) {
-                            openUrlsSequentially(successfulUrls, 0);
-                        }
-                        
-                        // Check if we have any failures to report
-                        let failureCount = response.urls.length - successCount;
-                        
-                        if (failureCount > 0) {
-                            let detailsHtml = '<ul class="text-start">';
+            let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
+            return $(
+                `<div style="display: flex; align-items: center;">
+                    <img src="${imgSrc}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
+                    <span>${item.text}</span>
+                </div>`
+            );
+        }
+
+        // Format the selected items inside the box
+        function formatSelectedEmail(item) {
+            if (!item.id) return item.text;
+
+            let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
+            return $(
+                `<div style="display: flex; align-items: center; gap: 5px;">
+                    <img src="${imgSrc}" style="width: 20px; height: 20px; border-radius: 50%;">
+                    <span>${item.text}</span>
+                </div>`
+            );
+        }
+
+        $('#invitestall').on('shown.bs.modal', function () {
+            $("#emailSelect").val(null).trigger("change"); // Reset selection
+        });
+
+        $("#createStallBtn").on("click", function () {
+            let selectedUsers = $("#emailSelect").select2("data"); // Get selected user objects
+            let parkId = "<?php echo $_SESSION['current_park_id']; ?>"; // Get park ID
+
+            if (!selectedUsers || selectedUsers.length === 0) {
+                Swal.fire({
+                    title: 'Hold up! ⚠️',
+                    text: 'You haven’t selected any users yet. Let’s fix that and try again!',
+                    icon: 'error',
+                    confirmButtonText: 'Alright, selecting now!'
+                });
+                return;
+            }
+
+            // Show loading state
+            Swal.fire({
+                title: 'Sending invitations...',
+                text: 'Processing your request',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Prepare data for AJAX
+            let userData = selectedUsers.map(user => ({
+                id: user.id,
+                email: user.text
+            }));
+
+            // Send AJAX request
+            $.ajax({
+                url: 'email/process_stall_invitations.php',
+                type: 'POST',
+                data: {
+                    users: userData,
+                    park_id: parkId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // We have URLs for each user
+                        if (response.urls && response.urls.length > 0) {
+                            let successCount = 0;
+                            let successfulUrls = [];
+                            
+                            // Collect successful URLs
                             response.urls.forEach(function(item) {
-                                if (!item.success) {
-                                    detailsHtml += `<li>${item.email}: ${item.message}</li>`;
+                                if (item.success && item.url) {
+                                    successfulUrls.push({
+                                        email: item.email,
+                                        url: item.url
+                                    });
+                                    successCount++;
                                 }
                             });
-                            detailsHtml += '</ul>';
                             
-                            Swal.fire({
-                                title: 'Some URLs could not be generated',
-                                html: `${failureCount} URL(s) could not be generated due to errors.<br>${detailsHtml}`,
-                                icon: 'warning',
-                                confirmButtonText: 'Ok, I understand'
-                            });
-                        } else {
-                            // Create HTML for manual URL opening in case automatic opening fails
-                            let urlListHtml = '';
-                            if (successfulUrls.length > 1) {
-                                urlListHtml = '<p>If not all URLs opened automatically, you can click on them below:</p><ul class="text-start">';
-                                successfulUrls.forEach(function(item) {
-                                    urlListHtml += `<li><a href="${item.url}" target="_blank">${item.email}</a></li>`;
-                                });
-                                urlListHtml += '</ul>';
+                            // Function to open URLs with a delay to avoid popup blockers
+                            function openUrlsSequentially(urls, index) {
+                                if (index < urls.length) {
+                                    window.open(urls[index].url, "_blank");
+                                    setTimeout(function() {
+                                        openUrlsSequentially(urls, index + 1);
+                                    }, 500);
+                                }
                             }
                             
+                            // Try to open URLs sequentially
+                            if (successfulUrls.length > 0) {
+                                openUrlsSequentially(successfulUrls, 0);
+                            }
+                            
+                            // Check if we have any failures to report
+                            let failureCount = response.urls.length - successCount;
+                            
+                            if (failureCount > 0) {
+                                let detailsHtml = '<ul class="text-start">';
+                                response.urls.forEach(function(item) {
+                                    if (!item.success) {
+                                        detailsHtml += `<li>${item.email}: ${item.message}</li>`;
+                                    }
+                                });
+                                detailsHtml += '</ul>';
+                                
+                                Swal.fire({
+                                    title: 'Some URLs could not be generated',
+                                    html: `${failureCount} URL(s) could not be generated due to errors.<br>${detailsHtml}`,
+                                    icon: 'warning',
+                                    confirmButtonText: 'Ok, I understand'
+                                });
+                            } else {
+                                // Create HTML for manual URL opening in case automatic opening fails
+                                let urlListHtml = '';
+                                if (successfulUrls.length > 1) {
+                                    urlListHtml = '<p>If not all URLs opened automatically, you can click on them below:</p><ul class="text-start">';
+                                    successfulUrls.forEach(function(item) {
+                                        urlListHtml += `<li><a href="${item.url}" target="_blank">${item.email}</a></li>`;
+                                    });
+                                    urlListHtml += '</ul>';
+                                }
+                                
+                                Swal.fire({
+                                    title: 'Success! 🎉',
+                                    html: `All URLs have been generated successfully!${urlListHtml}`,
+                                    icon: 'success',
+                                    confirmButtonText: 'Great!'
+                                });
+                            }
+                            
+                            // Close the modal after processing
+                            $('#invitestall').modal('hide');
+                        } else {
                             Swal.fire({
-                                title: 'Success! 🎉',
-                                html: `All URLs have been generated successfully!${urlListHtml}`,
-                                icon: 'success',
-                                confirmButtonText: 'Great!'
+                                title: 'No URLs generated',
+                                text: 'No URLs were generated from the server.',
+                                icon: 'warning',
+                                confirmButtonText: 'Ok'
                             });
                         }
-                        
-                        // Close the modal after processing
-                        $('#invitestall').modal('hide');
                     } else {
                         Swal.fire({
-                            title: 'No URLs generated',
-                            text: 'No URLs were generated from the server.',
-                            icon: 'warning',
-                            confirmButtonText: 'Ok'
+                            title: 'Oops! 😕',
+                            text: response.message || 'Something went wrong. Please try again.',
+                            icon: 'error',
+                            confirmButtonText: 'Try again'
                         });
                     }
-                } else {
+                },
+                error: function() {
                     Swal.fire({
-                        title: 'Oops! 😕',
-                        text: response.message || 'Something went wrong. Please try again.',
+                        title: 'Connection Error',
+                        text: 'Unable to connect to the server. Please check your connection and try again.',
                         icon: 'error',
                         confirmButtonText: 'Try again'
                     });
                 }
-            },
-            error: function() {
-                Swal.fire({
-                    title: 'Connection Error',
-                    text: 'Unable to connect to the server. Please check your connection and try again.',
-                    icon: 'error',
-                    confirmButtonText: 'Try again'
-                });
-            }
-        });
-    });
-
-    $('#sendInviteBtn').click(function () {
-        var selectedEmails = $('#emailSelect').val();
-        if (selectedEmails.length === 0) {
-            Swal.fire({
-                title: 'Hey, wait a sec! ✋',
-                text: 'You need to pick at least one email before we can send the invites.',
-                icon: 'error',
-                confirmButtonText: 'Got it, picking now!'
             });
-
-            return;
-        }
-
-        // Show loading indicator
-        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
-        $(this).prop('disabled', true);
-        
-        // Store button reference
-        var $button = $(this);
-
-        $.ajax({
-            url: './email/send_invite.php',
-            type: 'POST',
-            data: { emails: selectedEmails },
-            dataType: 'json',
-            success: function (response) {
-                // Reset button state
-                $button.html('Send Invitation Link');
-                $button.prop('disabled', false);
-                
-                if (response.status === 'success') {
-                    // Show success message
-                    // alert('Invitation links sent successfully!');
-                    Swal.fire({
-                        title: "Success! 🎉",
-                        text: "All invitation links were sent without a hitch! Check your inboxes. 📩",
-                        icon: "success"
-                    });
-
-                    
-                    // Reset the select2 dropdown
-                    $("#emailSelect").val(null).trigger("change");
-                    
-                    // Close the modal
-                    $('#invitestall').modal('hide');
-                } else if (response.status === 'warning') {
-                    // Show warning message with details
-                    var message = 'Some invitations could not be sent:\n';
-                    response.results.forEach(function(result) {
-                        message += '- ' + result.email + ': ' + result.message + '\n';
-                    });
-                    // alert(message);
-                    Swal.fire({
-                        title: 'Yikes! 😬',
-                        text: message || 'Something went wrong. Let’s try that one more time!',
-                        icon: 'error',
-                        confirmButtonText: 'Got it!'
-                    });
-                } else {
-                    // Show error message
-                    // alert('Failed to send some invitation links. Please try again.');
-                    Swal.fire({
-                        title: 'Oops! 🚧',
-                        text: 'Some invitations didn’t make it through. Maybe the internet gremlins are at it again? Give it another shot!',
-                        icon: 'error',
-                        confirmButtonText: 'Alright, I’ll try again!'
-                    });
-                }
-            },
-            error: function (xhr, status, error) {
-                // Reset button state
-                $button.html('Send Invitation Link');
-                $button.prop('disabled', false);
-                
-                // Show error message
-                // alert('An error occurred while sending invitations: ' + error);
-                Swal.fire({
-                    title: 'Uh-oh! 😟',
-                    text: 'Something went wrong while sending the invitations. Maybe the internet took a coffee break? Try again! Error: ' + error,
-                    icon: 'error',
-                    confirmButtonText: 'Got it, I’ll try again!'
-                })
-            }
         });
+
+        $('#sendInviteBtn').click(function () {
+            var selectedEmails = $('#emailSelect').val();
+            if (selectedEmails.length === 0) {
+                Swal.fire({
+                    title: 'Hey, wait a sec! ✋',
+                    text: 'You need to pick at least one email before we can send the invites.',
+                    icon: 'error',
+                    confirmButtonText: 'Got it, picking now!'
+                });
+
+                return;
+            }
+
+            // Show loading indicator
+            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
+            $(this).prop('disabled', true);
+            
+            // Store button reference
+            var $button = $(this);
+
+            $.ajax({
+                url: './email/send_invite.php',
+                type: 'POST',
+                data: { emails: selectedEmails },
+                dataType: 'json',
+                success: function (response) {
+                    // Reset button state
+                    $button.html('Send Invitation Link');
+                    $button.prop('disabled', false);
+                    
+                    if (response.status === 'success') {
+                        // Show success message
+                        // alert('Invitation links sent successfully!');
+                        Swal.fire({
+                            title: "Success! 🎉",
+                            text: "All invitation links were sent without a hitch! Check your inboxes. 📩",
+                            icon: "success"
+                        });
+
+                        
+                        // Reset the select2 dropdown
+                        $("#emailSelect").val(null).trigger("change");
+                        
+                        // Close the modal
+                        $('#invitestall').modal('hide');
+                    } else if (response.status === 'warning') {
+                        // Show warning message with details
+                        var message = 'Some invitations could not be sent:\n';
+                        response.results.forEach(function(result) {
+                            message += '- ' + result.email + ': ' + result.message + '\n';
+                        });
+                        // alert(message);
+                        Swal.fire({
+                            title: 'Yikes! 😬',
+                            text: message || 'Something went wrong. Let’s try that one more time!',
+                            icon: 'error',
+                            confirmButtonText: 'Got it!'
+                        });
+                    } else {
+                        // Show error message
+                        // alert('Failed to send some invitation links. Please try again.');
+                        Swal.fire({
+                            title: 'Oops! 🚧',
+                            text: 'Some invitations didn’t make it through. Maybe the internet gremlins are at it again? Give it another shot!',
+                            icon: 'error',
+                            confirmButtonText: 'Alright, I’ll try again!'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Reset button state
+                    $button.html('Send Invitation Link');
+                    $button.prop('disabled', false);
+                    
+                    // Show error message
+                    // alert('An error occurred while sending invitations: ' + error);
+                    Swal.fire({
+                        title: 'Uh-oh! 😟',
+                        text: 'Something went wrong while sending the invitations. Maybe the internet took a coffee break? Try again! Error: ' + error,
+                        icon: 'error',
+                        confirmButtonText: 'Got it, I’ll try again!'
+                    })
+                }
+            });
+        });
+
     });
-
-});
-
 </script>
 
 <script>
-// Attach click event to all delete icons
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteIcons = document.querySelectorAll('.fa-trash-can');
-    
-    deleteIcons.forEach(icon => {
-        icon.addEventListener('click', function() {
-            // Get the stall ID from the edit icon in the same card
-            // First, get the card parent element
-            const card = this.closest('.card');
-            // Get the edit icon's onclick attribute which contains the ID
-            const editIconOnclick = card.querySelector('.fa-pen-to-square').getAttribute('onclick');
-            // Extract just the ID number
-            const stallId = editIconOnclick.split('id=')[1].replace(/['")\s;]/g, '');
-            
-            console.log('Stall ID to delete:', stallId); // Debug
-            
-            // Set the stall ID in the hidden input
-            document.getElementById('stall_id_to_delete').value = stallId;
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteIcons = document.querySelectorAll('.fa-trash-can');
+        
+        deleteIcons.forEach(icon => {
+            icon.addEventListener('click', function() {
+                // Get the stall ID from the edit icon in the same card
+                // First, get the card parent element
+                const card = this.closest('.card');
+                // Get the edit icon's onclick attribute which contains the ID
+                const editIconOnclick = card.querySelector('.fa-pen-to-square').getAttribute('onclick');
+                // Extract just the ID number
+                const stallId = editIconOnclick.split('id=')[1].replace(/['")\s;]/g, '');
+                
+                console.log('Stall ID to delete:', stallId); // Debug
+                
+                // Set the stall ID in the hidden input
+                document.getElementById('stall_id_to_delete').value = stallId;
+            });
         });
-    });
-    
-    // Handle delete confirmation
-    document.getElementById('confirmDeleteStall').addEventListener('click', function() {
-        const stallId = document.getElementById('stall_id_to_delete').value;
         
-        console.log('Confirming delete of stall ID:', stallId); // Debug
-        
-        // Make an AJAX request to delete the stall
-        fetch('delete_stall.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'stall_id=' + stallId
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Delete response:', data); // Debug
+        // Handle delete confirmation
+        document.getElementById('confirmDeleteStall').addEventListener('click', function() {
+            const stallId = document.getElementById('stall_id_to_delete').value;
             
-            // Close the modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('deletestall'));
-            modal.hide();
+            console.log('Confirming delete of stall ID:', stallId); // Debug
             
-            if (data.success) {
-                // Show success message
-                Swal.fire({
-                    title: 'Success!',
-                    text: 'Stall has been deleted successfully.',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    // Reload the page
-                    window.location.reload();
-                });
-            } else {
-                // Show error message
+            // Make an AJAX request to delete the stall
+            fetch('delete_stall.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'stall_id=' + stallId
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Delete response:', data); // Debug
+                
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deletestall'));
+                modal.hide();
+                
+                if (data.success) {
+                    // Show success message
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Stall has been deleted successfully.',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // Reload the page
+                        window.location.reload();
+                    });
+                } else {
+                    // Show error message
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message || 'Failed to delete stall. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 Swal.fire({
                     title: 'Error!',
-                    text: data.message || 'Failed to delete stall. Please try again.',
+                    text: 'An unexpected error occurred. Please try again.',
                     icon: 'error',
                     confirmButtonText: 'OK'
                 });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                title: 'Error!',
-                text: 'An unexpected error occurred. Please try again.',
-                icon: 'error',
-                confirmButtonText: 'OK'
             });
         });
     });
-});
 </script>
 
 <?php 
