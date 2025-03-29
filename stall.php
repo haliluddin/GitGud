@@ -173,8 +173,8 @@ if (isset($_POST['report_submit'])) {
             </div>
             <div class="d-flex align-items-center">
                 <?php if (isset($user_id) && $user_id == $stall['user_id']): ?>
-                    <button class="pagelike" onclick="window.location.href='editpage.php?id=<?= $stall['id'] ?>';">Edit Page</button>
-                <?php else: ?>
+                    <button class="pagelike" onclick="window.location.href='editpage.php?id=<?= urlencode(encrypt($stall['id'])) ?>';">Edit Page</button>
+                    <?php else: ?>
                     <button id="likeBtn" class="pagelike <?= $likedByUser ? 'liked' : ''; ?>">
                         <?= $likedByUser ? 'Liked' : 'Like'; ?>
                     </button>

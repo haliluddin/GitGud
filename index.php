@@ -1,4 +1,6 @@
 <?php
+ob_start();
+
 session_start();
 include_once 'landingheader.php';
 include_once 'links.php';
@@ -38,7 +40,6 @@ if (isset($_POST['report_submit'])) {
     }
 }
 
-
 date_default_timezone_set('Asia/Manila');
 $currentDateTime = date("l, F j, Y h:i A");
 $currentDay = date('l'); 
@@ -63,6 +64,13 @@ $validParks = array_filter($parks, function($park) {
     return $park['business_status'] === 'Approved';
 });
 
+if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
+    $parkId = $_POST['parkId'];
+    $newStatus = $_POST['status'];
+    $parkObj->updateParkStatus($parkId, $newStatus);
+    header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($parkId));
+    exit();
+}
 ?>
 <title>GitGud PMS</title>
 <style>
@@ -208,7 +216,6 @@ $validParks = array_filter($parks, function($park) {
                     <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
                         <div class="card border-0" style="position: relative;">
                             <?php 
-                            // Display overlay based on status
                             if ($status === 'closed') { 
                                 $closedMessage = getNextOpening($operatingHours);
                             ?>
@@ -233,6 +240,7 @@ $validParks = array_filter($parks, function($park) {
                             </div>
                         </div>
                     </a>
+                    
                     <div class="text-center p-2 lpseemore rounded-4 mx-3 mb-3 small" 
                         data-bs-toggle="modal" 
                         data-bs-target="#seemorepark" 
@@ -240,11 +248,44 @@ $validParks = array_filter($parks, function($park) {
                         data-phone="<?= htmlspecialchars($park['business_phone']) ?>" 
                         data-hours="<?= htmlspecialchars($park['operating_hours']) ?>" 
                         data-reported_park="<?= htmlspecialchars($park['id']) ?>">See more...</div>
-                    </div>
-            <?php 
-            }
-            ?>
 
+                    <!-- Admin dropdown for updating park status -->
+                    <?php if ($isLoggedIn && $user['role'] == 'Admin'): ?>
+                        <div class="dropdown mb-3 d-flex justify-content-center">
+                            <button class="dropdown-toggle bg-white border-0 m-0 p-0 d-flex align-items-center justify-content-center" 
+                                    id="dropdownMenuButton<?= $park['id'] ?>" 
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-circle <?= ($park['status'] === 'Available') ? 'text-success' : 'text-danger' ?> me-2" 
+                                style="font-size: 9px;"></i>
+                                <span class="pe-3"><?= $park['status'] ?></span>
+                            </button>
+                            <div class="dropdown-menu py-0" aria-labelledby="dropdownMenuButton<?= $park['id'] ?>">
+                                <form method="POST" action="">
+                                    <input type="hidden" name="action" value="update_status">
+                                    <input type="hidden" name="parkId" value="<?= $park['id'] ?>">
+                                    <input type="hidden" name="status" value="Available">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center">
+                                        <i class="fa-solid fa-circle text-success me-2" style="font-size: 9px;"></i>
+                                        <span>Available</span>
+                                    </button>
+                                </form>
+                                <form method="POST" action="">
+                                    <input type="hidden" name="action" value="update_status">
+                                    <input type="hidden" name="parkId" value="<?= $park['id'] ?>">
+                                    <input type="hidden" name="status" value="Unavailable">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center">
+                                        <i class="fa-solid fa-circle text-danger me-2" style="font-size: 9px;"></i>
+                                        <span>Unavailable</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                </div>
+        <?php 
+            }
+        ?>
         </div>
     <?php 
     }
@@ -254,6 +295,7 @@ $validParks = array_filter($parks, function($park) {
 <?php
 include_once 'footer.php';
 ?>
+<!-- The See More modal remains mostly unchanged -->
 <div class="modal fade" id="seemorepark" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -277,7 +319,9 @@ include_once 'footer.php';
                 <div class="mb-4" data-hours>
                 </div>
                 <?php if ($isLoggedIn && $user['role'] == 'Customer'): ?>
-                    <button class="border-0 py-2 px-3 rounded-5" data-bs-toggle="modal" data-bs-target="#report" data-reported_user=""> <i class="fa-regular fa-flag me-2 fs-5"></i>Report</button>
+                    <button class="border-0 py-2 px-3 rounded-5" data-bs-toggle="modal" data-bs-target="#report" data-reported_user=""> 
+                        <i class="fa-regular fa-flag me-2 fs-5"></i>Report
+                    </button>
                 <?php endif; ?>
             </div>
         </div>
@@ -309,6 +353,7 @@ include_once 'footer.php';
 </div>
 
 <script>
+    // Filtering buttons for park cards
     document.addEventListener("DOMContentLoaded", function(){
         const openBtn = document.getElementById('openBtn');
         const closedBtn = document.getElementById('closedBtn');
@@ -363,36 +408,31 @@ include_once 'footer.php';
         });
     });
 
-</script>
+    // Modal for See More
+    const modal = document.getElementById('seemorepark');
+    modal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const email = button.getAttribute('data-email');
+        const phone = button.getAttribute('data-phone');
+        const hours = button.getAttribute('data-hours');
+        const reportedPark = button.getAttribute('data-reported_park');
+        modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
+        modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
+        const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
+        hoursContainer.innerHTML = hours ? hours.split('; ').map(hour => "<p>" + hour + "</p>").join('') : '<p>No operating hours available</p>';
+        // No admin dropdown handling is needed here now
+    });
 
-<script>
-const modal = document.getElementById('seemorepark');
-modal.addEventListener('show.bs.modal', function (event) {
-    const button = event.relatedTarget;
-    const email = button.getAttribute('data-email');
-    const phone = button.getAttribute('data-phone');
-    const hours = button.getAttribute('data-hours');
-    const reportedPark = button.getAttribute('data-reported_park'); // change here
-    modal.querySelector('.modal-body span[data-email]').textContent = email || 'N/A';
-    modal.querySelector('.modal-body span[data-phone]').textContent = phone || 'N/A';
-    const hoursContainer = modal.querySelector('.modal-body div[data-hours]');
-    hoursContainer.innerHTML = hours ? hours.split('; ').map(hour => "<p>" + hour + "</p>").join('') : '<p>No operating hours available</p>';
-    const reportButton = modal.querySelector('button[data-bs-target="#report"]');
-    if(reportButton) {
-        reportButton.setAttribute('data-reported_park', reportedPark); // update attribute here
-    }
-});
-
-const reportModal = document.getElementById('report');
-reportModal.addEventListener('show.bs.modal', function (event) {
-    const button = event.relatedTarget;
-    const reportedPark = button.getAttribute('data-reported_park'); // change here
-    document.getElementById('reported_park').value = reportedPark ? reportedPark : '';
-});
+    // Modal for reporting
+    const reportModal = document.getElementById('report');
+    reportModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const reportedPark = button.getAttribute('data-reported_park');
+        document.getElementById('reported_park').value = reportedPark ? reportedPark : '';
+    });
 </script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script>
 $(document).ready(function() {
     $("#searchInput").keyup(function() {

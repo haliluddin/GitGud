@@ -55,87 +55,93 @@ $statusMapping = [
     <!-- All Orders Section -->
     <div id="all" class="section-content">
         <?php 
-        foreach ($groupedOrders as $status => $ordersGroup) {
-            foreach ($ordersGroup as $osid => $orderGroup) {
-                $formattedOrderId = str_pad($orderGroup['order_id'], 4, '0', STR_PAD_LEFT);
-                $formattedDate = date("m/d/Y H:i", strtotime($orderGroup['order_date']));
-                $displayStatus = ($status == 'Pending') ? "TO PAY" :
-                                 (($status == 'Preparing') ? "PREPARING" :
-                                 (($status == 'Ready') ? "TO RECEIVE" :
-                                 (($status == 'Completed') ? "COMPLETED" : "CANCELED")));
-                ?>
-                <div class="border py-3 px-4 rounded-2 bg-white mb-3">
-                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
-                        <div class="d-flex gap-3 align-items-center">
-                            <span class="fw-bold">ORDER ID: <?php echo $formattedOrderId; ?></span>
-                            <span class="dot text-muted"></span>
-                            <div class="d-flex gap-2 align-items-center">
-                                <span class="fw-bold"><?php echo htmlspecialchars($orderGroup['stall_name']); ?></span> 
-                                <button class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php?id=<?= encrypt($orderGroup['stall_id']); ?>';">View Stall</button>
+        if (empty($groupedOrders)) {
+            echo '<div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">
+                    No orders in this section.
+                </div>';
+        } else {
+            foreach ($groupedOrders as $status => $ordersGroup) {
+                foreach ($ordersGroup as $osid => $orderGroup) {
+                    $formattedOrderId = str_pad($orderGroup['order_id'], 4, '0', STR_PAD_LEFT);
+                    $formattedDate = date("m/d/Y H:i", strtotime($orderGroup['order_date']));
+                    $displayStatus = ($status == 'Pending') ? "TO PAY" :
+                                    (($status == 'Preparing') ? "PREPARING" :
+                                    (($status == 'Ready') ? "TO RECEIVE" :
+                                    (($status == 'Completed') ? "COMPLETED" : "CANCELED")));
+                    ?>
+                    <div class="border py-3 px-4 rounded-2 bg-white mb-3">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                            <div class="d-flex gap-3 align-items-center">
+                                <span class="fw-bold">ORDER ID: <?php echo $formattedOrderId; ?></span>
+                                <span class="dot text-muted"></span>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <span class="fw-bold"><?php echo htmlspecialchars($orderGroup['stall_name']); ?></span> 
+                                    <button class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php?id=<?= encrypt($orderGroup['stall_id']); ?>';">View Stall</button>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3 align-items-center">
+                                <span style="color: #6A9C89" class="small"><?php echo $formattedDate; ?></span>
+                                <span class="dot text-muted"></span>
+                                <span class="fw-bold" style="color: #CD5C08"><?php echo $displayStatus; ?></span>
                             </div>
                         </div>
-                        <div class="d-flex gap-3 align-items-center">
-                            <span style="color: #6A9C89" class="small"><?php echo $formattedDate; ?></span>
-                            <span class="dot text-muted"></span>
-                            <span class="fw-bold" style="color: #CD5C08"><?php echo $displayStatus; ?></span>
+                        <?php 
+                        foreach ($orderGroup['items'] as $item) { ?>
+                            <div class="d-flex justify-content-between border-bottom py-2">
+                                <div class="d-flex gap-3 align-items-center">
+                                    <img src="<?php echo htmlspecialchars($item['product_image']); ?>" width="85px" height="85px" class="border rounded-2">
+                                    <div>
+                                        <span class="fs-5"><?php echo htmlspecialchars($item['product_name']); ?></span><br>
+                                        <?php if (!empty($item['variations'])): ?>
+                                            <span class="small text-muted">Variation: <?php echo htmlspecialchars($item['variations']); ?></span><br>
+                                        <?php endif; ?>
+                                        <?php if (!empty($item['request'])): ?>
+                                            <span class="small text-muted">"<?php echo htmlspecialchars($item['request']); ?>"</span><br>
+                                        <?php endif; ?>
+                                        <span>x<?php echo $item['quantity']; ?></span>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column justify-content-end">
+                                    <span class="fw-bold">₱<?php echo number_format($item['item_subtotal'], 2); ?></span>
+                                </div>
+                            </div>
+                        <?php } ?>
+                        <div class="d-flex justify-content-between pt-2">
+                            <div class="d-flex gap-3 align-items-center text-muted small">
+                                <span>Payment Method: <?php echo $item['payment_method']; ?></span>
+                                <span class="dot text-muted"></span>
+                                <span>Order Type: <?php echo $item['order_type']; ?></span>
+                            </div>
+                            <div class="d-flex gap-4 align-items-center">
+                                <?php if($status == 'Pending'): ?>
+                                    <button class="cancelorder-btn cancelorder rounded-2" data-order-stall-id="<?php echo $osid; ?>" data-bs-toggle="modal" data-bs-target="#cancelorder">Cancel Order</button>
+                                    <span class="dot text-muted"></span>
+                                <?php endif; ?>
+                                <?php if($status == 'Preparing'): ?>
+                                    <button class="preparing rounded-2">Preparing</button>                                
+                                    <span class="dot text-muted"></span>
+                                <?php endif; ?>
+                                <?php if($status == 'Ready'): ?>
+                                    <button class="order-received-btn cancelorder rounded-2" data-order-stall-id="<?php echo $osid; ?>" data-new-status="Completed" data-bs-toggle="modal" data-bs-target="#orderreceived">Order Received</button>
+                                    <span class="dot text-muted"></span>
+                                <?php endif; ?>
+                                <?php if($status == 'Completed'): ?>
+                                    <button class="preparing rounded-2">Completed</button>                             
+                                    <span class="dot text-muted"></span>
+                                <?php endif; ?>
+                                <?php if($status == 'Canceled'): ?>
+                                    <button class="preparing rounded-2">Canceled</button>                               
+                                    <span class="dot text-muted"></span>
+                                <?php endif; ?>
+                                <div class="d-flex gap-3 align-items-center">
+                                    <span class="text-muted">Sub Total:</span>
+                                    <span class="fw-bold fs-4">₱<?php echo number_format($orderGroup['stall_subtotal'], 2); ?></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <?php 
-                    foreach ($orderGroup['items'] as $item) { ?>
-                        <div class="d-flex justify-content-between border-bottom py-2">
-                            <div class="d-flex gap-3 align-items-center">
-                                <img src="<?php echo htmlspecialchars($item['product_image']); ?>" width="85px" height="85px" class="border rounded-2">
-                                <div>
-                                    <span class="fs-5"><?php echo htmlspecialchars($item['product_name']); ?></span><br>
-                                    <?php if (!empty($item['variations'])): ?>
-                                        <span class="small text-muted">Variation: <?php echo htmlspecialchars($item['variations']); ?></span><br>
-                                    <?php endif; ?>
-                                    <?php if (!empty($item['request'])): ?>
-                                        <span class="small text-muted">"<?php echo htmlspecialchars($item['request']); ?>"</span><br>
-                                    <?php endif; ?>
-                                    <span>x<?php echo $item['quantity']; ?></span>
-                                </div>
-                            </div>
-                            <div class="d-flex flex-column justify-content-end">
-                                <span class="fw-bold">₱<?php echo number_format($item['item_subtotal'], 2); ?></span>
-                            </div>
-                        </div>
-                    <?php } ?>
-                    <div class="d-flex justify-content-between pt-2">
-                        <div class="d-flex gap-3 align-items-center text-muted small">
-                            <span>Payment Method: <?php echo $item['payment_method']; ?></span>
-                            <span class="dot text-muted"></span>
-                            <span>Order Type: <?php echo $item['order_type']; ?></span>
-                        </div>
-                        <div class="d-flex gap-4 align-items-center">
-                            <?php if($status == 'Pending'): ?>
-                                <button class="cancelorder-btn cancelorder rounded-2" data-order-stall-id="<?php echo $osid; ?>" data-bs-toggle="modal" data-bs-target="#cancelorder">Cancel Order</button>
-                                <span class="dot text-muted"></span>
-                            <?php endif; ?>
-                            <?php if($status == 'Preparing'): ?>
-                                <button class="preparing rounded-2">Preparing</button>                                
-                                <span class="dot text-muted"></span>
-                            <?php endif; ?>
-                            <?php if($status == 'Ready'): ?>
-                                <button class="order-received-btn cancelorder rounded-2" data-order-stall-id="<?php echo $osid; ?>" data-new-status="Completed" data-bs-toggle="modal" data-bs-target="#orderreceived">Order Received</button>
-                                <span class="dot text-muted"></span>
-                            <?php endif; ?>
-                            <?php if($status == 'Completed'): ?>
-                                <button class="preparing rounded-2">Completed</button>                             
-                                <span class="dot text-muted"></span>
-                            <?php endif; ?>
-                            <?php if($status == 'Canceled'): ?>
-                                <button class="preparing rounded-2">Canceled</button>                               
-                                <span class="dot text-muted"></span>
-                            <?php endif; ?>
-                            <div class="d-flex gap-3 align-items-center">
-                                <span class="text-muted">Sub Total:</span>
-                                <span class="fw-bold fs-4">₱<?php echo number_format($orderGroup['stall_subtotal'], 2); ?></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php 
+                }
             }
         }
         ?>

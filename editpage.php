@@ -21,9 +21,7 @@
                 $categories = explode(", ", $record['categories']);
                 $paymentMethods = explode(", ", $record['payment_methods']);
                 $operatingHours = explode("; ", $record['operating_hours']);
-            } else {
-                echo '<script>window.location.href = "managestall.php";</script>';
-            }
+            } 
         }
     } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
         

@@ -99,12 +99,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 'subtractPrice' => $_POST["variation_subtract_price_{$varIndex}"][$i] ?? '',
                                 'imageBase64'   => $_POST["variation_image_base64_{$varIndex}"][$i] ?? ''
                             ];
-                            $stockVal = $_POST["variation_initial_stock_{$varIndex}"][$i] ?? '';
-                            if (empty($stockVal)) {
-                                $variationStockErr = 'Required.';
-                            } elseif (!is_numeric($stockVal) || $stockVal < 0) {
-                                $variationStockErr = 'Non-negative.';
-                            }
                         }
                     }
                 }
@@ -489,4 +483,36 @@ ob_end_flush();
         </div>
     </div>
 </div>
+
+<script>
+document.querySelector('form.productcon').addEventListener('submit', function(e) {
+    document.querySelectorAll('.variation-stock-error').forEach(function(span) {
+        span.remove();
+    });
+    let hasError = false;
+    document.querySelectorAll('input.inst').forEach(function(input) {
+        const value = input.value.trim();
+        let errorMsg = "";
+        if (value === "") {
+            errorMsg = "Required.";
+        } else if (isNaN(value) || Number(value) < 0) {
+            errorMsg = "Non-negative.";
+        }
+        if (errorMsg !== "") {
+            hasError = true;
+            const errorSpan = document.createElement('span');
+            errorSpan.className = 'errormessage variation-stock-error';
+            errorSpan.style.color = 'red';
+            errorSpan.style.fontSize = 'small';
+            errorSpan.innerText = errorMsg;
+            input.parentNode.insertBefore(errorSpan, input.nextSibling);
+        }
+    });
+    if (hasError) {
+        e.preventDefault();
+    }
+});
+</script>
+
+
 <?php include_once './footer.php'; ?>

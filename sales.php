@@ -143,14 +143,21 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
                         <th class="text-end w-25">Order Count</th>
                         <th class="text-end w-25">Sales</th>
                     </tr>
-                    <?php if($productsReport): foreach($productsReport as $product): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($product['name']); ?></td>
-                        <td class="text-end"><?php echo $product['order_count']; ?></td>
-                        <td class="text-end">₱<?php echo $product['sales']; ?></td>
-                    </tr>
-                    <?php endforeach; endif; ?>
+                    <?php if (!empty($productsReport)): ?>
+                        <?php foreach ($productsReport as $product): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($product['name']); ?></td>
+                            <td class="text-end"><?php echo $product['order_count']; ?></td>
+                            <td class="text-end">₱<?php echo number_format($product['sales'], 2); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-3">No products available.</td>
+                        </tr>
+                    <?php endif; ?>
                 </table>
+
                 <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3">
                     <!-- Pagination will be dynamically generated -->
                 </div>

@@ -490,6 +490,15 @@ class Park {
         return $query->execute([':status' => $status, ':id' => $stallId]);
     }
 
+    public function updateParkStatus($park_id, $status){
+        if (!in_array($status, ['Available', 'Unavailable'])) {
+            return false;
+        }
+        $sql = "UPDATE business SET status = :status WHERE id = :id;";
+        $query = $this->db->connect()->prepare($sql);
+        return $query->execute([':status' => $status, ':id' => $park_id]);
+    }
+
     function getStallReports($park_id) {
         $sql = "SELECT sr.id, sr.reported_by, sr.reported_stall, sr.reason, sr.status, sr.created_at,
                        u.profile_img, u.first_name, u.last_name,

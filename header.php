@@ -33,7 +33,6 @@ if (isset($_SESSION['user'])) {
 
     $nav_links = [
         'account.php' => ['label' => 'Account', 'icon' => 'fa-solid fa-user'],
-        //'favorites.php' => ['label' => 'Favorites', 'icon' => 'fa-solid fa-heart'],
         'purchase.php' => ['label' => 'Purchase', 'icon' => 'fa-solid fa-shopping-bag'],
     ];
 
@@ -42,15 +41,12 @@ if (isset($_SESSION['user'])) {
             'orders.php' => ['label' => 'Orders', 'icon' => 'fa-solid fa-receipt'],
             'managemenu.php' => ['label' => 'Manage Menu', 'icon' => 'fa-solid fa-utensils'],
             'sales.php' => ['label' => 'Sales', 'icon' => 'fa-solid fa-chart-line'],
-            //'stallpage.php' => ['label' => 'Stall Page', 'icon' => 'fa-solid fa-store'],
         ];
     }
 
     if ($is_food_park_owner) {
         $nav_links += [
             'managestall.php' => ['label' => 'Manage Stall', 'icon' => 'fa-solid fa-cogs'],
-            //'dashboard.php' => ['label' => 'Dashboard', 'icon' => 'fa-solid fa-chart-bar'],
-            //'centralized.php' => ['label' => 'Centralized', 'icon' => 'fa-solid fa-layer-group'],
         ];
     }
 } else {
@@ -135,32 +131,39 @@ if (isset($park_id))
                 <h5 class="modal-title">Select a Stall</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div id="stallsContainer" class="modal-body">
+            <!-- Changed container id from stallsContainer to stallsModalContainer -->
+            <div id="stallsModalContainer" class="modal-body">
                 <div class="row row-cols-1 row-cols-md-3 g-3">
-                    <?php foreach ($allStalls as $stall): ?>
-                        <div class="col stall-card">
-                            <a href="#" class="card-link text-decoration-none bg-white" data-stall-id="<?= $stall['id'] ?>">
-                                <div class="card">
-                                    <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="Stall Logo">
-                                    <div class="card-body">
-                                        <div class="d-flex gap-2 align-items-center">
-                                            <?php 
-                                                $stall_categories = explode(',', $stall['stall_categories']); 
-                                                foreach ($stall_categories as $index => $category): 
-                                            ?>
-                                                <p class="card-text text-muted m-0"><?= trim($category) ?></p>
-                                                <?php if ($index !== array_key_last($stall_categories)): ?>
-                                                    <span class="dot text-muted"></span>
-                                                <?php endif; ?>
-                                            <?php endforeach; ?>
+                    <?php if(isset($allStalls) && !empty($allStalls)): ?>
+                        <?php foreach ($allStalls as $singleStall): ?>
+                            <div class="col stall-card">
+                                <a href="#" class="card-link text-decoration-none bg-white" data-stall-id="<?= $singleStall['id'] ?>">
+                                    <div class="card">
+                                        <img src="<?= $singleStall['logo'] ?>" class="card-img-top" alt="Stall Logo">
+                                        <div class="card-body">
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <?php 
+                                                    $stall_categories = explode(',', $singleStall['stall_categories']); 
+                                                    foreach ($stall_categories as $index => $category): 
+                                                ?>
+                                                    <p class="card-text text-muted m-0"><?= trim($category) ?></p>
+                                                    <?php if ($index !== array_key_last($stall_categories)): ?>
+                                                        <span class="dot text-muted"></span>
+                                                    <?php endif; ?>
+                                                <?php endforeach; ?>
+                                            </div>
+                                            <h5 class="card-title my-2"><?= $singleStall['name'] ?></h5>
+                                            <p class="card-text text-muted m-0"><?= $singleStall['description'] ?></p>
                                         </div>
-                                        <h5 class="card-title my-2"><?= $stall['name'] ?></h5>
-                                        <p class="card-text text-muted m-0"><?= $stall['description'] ?></p>
                                     </div>
-                                </div>
-                            </a>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col">
+                            <p>No stalls available.</p>
                         </div>
-                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -191,13 +194,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
         document.querySelectorAll('.stall-card a').forEach(function(stallLink) {
             stallLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                const stallId = this.getAttribute('data-stall-id');
-                if (stallId) {
-                    window.location.href = targetUrl + '?stall_id=' + stallId;
+                if (typeof targetUrl !== 'undefined' && targetUrl !== '') {
+                    e.preventDefault();
+                    const stallId = this.getAttribute('data-stall-id');
+                    if (stallId) {
+                        window.location.href = targetUrl + '?stall_id=' + stallId;
+                    }
                 }
             });
         });
+
     }
 });
 </script>

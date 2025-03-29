@@ -3,6 +3,7 @@ include_once 'links.php';
 include_once 'header.php';
 require_once __DIR__ . '/classes/cart.class.php';
 require_once __DIR__ . '/classes/paymongo.class.php';
+require_once __DIR__ . '/classes/encdec.class.php';
 
 $cartObj = new Cart();
 $payMongo = new PayMongoHandler();
@@ -136,7 +137,7 @@ foreach ($cartGrouped as $stallName => $items) {
                     <div class="d-flex justify-content-between align-items-center border-bottom pb-2 stall-header">
                         <div class="d-flex gap-2 align-items-center">
                             <span class="fw-bold"><?= htmlspecialchars($stallName) ?></span> 
-                            <button type="button" class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php'">View Stall</button>
+                            <button type="button" class="border bg-white small px-2" onclick="window.location.href='stall.php?id=<?= urlencode(encrypt($stall_id)) ?>'">View Stall</button>
                         </div>
                         <span class="stall-error text-danger" style="font-size: 13px; display:none;">
                             <i class="fa-solid fa-circle-exclamation me-2"></i>

@@ -79,85 +79,91 @@ $statusMapping = [
 
     <div id="all" class="section-content">
         <?php 
-        foreach ($groupedOrders as $status => $ordersGroup) {
-            foreach ($ordersGroup as $osid => $orderGroup) { 
-                $formattedOrderId = str_pad($orderGroup['order_id'], 4, '0', STR_PAD_LEFT);
-                $formattedDate = date("m/d/Y H:i", strtotime($orderGroup['order_date']));
-                $displayStatus = ($status == 'Pending') ? "PENDING PAYMENT" :
-                                 (($status == 'Preparing') ? "PREPARING" :
-                                 (($status == 'Ready') ? "READY FOR PICKUP" :
-                                 (($status == 'Completed') ? "COMPLETED" : "CANCELED")));
-                ?>
-                <div class="border rounded-2 bg-white mb-3 d-flex">
-                    <div class="flex-grow-1 border-end">
-                        <div class="d-flex justify-content-between align-items-center border-bottom py-3 px-5">
-                            <div class="d-flex gap-3 align-items-center">
-                                <?php if (!empty($orderGroup['queue_number'])): ?>
-                                    <span class="prequeue fw-bold text-white d-flex align-items-center justify-content-center">
-                                        <?php echo str_pad($orderGroup['queue_number'], 2, '0', STR_PAD_LEFT); ?>
-                                    </span>
-                                    <span class="dot text-muted"></span>
-                                <?php endif; ?>
-                                <span class="fw-bold">ORDER ID: <?php echo $formattedOrderId; ?></span>
-                            </div>
-                            <div class="d-flex gap-3 align-items-center">
-                                <span style="color: #6A9C89" class="small"><?php echo $formattedDate; ?></span>
-                                <span class="dot text-muted"></span>
-                                <span class="fw-bold" style="color: #CD5C08"><?php echo $displayStatus; ?></span>
-                            </div>
-                        </div>
-                        <?php 
-                        foreach ($orderGroup['items'] as $item) { ?>
-                            <div class="d-flex justify-content-between border-bottom py-2 px-5">
+        if (empty($groupedOrders)) {
+            echo '<div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">
+                    No orders in this section.
+                </div>';
+        } else {
+            foreach ($groupedOrders as $status => $ordersGroup) {
+                foreach ($ordersGroup as $osid => $orderGroup) { 
+                    $formattedOrderId = str_pad($orderGroup['order_id'], 4, '0', STR_PAD_LEFT);
+                    $formattedDate = date("m/d/Y H:i", strtotime($orderGroup['order_date']));
+                    $displayStatus = ($status == 'Pending') ? "PENDING PAYMENT" :
+                                    (($status == 'Preparing') ? "PREPARING" :
+                                    (($status == 'Ready') ? "READY FOR PICKUP" :
+                                    (($status == 'Completed') ? "COMPLETED" : "CANCELED")));
+                    ?>
+                    <div class="border rounded-2 bg-white mb-3 d-flex">
+                        <div class="flex-grow-1 border-end">
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-3 px-5">
                                 <div class="d-flex gap-3 align-items-center">
-                                    <img src="<?php echo htmlspecialchars($item['product_image']); ?>" width="85px" height="85px" class="border rounded-2">
-                                    <div>
-                                        <span class="fs-5"><?php echo htmlspecialchars($item['product_name']); ?></span><br>
-                                        <?php if (!empty($item['variations'])): ?>
-                                            <span class="small text-muted">Variation: <?php echo htmlspecialchars($item['variations']); ?></span><br>
-                                        <?php endif; ?>
-                                        <?php if (!empty($item['request'])): ?>
-                                            <span class="small text-muted">"<?php echo htmlspecialchars($item['request']); ?>"</span><br>
-                                        <?php endif; ?>
-                                        <span>x<?php echo $item['quantity']; ?></span>
+                                    <?php if (!empty($orderGroup['queue_number'])): ?>
+                                        <span class="prequeue fw-bold text-white d-flex align-items-center justify-content-center">
+                                            <?php echo str_pad($orderGroup['queue_number'], 2, '0', STR_PAD_LEFT); ?>
+                                        </span>
+                                        <span class="dot text-muted"></span>
+                                    <?php endif; ?>
+                                    <span class="fw-bold">ORDER ID: <?php echo $formattedOrderId; ?></span>
+                                </div>
+                                <div class="d-flex gap-3 align-items-center">
+                                    <span style="color: #6A9C89" class="small"><?php echo $formattedDate; ?></span>
+                                    <span class="dot text-muted"></span>
+                                    <span class="fw-bold" style="color: #CD5C08"><?php echo $displayStatus; ?></span>
+                                </div>
+                            </div>
+                            <?php 
+                            foreach ($orderGroup['items'] as $item) { ?>
+                                <div class="d-flex justify-content-between border-bottom py-2 px-5">
+                                    <div class="d-flex gap-3 align-items-center">
+                                        <img src="<?php echo htmlspecialchars($item['product_image']); ?>" width="85px" height="85px" class="border rounded-2">
+                                        <div>
+                                            <span class="fs-5"><?php echo htmlspecialchars($item['product_name']); ?></span><br>
+                                            <?php if (!empty($item['variations'])): ?>
+                                                <span class="small text-muted">Variation: <?php echo htmlspecialchars($item['variations']); ?></span><br>
+                                            <?php endif; ?>
+                                            <?php if (!empty($item['request'])): ?>
+                                                <span class="small text-muted">"<?php echo htmlspecialchars($item['request']); ?>"</span><br>
+                                            <?php endif; ?>
+                                            <span>x<?php echo $item['quantity']; ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column justify-content-end">
+                                        <span class="fw-bold">₱<?php echo number_format($item['item_subtotal'], 2); ?></span>
                                     </div>
                                 </div>
-                                <div class="d-flex flex-column justify-content-end">
-                                    <span class="fw-bold">₱<?php echo number_format($item['item_subtotal'], 2); ?></span>
+                            <?php } ?>
+                            <div class="d-flex justify-content-between py-2 px-5">
+                                <div class="d-flex gap-3 align-items-center text-muted small">
+                                    <span>Payment Method: <?php echo $item['payment_method']; ?></span>
+                                    <span class="dot text-muted"></span>
+                                    <span>Order Type: <?php echo $item['order_type']; ?></span>
+                                </div>
+                                <div class="d-flex gap-3 align-items-center">
+                                    <span class="text-muted">Total:</span>
+                                    <span class="fw-bold fs-4">₱<?php echo number_format($orderGroup['stall_subtotal'], 2); ?></span>
                                 </div>
                             </div>
-                        <?php } ?>
-                        <div class="d-flex justify-content-between py-2 px-5">
-                            <div class="d-flex gap-3 align-items-center text-muted small">
-                                <span>Payment Method: <?php echo $item['payment_method']; ?></span>
-                                <span class="dot text-muted"></span>
-                                <span>Order Type: <?php echo $item['order_type']; ?></span>
-                            </div>
-                            <div class="d-flex gap-3 align-items-center">
-                                <span class="text-muted">Total:</span>
-                                <span class="fw-bold fs-4">₱<?php echo number_format($orderGroup['stall_subtotal'], 2); ?></span>
-                            </div>
+                        </div>
+                        <div class="d-flex flex-column gap-4 justify-content-center align-items-center flex-shrink-0 w-25 orderbtns">
+                            <?php if($status == 'Pending'): ?>
+                                <button class="rounded-2 prepare-order-btn" data-order-stall-id="<?php echo $osid; ?>" data-new-status="Preparing" data-bs-toggle="modal" data-bs-target="#prepareorder">Prepare Order</button>
+                                <button class="rounded-2 cancelorder-btn" style="background-color: #6A9C89;" data-order-stall-id="<?php echo $osid; ?>" data-bs-toggle="modal" data-bs-target="#cancelorder">Cancel Order</button>
+                                <button class="rounded-2 remind-payment-btn" data-order-stall-id="<?php echo $osid; ?>" data-action="remind_payment" style="background-color: gray;">Remind Payment</button>
+                            <?php elseif($status == 'Preparing'): ?>
+                                <button class="rounded-2 order-ready-btn" data-order-stall-id="<?php echo $osid; ?>" data-new-status="Ready" data-bs-toggle="modal" data-bs-target="#orderready">Order Ready</button>
+                            <?php elseif($status == 'Ready'): ?>
+                                <button class="rounded-2 order-complete-btn" data-order-stall-id="<?php echo $osid; ?>" data-new-status="Completed" data-bs-toggle="modal" data-bs-target="#ordercomplete">Order Complete</button>
+                                <button class="rounded-2 notify-customer-btn" data-order-stall-id="<?php echo $osid; ?>" data-action="notify_customer" style="background-color: #6A9C89;">Notify Customer</button>
+                            <?php elseif($status == 'Completed'): ?>
+                                <span class="text-muted">Completed</span>
+                            <?php elseif($status == 'Canceled'): ?>
+                                <span class="text-muted text-center">Reason<br>(<?php echo htmlspecialchars($orderGroup['cancellation_reason']); ?>)</span>
+                            <?php endif; ?>
+
                         </div>
                     </div>
-                    <div class="d-flex flex-column gap-4 justify-content-center align-items-center flex-shrink-0 w-25 orderbtns">
-                        <?php if($status == 'Pending'): ?>
-                            <button class="rounded-2 prepare-order-btn" data-order-stall-id="<?php echo $osid; ?>" data-new-status="Preparing" data-bs-toggle="modal" data-bs-target="#prepareorder">Prepare Order</button>
-                            <button class="rounded-2 cancelorder-btn" style="background-color: #6A9C89;" data-order-stall-id="<?php echo $osid; ?>" data-bs-toggle="modal" data-bs-target="#cancelorder">Cancel Order</button>
-                            <button class="rounded-2 remind-payment-btn" data-order-stall-id="<?php echo $osid; ?>" data-action="remind_payment" style="background-color: gray;">Remind Payment</button>
-                        <?php elseif($status == 'Preparing'): ?>
-                            <button class="rounded-2 order-ready-btn" data-order-stall-id="<?php echo $osid; ?>" data-new-status="Ready" data-bs-toggle="modal" data-bs-target="#orderready">Order Ready</button>
-                        <?php elseif($status == 'Ready'): ?>
-                            <button class="rounded-2 order-complete-btn" data-order-stall-id="<?php echo $osid; ?>" data-new-status="Completed" data-bs-toggle="modal" data-bs-target="#ordercomplete">Order Complete</button>
-                            <button class="rounded-2 notify-customer-btn" data-order-stall-id="<?php echo $osid; ?>" data-action="notify_customer" style="background-color: #6A9C89;">Notify Customer</button>
-                        <?php elseif($status == 'Completed'): ?>
-                            <span class="text-muted">Completed</span>
-                        <?php elseif($status == 'Canceled'): ?>
-                            <span class="text-muted text-center">Reason<br>(<?php echo htmlspecialchars($orderGroup['cancellation_reason']); ?>)</span>
-                        <?php endif; ?>
-
-                    </div>
-                </div>
-                <?php 
+                    <?php 
+                }
             }
         }
         ?>

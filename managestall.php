@@ -1,56 +1,50 @@
 <?php  
-    include_once 'links.php'; 
-    include_once 'header.php';
-    include_once 'nav.php';
-    include_once 'bootstrap.php'; 
-    include_once 'modals.php';
-    require_once 'classes/encdec.class.php';
+ob_start();
+include_once 'links.php'; 
+include_once 'header.php';
+include_once 'nav.php';
+include_once 'bootstrap.php'; 
+include_once 'modals.php';
+require_once 'classes/encdec.class.php';
 
-    if (!$user) {
-        echo '<script> window.location.href = "signin.php" </script>';
-        exit();
-    }
+if (!$user) {
+    echo '<script>window.location.href="signin.php";</script>';
+    exit();
+}
 
-    if (!isset($park_id)) {
-        echo '<script> window.location.href = "index.php" </script>';
-        exit();
-    }
-    $park = $parkObj->getPark($park_id);
+if (!isset($park_id)) {
+    echo '<script>window.location.href="index.php";</script>';
+    exit();
+}
 
-    if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
-        $stallId = $_POST['stallId'];
-        $newStatus = $_POST['status'];
-    
-        $result = $parkObj->updateStallStatus($stallId, $newStatus);
-    
-        header('Content-Type: application/json');
-        if ($result) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false]);
-        }
-        exit();
-    }
+$park = $parkObj->getPark($park_id);
 
-    if (isset($_POST['action']) && $_POST['action'] === 'update_report_status') {
-        $report_id = $_POST['report_id'];
-        $newStatus = $_POST['new_status'];
-        $result = $parkObj->updateStallReportStatus($report_id, $newStatus);
-        header('Content-Type: application/json');
-        echo json_encode(['success' => $result]);
-        exit();
-    }
+if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
+    $stallId = $_POST['stallId'];
+    $newStatus = $_POST['status'];
+    $parkObj->updateStallStatus($stallId, $newStatus);
+    header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($park_id));
+    exit();
+}
 
+if (isset($_POST['report_update'])) {
+    $report_id = $_POST['report_id'];
+    $action = $_POST['action'];
+    $newStatus = ($action === 'resolve') ? 'Resolved' : 'Rejected';
+    $parkObj->updateStallReportStatus($report_id, $newStatus);
+    header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($park_id) . "#reports");
+    exit();
+}
 ?>
 
 <style>
-     main{
+    main {
         padding: 20px 120px;
     }
-    .btn{
+    .btn {
         width: 150px;
     }
-    .ip{
+    .ip {
         color: #CD5C08;
         font-weight: bold;
     }
@@ -78,19 +72,19 @@
         height: 25px !important;
         border-radius: 50% !important;
     }
-    .select2-results__option{
+    .select2-results__option {
         padding: 7px 15px !important;
         background-color: white !important;
         color: black !important;
     }
-    .select2-results__option--highlighted{
+    .select2-results__option--highlighted {
         background-color: #e0e0e0 !important;
     }
-    .disabled{
+    .disabled {
         color: #ccc !important;
         pointer-events: none;
     }
-    .hover:hover{
+    .hover:hover {
         transform: scale(1.02);
         opacity: 0.8;
     }
@@ -149,42 +143,30 @@
                 </div>
                 <div class="d-flex gap-2" id="actions-<?= $report['id']; ?>">
                     <?php if ($report['status'] == 'Pending'): ?>
-                        <i class="fa-solid fa-check text-success rename update-status" data-report_id="<?= $report['id']; ?>" data-new_status="Resolved" style="cursor:pointer;"></i>
-                        <i class="fa-solid fa-xmark text-danger rename update-status" data-report_id="<?= $report['id']; ?>" data-new_status="Rejected" style="cursor:pointer;"></i>
+                        <form method="POST" action="" style="display:inline-block;">
+                            <input type="hidden" name="report_id" value="<?= $report['id']; ?>">
+                            <input type="hidden" name="action" value="resolve">
+                            <button type="submit" name="report_update" style="background: none; border: none; cursor: pointer;">
+                                <i class="fa-solid fa-check text-success rename"></i>
+                            </button>
+                        </form>
+                        <form method="POST" action="" style="display:inline-block;">
+                            <input type="hidden" name="report_id" value="<?= $report['id']; ?>">
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" name="report_update" style="background: none; border: none; cursor: pointer;">
+                                <i class="fa-solid fa-xmark text-danger rename"></i>
+                            </button>
+                        </form>
                     <?php else: ?>
-                        <i class="fa-solid fa-check text-success rename disabled"></i>
-                        <i class="fa-solid fa-xmark text-danger rename disabled"></i>
+                        <i class="fa-solid fa-check text-success rename disabled" style="cursor:not-allowed;"></i>
+                        <i class="fa-solid fa-xmark text-danger rename disabled" style="cursor:not-allowed;"></i>
                     <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
     </div>
-    <script>
-    $(document).ready(function(){
-        $('.update-status').click(function(){
-            var report_id = $(this).data('report_id');
-            var new_status = $(this).data('new_status');
-            $.ajax({
-                url: '',
-                method: 'POST',
-                dataType: 'json',
-                data: { action: 'update_report_status', report_id: report_id, new_status: new_status },
-                success: function(response) {
-                    if(response.success) {
-                        var container = $('#report-' + report_id);
-                        if(new_status === 'Resolved') {
-                            container.find('i.fa-solid.fa-circle').replaceWith('<i class="fa-solid fa-circle text-success" style="font-size:9px;"></i>');
-                        } else if(new_status === 'Rejected') {
-                            container.find('i.fa-solid.fa-circle').replaceWith('<i class="fa-solid fa-circle text-danger" style="font-size:9px;"></i>');
-                        }
-                        $('#actions-' + report_id).html('<i class="fa-solid fa-check text-success rename disabled" style="cursor:not-allowed;"></i><i class="fa-solid fa-xmark text-danger rename disabled" style="cursor:not-allowed;"></i>');
-                    }
-                }
-            });
-        });
-    });
-    </script>
+
     <?php
         $stalls = $parkObj->getStalls($park_id); 
         if (empty($stalls)) {
@@ -199,7 +181,7 @@
             $currentDay = date('l'); 
             $currentTime = date('H:i');
             foreach ($stalls as $stall) { 
-                ?>
+        ?>
                 <div class="col">
                     <div class="card h-100">
                         <div class="position-relative">
@@ -232,18 +214,29 @@
                                             id="dropdownMenuButton<?= $stall['id'] ?>" 
                                             data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="fa-solid fa-circle <?= ($stall['status'] === 'Available') ? 'text-success' : 'text-danger' ?> me-2" 
-                                        style="font-size: 9px;" id="statusIcon<?= $stall['id'] ?>"></i>
-                                        <span class="pe-3" id="statusText<?= $stall['id'] ?>"><?= $stall['status'] ?></span>
+                                        style="font-size: 9px;"></i>
+                                        <span class="pe-3"><?= $stall['status'] ?></span>
                                     </button>
                                     <div class="dropdown-menu py-0" aria-labelledby="dropdownMenuButton<?= $stall['id'] ?>">
-                                        <a class="dropdown-item update-status d-flex align-items-center" href="#" data-stallid="<?= $stall['id'] ?>" data-status="Available">
-                                            <i class="fa-solid fa-circle text-success me-2" style="font-size: 9px;"></i>
-                                            <span>Available</span>
-                                        </a>
-                                        <a class="dropdown-item update-status d-flex align-items-center" href="#" data-stallid="<?= $stall['id'] ?>" data-status="Unavailable">
-                                            <i class="fa-solid fa-circle text-danger me-2" style="font-size: 9px;"></i>
-                                            <span>Unavailable</span>
-                                        </a>
+                                        <form method="POST" action="">
+                                            <input type="hidden" name="action" value="update_status">
+                                            <input type="hidden" name="stallId" value="<?= $stall['id'] ?>">
+                                            <input type="hidden" name="status" value="Available">
+                                            <button type="submit" class="dropdown-item d-flex align-items-center">
+                                                <i class="fa-solid fa-circle text-success me-2" style="font-size: 9px;"></i>
+                                                <span>Available</span>
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="">
+                                            <input type="hidden" name="action" value="update_status">
+                                            <input type="hidden" name="stallId" value="<?= $stall['id'] ?>">
+                                            <input type="hidden" name="status" value="Unavailable">
+                                            <button type="submit" class="dropdown-item d-flex align-items-center">
+                                                <i class="fa-solid fa-circle text-danger me-2" style="font-size: 9px;"></i>
+                                                <span>Unavailable</span>
+                                            </button>
+                                        </form>
+
                                     </div>
                                 </div>
 
@@ -413,37 +406,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-    $(document).ready(function(){
-        $('.update-status').on('click', function(e) {
-            e.preventDefault();
-            var newStatus = $(this).data('status');
-            var stallId = $(this).data('stallid');
-            
-            $.ajax({
-                url: '', 
-                type: 'POST',
-                dataType: 'json',
-                data: { 
-                    action: 'update_status', 
-                    stallId: stallId, 
-                    status: newStatus 
-                },
-                success: function(response) {
-                    if(response.success){
-                        location.reload();
-                    } else {
-                        console.error('Error updating status.');
-                    }
-                },
-                error: function(){
-                    console.error('There was an error processing your request.');
-                }
-            });
-        });
-    });
-</script>
 
 <script>
     $(document).ready(function () {
