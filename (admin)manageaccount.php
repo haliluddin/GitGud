@@ -40,7 +40,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();
         } else {
-            echo '<script>alert("Update failed")</script>';
+            echo "
+            <script>
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to update user.',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '" . $_SERVER['PHP_SELF'] . "';
+                    }
+                });
+            </script>";
         }
     }
     if (isset($_POST['firstname']) && isset($_POST['middlename']) && isset($_POST['lastname']) && isset($_POST['phone']) && isset($_POST['email']) && isset($_POST['dob']) && isset($_POST['sex']) && isset($_POST['password']) && isset($_POST['confirm_password'])) {
@@ -93,17 +106,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </script>";
                     } else {
                         echo "ERROR: " . $verification;
-                        echo '<script>alert("Failed to send verification email")</script>';
+                        echo "
+                        <script>
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'Failed to send verification email.',
+                                icon: 'error',
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'OK'
+                            });
+                        </script>";
                     }
                 } else {
-                    echo '<script>alert("Failed to sign up")</script>';
+                    echo "
+                    <script>
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to retrieve user information.',
+                            icon: 'error',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                    </script>";
                 }
             } else if ($add == 'email') {
-                echo '<script>alert("Email is already taken")</script>';
+                echo "
+                <script>
+                    Swal.fire({
+                        title: 'Email Already Taken',
+                        text: 'The email address is already registered.',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                </script>";
             } else if ($add == 'phone') {
-                echo '<script>alert("Phone number is already taken")</script>';
+                echo "
+                <script>
+                    Swal.fire({
+                        title: 'Phone Number Already Taken',
+                        text: 'The phone number is already registered.',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                </script>";
             } else {
-                echo '<script>alert("Failed to sign up")</script>';
+                echo "
+                <script>
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to add user.',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                </script>";
             }
         }
     }
