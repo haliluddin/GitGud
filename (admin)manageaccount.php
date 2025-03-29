@@ -122,7 +122,6 @@ if (isset($_POST['deactivate_user'])) {
     $deactivation_reason = htmlspecialchars(trim($_POST['deactivation_reason']));
     $duration = $_POST['deactivation_duration'];
     
-    // Calculate deactivation end date based on selected duration
     $today = new DateTime();
     $deactivated_until = clone $today;
     
@@ -144,8 +143,7 @@ if (isset($_POST['deactivate_user'])) {
     }
     
     $deactivated_until_str = $deactivated_until->format('Y-m-d');
-    
-    // Update user status and add to deactivation table
+
     $deactivate = $adminObj->deactivateUser($user_id, $deactivated_until_str, $deactivation_reason);
     
     if ($deactivate) {
