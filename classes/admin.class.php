@@ -337,16 +337,13 @@ class Admin {
     
     public function deactivateUser($user_id, $deactivated_until, $reason) {
         try {
-            // Get database connection
             $db = $this->db->connect();
             $db->beginTransaction();
     
-            // Update user status
             $updateUserQuery = "UPDATE users SET status = 'Deactivated' WHERE id = :user_id";
             $stmt = $db->prepare($updateUserQuery);
             $stmt->execute([':user_id' => $user_id]);
     
-            // Insert or update deactivation record in one query
             $query = "INSERT INTO deactivation (user_id, deactivated_until, deactivation_reason, status) 
                       VALUES (:user_id, :deactivated_until, :reason, 'Deactivated')
                       ON DUPLICATE KEY UPDATE 
@@ -359,8 +356,7 @@ class Admin {
                 ':deactivated_until' => $deactivated_until,
                 ':reason' => $reason
             ]);
-    
-            // Commit transaction
+            
             $db->commit();
             return true;
         } catch (PDOException $e) {
@@ -382,7 +378,6 @@ class Admin {
             $db = $this->db->connect();
             $db->beginTransaction();
     
-            // Remove user from deactivation table
             $deleteDeactivationQuery = "DELETE FROM deactivation WHERE user_id = :user_id";
             $stmt = $db->prepare($deleteDeactivationQuery);
             $stmt->execute([':user_id' => $user_id]);
