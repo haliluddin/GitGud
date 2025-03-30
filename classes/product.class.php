@@ -32,34 +32,6 @@ class Product {
         
         return false;
     } 
-
-    function updateProduct($product_id, $productName, $category, $description, $basePrice, $discount, $startDate, $endDate, $imagePath) {
-        $db = $this->db->connect();  
-        $sql = "UPDATE products SET 
-                name = :name,
-                category_id = :category_id,
-                description = :description, 
-                base_price = :base_price,
-                discount = :discount,
-                start_date = :start_date,
-                end_date = :end_date,
-                image = :image
-                WHERE id = :product_id";
-                
-        $stmt = $db->prepare($sql);
-        
-        $stmt->bindValue(':name', $productName);
-        $stmt->bindValue(':category_id', $category);
-        $stmt->bindValue(':description', $description);
-        $stmt->bindValue(':base_price', $basePrice);
-        $stmt->bindValue(':discount', $discount);
-        $stmt->bindValue(':start_date', $startDate);
-        $stmt->bindValue(':end_date', $endDate);
-        $stmt->bindValue(':image', $imagePath);
-        $stmt->bindValue(':product_id', $product_id);
-        
-        return $stmt->execute();
-    }
     
     function addVariations($productId, $variationName) {
         $db = $this->db->connect();  
@@ -126,6 +98,7 @@ class Product {
         $stmt->bindValue(':categoryId', $categoryId, PDO::PARAM_INT);
         return $stmt->execute();
     }
+
     public function deleteProduct($productId) {
         try {
             $db = $this->db->connect();
@@ -149,7 +122,6 @@ class Product {
             return false;
         }
     }
-    
     
     public function getCategories($stall_id) {
         $sql = "SELECT * FROM categories WHERE stall_id = :stall_id";
@@ -179,9 +151,6 @@ class Product {
     
         return $query->fetchColumn() > 0;
     }
-
-
-
 
     public function getStallLikes($stall_id){
         $sql = "SELECT COUNT(*) AS count FROM stall_likes WHERE stall_id = :stall_id";
@@ -292,8 +261,6 @@ class Product {
         $stmt->execute([':stall_id' => $stall_id, ':search' => "%$searchTerm%"]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
-
 
     function getProducts($stallId) {
         $sql = "SELECT * FROM products WHERE stall_id = :stall_id;";
@@ -333,20 +300,145 @@ class Product {
         return $result;
     }
 
-    // function getProduct($productId) {
-    //     $sql = "SELECT p.*, c.name AS category_name, 
-    //                 COALESCE(SUM(s.quantity), 0) AS stock 
-    //             FROM products p 
-    //             JOIN categories c ON p.category_id = c.id 
-    //             LEFT JOIN stocks s ON p.id = s.product_id 
-    //             WHERE p.id = :product_id 
-    //             GROUP BY p.id;";
+    public function getProduct($productId) {
+        $db = $this->db->connect();
+        $sql = "SELECT p.*, COALESCE(s.quantity, 0) AS initial_stock
+                FROM products p
+                LEFT JOIN stocks s 
+                  ON p.id = s.product_id 
+                 AND s.variation_option_id IS NULL
+                WHERE p.id = :product_id";
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':product_id', $productId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }    
 
-    //     $query = $this->db->connect()->prepare($sql);
-    //     $query->execute(array(':product_id' => $productId));
-    //     $result = $query->fetch(); 
-
-    //     return $result ?: null;
-    // }
-
+    public function getProductVariations($productId) {
+        $db = $this->db->connect();
+        
+        $sql = "SELECT id as variation_id, name as title 
+                FROM product_variations 
+                WHERE product_id = :product_id";
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':product_id', $productId, PDO::PARAM_INT);
+        $stmt->execute();
+        $variations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        foreach ($variations as &$variation) {
+            $sqlOptions = "SELECT vo.id as option_id, vo.name as optionName, vo.add_price as addPrice, 
+                                  vo.subtract_price as subtractPrice, vo.image as imageBase64 
+                           FROM variation_options vo
+                           WHERE vo.variation_id = :variation_id";
+            $stmtOptions = $db->prepare($sqlOptions);
+            $stmtOptions->bindValue(':variation_id', $variation['variation_id'], PDO::PARAM_INT);
+            $stmtOptions->execute();
+            $options = $stmtOptions->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($options as &$option) {
+                $sqlStock = "SELECT quantity FROM stocks 
+                             WHERE product_id = :product_id AND variation_option_id = :option_id";
+                $stmtStock = $db->prepare($sqlStock);
+                $stmtStock->bindValue(':product_id', $productId, PDO::PARAM_INT);
+                $stmtStock->bindValue(':option_id', $option['option_id'], PDO::PARAM_INT);
+                $stmtStock->execute();
+                $stockRow = $stmtStock->fetch(PDO::FETCH_ASSOC);
+                $option['initialStock'] = $stockRow ? $stockRow['quantity'] : 0;
+            }
+            $variation['rows'] = $options;
+        }
+        
+        return $variations;
+    }
+    public function updateProduct($productId, $stall_id, $productName, $category, $description, $basePrice, $discount, $startDate, $endDate, $imagePath) {
+        $db = $this->db->connect();
+        $sql = "UPDATE products 
+                SET stall_id = :stall_id, 
+                    name = :name, 
+                    category_id = :category_id, 
+                    description = :description, 
+                    base_price = :base_price, 
+                    discount = :discount, 
+                    start_date = :start_date, 
+                    end_date = :end_date, 
+                    image = :image 
+                WHERE id = :product_id";
+        
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':stall_id', $stall_id);
+        $stmt->bindValue(':name', $productName);
+        $stmt->bindValue(':category_id', $category);
+        $stmt->bindValue(':description', $description);
+        $stmt->bindValue(':base_price', $basePrice);
+        $stmt->bindValue(':discount', $discount);
+        $stmt->bindValue(':start_date', $startDate);
+        $stmt->bindValue(':end_date', $endDate);
+        $stmt->bindValue(':image', $imagePath);
+        $stmt->bindValue(':product_id', $productId, PDO::PARAM_INT);
+        
+        return $stmt->execute();
+    }
+    public function updateProductVariations($productId, $variationsData, $initialStock = null) {
+        $db = $this->db->connect();
+        try {
+            $db->beginTransaction();
+            
+            $stmt1 = $db->prepare("DELETE FROM variation_options WHERE variation_id IN (SELECT id FROM product_variations WHERE product_id = :product_id)");
+            $stmt1->execute([':product_id' => $productId]);
+            
+            $stmt2 = $db->prepare("DELETE FROM product_variations WHERE product_id = :product_id");
+            $stmt2->execute([':product_id' => $productId]);
+            
+            $stmt3 = $db->prepare("DELETE FROM stocks WHERE product_id = :product_id");
+            $stmt3->execute([':product_id' => $productId]);
+            
+            if (!empty($variationsData)) {
+                foreach ($variationsData as $varData) {
+                    $stmtVar = $db->prepare("INSERT INTO product_variations (product_id, name) VALUES (:product_id, :name)");
+                    $stmtVar->execute([
+                        ':product_id' => $productId,
+                        ':name'       => $varData['title']
+                    ]);
+                    $variationId = $db->lastInsertId();
+                    
+                    if (!empty($varData['rows'])) {
+                        foreach ($varData['rows'] as $option) {
+                            $stmtOpt = $db->prepare("INSERT INTO variation_options (variation_id, name, add_price, subtract_price, image) 
+                                                     VALUES (:variation_id, :name, :add_price, :subtract_price, :image)");
+                            $stmtOpt->execute([
+                                ':variation_id'  => $variationId,
+                                ':name'          => $option['optionName'],
+                                ':add_price'     => $option['addPrice'],
+                                ':subtract_price'=> $option['subtractPrice'],
+                                ':image'         => $option['imageBase64']
+                            ]);
+                            $variationOptionId = $db->lastInsertId();
+                            
+                            $stmtStock = $db->prepare("INSERT INTO stocks (product_id, variation_option_id, quantity) 
+                                                       VALUES (:product_id, :variation_option_id, :quantity)");
+                            $stmtStock->execute([
+                                ':product_id'         => $productId,
+                                ':variation_option_id'=> $variationOptionId,
+                                ':quantity'           => $option['initialStock']
+                            ]);
+                        }
+                    }
+                }
+            } else {
+                $stmtStock = $db->prepare("INSERT INTO stocks (product_id, variation_option_id, quantity) 
+                                           VALUES (:product_id, NULL, :quantity)");
+                $stmtStock->execute([
+                    ':product_id' => $productId,
+                    ':quantity'   => $initialStock
+                ]);
+            }
+            
+            $db->commit();
+            return true;
+        } catch (Exception $e) {
+            $db->rollBack();
+            return false;
+        }
+    }
+        
 }
