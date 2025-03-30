@@ -335,6 +335,49 @@ class Park {
     
         return false;
     }
+
+    public function fetchBusinessOperatingHours($businessId) {
+        $sql = "SELECT * FROM operating_hours WHERE business_id = :business_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindParam(':business_id', $businessId);
+        if ($stmt->execute()) {
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        return [];
+    }
+
+    public function updateBusinessOperatingHours($businessId, $operatingHours) {
+        $conn = $this->db->connect();
+        $conn->prepare("DELETE FROM operating_hours WHERE business_id = :business_id")
+            ->execute([':business_id' => $businessId]);
+            
+        if (!empty($operatingHours)) {
+            $stmt = $conn->prepare("INSERT INTO operating_hours (business_id, days, open_time, close_time) VALUES (:business_id, :days, :open_time, :close_time)");
+            foreach ($operatingHours as $schedule) {
+                $days = implode(', ', $schedule['days']);
+                $openTime = $schedule['openTime'];
+                $closeTime = $schedule['closeTime'];
+                $stmt->execute([
+                    ':business_id' => $businessId,
+                    ':days' => $days,
+                    ':open_time' => $openTime,
+                    ':close_time' => $closeTime
+                ]);
+            }
+        }
+        return true;
+    }
+
+    public function updateBusinessLogo($parkId, $businessLogo) {
+        $conn = $this->db->connect();
+        $sql = "UPDATE business SET business_logo = :business_logo WHERE id = :park_id";
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute([
+            ':business_logo' => $businessLogo,
+            ':park_id' => $parkId
+        ]);
+        return $result;
+    }
     
     function searchParks($query) {
         $stmt = $this->db->connect()->prepare("SELECT id, business_name, business_logo, street_building_house, barangay FROM business WHERE business_name LIKE ? AND business_status = 'Approved'");
@@ -516,6 +559,36 @@ class Park {
             ':report_id' => $report_id
         ]);
     }
+
+    public function deleteBusiness($parkId) {
+        $conn = $this->db->connect();
+        try {
+            $conn->beginTransaction();
+    
+            $sql1 = "DELETE FROM stalls WHERE park_id = :park_id";
+            $stmt1 = $conn->prepare($sql1);
+            $stmt1->execute([':park_id' => $parkId]);
+    
+            $sql2 = "DELETE FROM stall_invitations WHERE park_id = :park_id";
+            $stmt2 = $conn->prepare($sql2);
+            $stmt2->execute([':park_id' => $parkId]);
+    
+            $sql3 = "DELETE FROM operating_hours WHERE business_id = :park_id";
+            $stmt3 = $conn->prepare($sql3);
+            $stmt3->execute([':park_id' => $parkId]);
+    
+            $sql4 = "DELETE FROM business WHERE id = :park_id";
+            $stmt4 = $conn->prepare($sql4);
+            $stmt4->execute([':park_id' => $parkId]);
+    
+            $conn->commit();
+            return true;
+        } catch (Exception $e) {
+            $conn->rollBack();
+            return false;
+        }
+    }
+    
     
     /*
     function addPark($name, $description, $location, $image, $ownerName, $contactNumber, $email, $openingTime, $closingTime, $priceRange, $status) {

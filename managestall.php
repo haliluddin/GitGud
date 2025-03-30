@@ -412,9 +412,9 @@ if (isset($_POST['report_update'])) {
         $("#emailSelect").select2({
             placeholder: "Add emails to send invitation link",
             allowClear: true,
-            templateResult: formatEmailWithImage, // For dropdown items
-            templateSelection: formatSelectedEmail, // For selected items
-            dropdownParent: $("#invitestall"), // Ensure it renders within the modal
+            templateResult: formatEmailWithImage, 
+            templateSelection: formatSelectedEmail, 
+            dropdownParent: $("#invitestall"), 
             ajax: {
                 url: "fetch_emails.php",
                 type: "GET",
@@ -426,7 +426,7 @@ if (isset($_POST['report_update'])) {
                 processResults: function (data) {
                     return { 
                         results: data.map(user => ({
-                            id: user.id,  // Use user ID instead of email as ID
+                            id: user.id,  
                             text: user.email,
                             profile_img: user.profile_img
                         }))
@@ -436,11 +436,10 @@ if (isset($_POST['report_update'])) {
             }
         });
 
-        // Format items in dropdown with an image
         function formatEmailWithImage(item) {
-            if (!item.id) return item.text; // If no ID, show plain text
+            if (!item.id) return item.text; 
 
-            let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
+            let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; 
             return $(
                 `<div style="display: flex; align-items: center;">
                     <img src="${imgSrc}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
@@ -449,11 +448,10 @@ if (isset($_POST['report_update'])) {
             );
         }
 
-        // Format the selected items inside the box
         function formatSelectedEmail(item) {
             if (!item.id) return item.text;
 
-            let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; // Fallback image
+            let imgSrc = item.profile_img ? item.profile_img : "default-avatar.png"; 
             return $(
                 `<div style="display: flex; align-items: center; gap: 5px;">
                     <img src="${imgSrc}" style="width: 20px; height: 20px; border-radius: 50%;">
@@ -463,12 +461,12 @@ if (isset($_POST['report_update'])) {
         }
 
         $('#invitestall').on('shown.bs.modal', function () {
-            $("#emailSelect").val(null).trigger("change"); // Reset selection
+            $("#emailSelect").val(null).trigger("change"); 
         });
 
         $("#createStallBtn").on("click", function () {
-            let selectedUsers = $("#emailSelect").select2("data"); // Get selected user objects
-            let parkId = "<?php echo $_SESSION['current_park_id']; ?>"; // Get park ID
+            let selectedUsers = $("#emailSelect").select2("data"); 
+            let parkId = "<?php echo $_SESSION['current_park_id']; ?>";
 
             if (!selectedUsers || selectedUsers.length === 0) {
                 Swal.fire({
@@ -480,7 +478,6 @@ if (isset($_POST['report_update'])) {
                 return;
             }
 
-            // Show loading state
             Swal.fire({
                 title: 'Sending invitations...',
                 text: 'Processing your request',
@@ -490,13 +487,11 @@ if (isset($_POST['report_update'])) {
                 }
             });
 
-            // Prepare data for AJAX
             let userData = selectedUsers.map(user => ({
                 id: user.id,
                 email: user.text
             }));
 
-            // Send AJAX request
             $.ajax({
                 url: 'email/process_stall_invitations.php',
                 type: 'POST',
@@ -507,12 +502,10 @@ if (isset($_POST['report_update'])) {
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        // We have URLs for each user
                         if (response.urls && response.urls.length > 0) {
                             let successCount = 0;
                             let successfulUrls = [];
                             
-                            // Collect successful URLs
                             response.urls.forEach(function(item) {
                                 if (item.success && item.url) {
                                     successfulUrls.push({
@@ -523,7 +516,6 @@ if (isset($_POST['report_update'])) {
                                 }
                             });
                             
-                            // Function to open URLs with a delay to avoid popup blockers
                             function openUrlsSequentially(urls, index) {
                                 if (index < urls.length) {
                                     window.open(urls[index].url, "_blank");
@@ -533,12 +525,10 @@ if (isset($_POST['report_update'])) {
                                 }
                             }
                             
-                            // Try to open URLs sequentially
                             if (successfulUrls.length > 0) {
                                 openUrlsSequentially(successfulUrls, 0);
                             }
                             
-                            // Check if we have any failures to report
                             let failureCount = response.urls.length - successCount;
                             
                             if (failureCount > 0) {
@@ -557,7 +547,6 @@ if (isset($_POST['report_update'])) {
                                     confirmButtonText: 'Ok, I understand'
                                 });
                             } else {
-                                // Create HTML for manual URL opening in case automatic opening fails
                                 let urlListHtml = '';
                                 if (successfulUrls.length > 1) {
                                     urlListHtml = '<p>If not all URLs opened automatically, you can click on them below:</p><ul class="text-start">';
@@ -575,7 +564,6 @@ if (isset($_POST['report_update'])) {
                                 });
                             }
                             
-                            // Close the modal after processing
                             $('#invitestall').modal('hide');
                         } else {
                             Swal.fire({
@@ -618,11 +606,9 @@ if (isset($_POST['report_update'])) {
                 return;
             }
 
-            // Show loading indicator
             $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
             $(this).prop('disabled', true);
             
-            // Store button reference
             var $button = $(this);
 
             $.ajax({
@@ -631,13 +617,10 @@ if (isset($_POST['report_update'])) {
                 data: { emails: selectedEmails },
                 dataType: 'json',
                 success: function (response) {
-                    // Reset button state
                     $button.html('Send Invitation Link');
                     $button.prop('disabled', false);
                     
                     if (response.status === 'success') {
-                        // Show success message
-                        // alert('Invitation links sent successfully!');
                         Swal.fire({
                             title: "Success! 🎉",
                             text: "All invitation links were sent without a hitch! Check your inboxes. 📩",
@@ -645,18 +628,14 @@ if (isset($_POST['report_update'])) {
                         });
 
                         
-                        // Reset the select2 dropdown
                         $("#emailSelect").val(null).trigger("change");
                         
-                        // Close the modal
                         $('#invitestall').modal('hide');
                     } else if (response.status === 'warning') {
-                        // Show warning message with details
                         var message = 'Some invitations could not be sent:\n';
                         response.results.forEach(function(result) {
                             message += '- ' + result.email + ': ' + result.message + '\n';
                         });
-                        // alert(message);
                         Swal.fire({
                             title: 'Yikes! 😬',
                             text: message || 'Something went wrong. Let’s try that one more time!',
@@ -664,8 +643,6 @@ if (isset($_POST['report_update'])) {
                             confirmButtonText: 'Got it!'
                         });
                     } else {
-                        // Show error message
-                        // alert('Failed to send some invitation links. Please try again.');
                         Swal.fire({
                             title: 'Oops! 🚧',
                             text: 'Some invitations didn’t make it through. Maybe the internet gremlins are at it again? Give it another shot!',
@@ -675,12 +652,9 @@ if (isset($_POST['report_update'])) {
                     }
                 },
                 error: function (xhr, status, error) {
-                    // Reset button state
                     $button.html('Send Invitation Link');
                     $button.prop('disabled', false);
                     
-                    // Show error message
-                    // alert('An error occurred while sending invitations: ' + error);
                     Swal.fire({
                         title: 'Uh-oh! 😟',
                         text: 'Something went wrong while sending the invitations. Maybe the internet took a coffee break? Try again! Error: ' + error,
@@ -700,28 +674,21 @@ if (isset($_POST['report_update'])) {
         
         deleteIcons.forEach(icon => {
             icon.addEventListener('click', function() {
-                // Get the stall ID from the edit icon in the same card
-                // First, get the card parent element
                 const card = this.closest('.card');
-                // Get the edit icon's onclick attribute which contains the ID
                 const editIconOnclick = card.querySelector('.fa-pen-to-square').getAttribute('onclick');
-                // Extract just the ID number
                 const stallId = editIconOnclick.split('id=')[1].replace(/['")\s;]/g, '');
                 
-                console.log('Stall ID to delete:', stallId); // Debug
+                console.log('Stall ID to delete:', stallId); 
                 
-                // Set the stall ID in the hidden input
                 document.getElementById('stall_id_to_delete').value = stallId;
             });
         });
         
-        // Handle delete confirmation
         document.getElementById('confirmDeleteStall').addEventListener('click', function() {
             const stallId = document.getElementById('stall_id_to_delete').value;
             
-            console.log('Confirming delete of stall ID:', stallId); // Debug
+            console.log('Confirming delete of stall ID:', stallId); 
             
-            // Make an AJAX request to delete the stall
             fetch('delete_stall.php', {
                 method: 'POST',
                 headers: {
@@ -731,25 +698,21 @@ if (isset($_POST['report_update'])) {
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Delete response:', data); // Debug
+                console.log('Delete response:', data); 
                 
-                // Close the modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('deletestall'));
                 modal.hide();
                 
                 if (data.success) {
-                    // Show success message
                     Swal.fire({
                         title: 'Success!',
                         text: 'Stall has been deleted successfully.',
                         icon: 'success',
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        // Reload the page
                         window.location.reload();
                     });
                 } else {
-                    // Show error message
                     Swal.fire({
                         title: 'Error!',
                         text: data.message || 'Failed to delete stall. Please try again.',

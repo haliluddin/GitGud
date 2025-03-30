@@ -964,8 +964,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             return errors;
         }
 
-
-
         function validateEmail(email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);

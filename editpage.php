@@ -108,7 +108,7 @@
             <i class="fa-solid fa-chevron-left me-2"></i> Previous
         </button>
     </div>
-    <form action="" class="srform rounded-2 bg-white p-5" method="POST" enctype="multipart/form-data">
+    <form action="" class="srform rounded-2 bg-white p-5" method="POST" enctype="multipart/form-data" id="editForm">
         <div class="pagehead mb-4 border-bottom">
             <div>
                 <h4 class="fw-bold m-0">Edit Business Page</h4>
@@ -400,9 +400,90 @@
             <button type="submit" class="btn btn-primary send px-5">SAVE EDIT</button>
         </div>
     </form>
-    <br><br><br><br>
 </main>
 
 <?php
     include_once 'footer.php'; 
 ?>
+
+<!-- Modal for error messages -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="errorModalLabel">Form Errors</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="errorList" class="text-danger"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelector('#editForm').addEventListener('submit', function(event) {
+    event.preventDefault(); 
+    let errors = [];
+
+    let logoInput = document.getElementById('stalllogo');
+    if (!logoInput.files.length && "<?= $stalllogo ?>" === "") {
+        errors.push("Business logo is required.");
+    }
+    
+    let businessName = document.getElementById('businessname').value.trim();
+    if (businessName === "") errors.push("Business name is required.");
+
+    let categoryOptions = document.getElementById('categories').selectedOptions;
+    if (categoryOptions.length === 0) errors.push("At least one category is required.");
+
+    let description = document.getElementById('description').value.trim();
+    if (description === "") errors.push("Business description is required.");
+
+    let email = document.getElementById('businessemail').value.trim();
+    let emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (email === "") {
+        errors.push("Business email is required.");
+    } else if (!emailPattern.test(email)) {
+        errors.push("Enter a valid email address.");
+    }
+
+    let phone = document.getElementById('businessphonenumber').value.trim();
+    let phonePattern = /^[0-9]{10}$/;
+    if (phone === "") {
+        errors.push("Business phone number is required.");
+    } else if (!phonePattern.test(phone)) {
+        errors.push("Enter a valid 10-digit phone number.");
+    }
+
+    let operatingHoursInput = document.getElementById('operating_hours').value;
+    try {
+        let operatingHours = JSON.parse(operatingHoursInput);
+        if (!Array.isArray(operatingHours) || operatingHours.length === 0) {
+            errors.push("Operating hours are required.");
+        }
+    } catch (e) {
+        errors.push("Operating hours are required.");
+    }
+
+    let paymentMethods = document.querySelectorAll('input[name="payment_methods[]"]:checked');
+    if (paymentMethods.length === 0) errors.push("At least one payment method is required.");
+
+    if (errors.length > 0) {
+        const errorList = document.getElementById('errorList');
+        errorList.innerHTML = "";
+        errors.forEach(error => {
+            const li = document.createElement('li');
+            li.textContent = error;
+            errorList.appendChild(li);
+        });
+        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        errorModal.show();
+    } else {
+        event.target.submit();
+    }
+});
+</script>
