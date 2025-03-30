@@ -1,413 +1,242 @@
-<?php  
-ob_start();
-include_once 'links.php'; 
-include_once 'header.php';
-include_once 'nav.php';
-include_once 'bootstrap.php'; 
-require_once 'classes/encdec.class.php';
+<?php
+    include_once 'header.php'; 
+    include_once 'links.php'; 
+    include_once 'nav.php';
+    include_once 'modals.php';
 
-if (!$user) {
-    echo '<script>window.location.href="signin.php";</script>';
-    exit();
-}
-
-if (!isset($park_id)) {
-    echo '<script>window.location.href="index.php";</script>';
-    exit();
-}
-
-$park = $parkObj->getPark($park_id);
-$operatingHours = $parkObj->fetchBusinessOperatingHours($park_id);
-
-if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
-    $stallId = $_POST['stallId'];
-    $newStatus = $_POST['status'];
-    $parkObj->updateStallStatus($stallId, $newStatus);
-    header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($park_id));
-    exit();
-}
-
-if (isset($_POST['update_operating_hours'])) {
-    $operatingHoursData = json_decode($_POST['operating_hours'], true);
-    $parkObj->updateBusinessOperatingHours($park_id, $operatingHoursData);
-    header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($park_id) . "#reports");
-    exit();
-}
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_business'])) {
-    if ($parkObj->deleteBusiness($park_id)) {
-        header("Location: index.php");
+    if (!isset($_SESSION['user'])) {
+        header('Location: ./signin.php');
         exit();
-    } else {
-        $delete_err = "Failed to delete the business. Please try again.";
     }
-}
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['businesslogo']) && $_FILES['businesslogo']['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = 'uploads/business/';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $userObj = new User();
+        $userObj->id = $_SESSION['user']['id'];
+        $user = $userObj->getUser($_SESSION['user']['id']);
+    
+        $hasChanges = ($_POST['firstname'] != $user['first_name']) ||
+                      ($_POST['lastname'] != $user['last_name']) ||
+                      ($_POST['phone'] != $user['phone']) ||
+                      ($_POST['sex'] != $user['sex']);
+    
+        if (!$hasChanges && $_FILES['profile_img']['error'] == UPLOAD_ERR_NO_FILE) {
+            echo '<script>alert("No changes were made.")</script>';
+        } else {
+            $userObj->first_name = filter_input(INPUT_POST, 'firstname', FILTER_SANITIZE_STRING);
+            $userObj->last_name = filter_input(INPUT_POST, 'lastname', FILTER_SANITIZE_STRING);
+            $userObj->phone = filter_input(INPUT_POST, 'phone', FILTER_SANITIZE_STRING);
+            $userObj->sex = filter_input(INPUT_POST, 'sex', FILTER_SANITIZE_STRING);
+            $current_password = filter_input(INPUT_POST, 'current_password', FILTER_SANITIZE_STRING);
+    
+            $uploadDir = 'uploads/profiles/';
+            $allowedTypes = ['jpg', 'jpeg', 'png'];
+            $maxFileSize = 5 * 1024 * 1024;
+    
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+    
+            if (isset($_FILES['profile_img']) && $_FILES['profile_img']['error'] == UPLOAD_ERR_OK) {
+                $fileTmpPath = $_FILES['profile_img']['tmp_name'];
+                $fileSize = $_FILES['profile_img']['size'];
+                $fileType = strtolower(pathinfo($_FILES['profile_img']['name'], PATHINFO_EXTENSION));
+    
+                if ($fileSize > $maxFileSize) {
+                    echo '<script>alert("File size exceeds 5MB limit.")</script>';
+                } elseif (!in_array($fileType, $allowedTypes)) {
+                    echo '<script>alert("Invalid file type. Only JPG and PNG are allowed.")</script>';
+                } else {
+                    $destPath = $uploadDir . $_SESSION['user']['id'] . '.' . $fileType;
+                    if (move_uploaded_file($fileTmpPath, $destPath)) {
+                        $userObj->profile_img = $destPath;
+                    } else {
+                        $userObj->profile_img = $user['profile_img'];
+                        echo '<script>alert("Failed to move uploaded file.")</script>';
+                    }
+                }
+            } else {
+                $userObj->profile_img = $user['profile_img'];
+            }
+            
+            $add = $userObj->editUser($_SESSION['user']['id'], $current_password, $user['phone']);
+            if ($add) {
+                echo '<script>alert("Account updated successfully.")</script>';
+            } else {
+                echo '<script>alert("Failed to update account.")</script>';
+            }
+    
+            $user = $userObj->getUser($_SESSION['user']['id']);
+        }
     }
-    $fileExtension = pathinfo($_FILES['businesslogo']['name'], PATHINFO_EXTENSION);
-    $uniqueFileName = $uploadDir . uniqid('logo_', true) . '.' . $fileExtension;
-    if (move_uploaded_file($_FILES['businesslogo']['tmp_name'], $uniqueFileName)) {
-        $business_logo = $uniqueFileName;
-        if ($parkObj->updateBusinessLogo($park_id, $business_logo)) {
-            header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($park_id));
-            exit();
-        } 
-    } 
-}
 ?>
 <style>
-    .checksub{
-        transition: color 0.3s, transform 0.3s;
+    main {
+        padding: 20px 120px;
     }
-    .checksub:hover {
-        transform: scale(1.20);
+    #profileImage {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #ddd;
     }
 </style>
 <main>
-    <div class="d-flex mb-3 align-items-center justify-content-end gap-3">
-        <button class="addpro flex-shrink-0" type="button" data-bs-toggle="modal" data-bs-target="#invitestall">+ Add Stall</button>
-        <i class="fa-solid fa-circle-user fs-1 hover" data-bs-toggle="offcanvas" data-bs-target="#foodparkbranch" aria-controls="foodparkbranch" style="cursor: pointer;"></i>
-    </div>
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="foodparkbranch" aria-labelledby="foodparkbranchLabel" style="width: 40%;">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="foodparkbranchLabel">Manage Food Park</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <form class="bg-white rounded-2 p-5" method="POST" enctype="multipart/form-data">
+        <div class="dropdown position-relative">
+            <i class="fa-solid fa-gear rename text-dark fs-5" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>
+            <ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changepassword">Change Password</a></li>
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteaccount">Delete Account</a></li>
+            </ul>
         </div>
-        <div class="offcanvas-body">
-            <div class="text-center mb-4 border-bottom pb-3">
-                <form id="logoForm" action="<?= $_SERVER['PHP_SELF'] . '?park_id=' . urlencode($park_id); ?>" method="POST" enctype="multipart/form-data">
-                    <div class="profile-picture" onclick="document.getElementById('businesslogo').click();">
-                        <img id="profileImg" src="<?= $park['business_logo'] ?>?t=<?= time() ?>" alt="Profile Picture" class="profile-img rounded-5">
-                        <div class="camera-overlay">
-                            <i class="fa-solid fa-camera"></i>
+        <div class="d-flex ">
+            <div class="d-flex justify-content-center" style="width: 40%;">
+                <div class="text-center flex-grow-1">
+                    <img id="profileImage" src="<?= $user['profile_img'] ?>" alt="Profile Image" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;"><br><br>
+                    <!-- <button id="selectImageBtn" type="button" class="disatc m-0">Select Image</button> -->
+                    <input name="profile_img" id="fileInput" class="" type="file" accept="image/jpeg, image/png, image/jpg">
+                    <br><br>
+                    <span class="text-muted">File size: maximum 5 MB<br>File extension: .JPEG, .PNG</span>
+                </div>
+            </div>
+            
+            <div  style="width: 60%;">
+                <div class="input-group m-0 mb-4">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <label for="firstname" class="m-0 text-muted" style="width: 250px;">First Name</label>
+                        <input type="text" name="firstname" id="firstname" placeholder="Enter your first name" value="<?= $user['first_name'] ?>" required />
+                    </div>
+                </div>
+                <div class="input-group m-0 mb-4">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <label for="lastname" class="m-0 text-muted" style="width: 250px;">Last Name</label>
+                        <input type="text" name="lastname" id="lastname" placeholder="Enter your last name" value="<?= $user['last_name'] ?>" required />
+                    </div>
+                </div>
+                <div class="input-group m-0 mb-4">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <label for="current_password" class="m-0 text-muted" style="width: 250px;">Current Password</label>
+                        <input type="password" name="current_password" id="current_password" placeholder="Enter your current password" required />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <label for="phone" class="mb-2 text-muted" style="width: 250px;">Phone Number</label>
+                        <div class="input-group m-0 mb-4">
+                            <span class="input-group-text rounded-0">+63</span>
+                            <input type="tel" name="phone" id="phone" class="form-control phone-input rounded-0" value="<?= $user['phone'] ?>" maxlength="10" placeholder="Enter your phone number" required>
                         </div>
                     </div>
-                    <input type="file" id="businesslogo" name="businesslogo" accept="image/jpeg,image/png,image/jpg" style="display:none" onchange="previewLogo(event)">
-                    <button type="submit" id="submitLogoButton" class="mt-2 fs-4 text-success checksub" style="border: none; background: none; display: none;">
-                        <i class="fa-solid fa-check"></i>
-                    </button>
-                </form>
-                <script>
-                function previewLogo(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        if (file.size > 5 * 1024 * 1024) {
-                            alert('File is too large. Please select an image under 5MB.');
-                            return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            document.getElementById('profileImg').src = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                        document.getElementById('submitLogoButton').style.display = 'inline';
-                    }
-                }
-                </script>
-
-                <h4 class="fw-bold m-0 mb-1 mt-3"><?= $park['business_name'] ?></h4>
-                <span class="text-muted mb-1"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City, Philippines</span>
-                <div class="d-flex gap-2 text-muted align-items-center justify-content-center mb-1">
-                    <span><i class="fa-solid fa-envelope"></i> <?= $park['business_email'] ?></span>
-                    <span class="dot"></span>
-                    <span><i class="fa-solid fa-phone small"></i> +63<?= $park['business_phone'] ?></span>
                 </div>
-                <button class="variation-btn addrem m-2" data-bs-toggle="modal" data-bs-target="#operatinghours">Operating Hours</button>
-                <button class="variation-btn addrem" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button>
-            </div>
-            <h5 class="fw-bold m-0">Reports</h5>
-            <span class="small text-muted">Resolve or reject customer's report on your stalls</span>
-            <?php 
-            $reports = $parkObj->getStallReports($park_id);
-            foreach ($reports as $report): 
-                if ($report['status'] == 'Pending') {
-                    $statusIcon = '<i class="fa-solid fa-circle text-warning" style="font-size:9px;"></i>';
-                } elseif ($report['status'] == 'Resolved') {
-                    $statusIcon = '<i class="fa-solid fa-circle text-success" style="font-size:9px;"></i>';
-                } elseif ($report['status'] == 'Rejected') {
-                    $statusIcon = '<i class="fa-solid fa-circle text-danger" style="font-size:9px;"></i>';
-                }
-            ?>
-            <div class="d-flex align-items-center border gap-4 rounded-2 p-3 mt-2" id="report-<?= $report['id']; ?>">
-                <?= $statusIcon; ?>
-                <div class="d-flex gap-3 w-100">
-                    <img src="<?= htmlspecialchars($report['profile_img']); ?>" width="40px" height="40px" style="border-radius:50%;">
-                    <div>
-                        <h6><?= htmlspecialchars($report['first_name'] . ' ' . $report['last_name']); ?> reported <?= htmlspecialchars($report['stall_name']); ?></h6>
-                        <p class="text-muted m-0 my-1" style="font-size:12px;">"<?= htmlspecialchars($report['reason']); ?>"</p>
-                        <span style="font-size:12px;"><?= htmlspecialchars($report['created_at']); ?></span>
+                <div class="input-group m-0 mb-4">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <label for="email" class="m-0 text-muted" style="width: 250px;">Email</label>
+                        <input type="email" name="email" id="email" placeholder="Enter your email" value="<?= $user['email'] ?>" required disabled/>
                     </div>
                 </div>
-                <div class="d-flex gap-2" id="actions-<?= $report['id']; ?>">
-                    <?php if ($report['status'] == 'Pending'): ?>
-                        <form method="POST" action="" style="display:inline-block;">
-                            <input type="hidden" name="report_id" value="<?= $report['id']; ?>">
-                            <input type="hidden" name="action" value="resolve">
-                            <button type="submit" name="report_update" style="background: none; border: none; cursor: pointer;">
-                                <i class="fa-solid fa-check text-success rename"></i>
-                            </button>
-                        </form>
-                        <form method="POST" action="" style="display:inline-block;">
-                            <input type="hidden" name="report_id" value="<?= $report['id']; ?>">
-                            <input type="hidden" name="action" value="reject">
-                            <button type="submit" name="report_update" style="background: none; border: none; cursor: pointer;">
-                                <i class="fa-solid fa-xmark text-danger rename"></i>
-                            </button>
-                        </form>
-                    <?php else: ?>
-                        <i class="fa-solid fa-check text-success rename disabled"></i>
-                        <i class="fa-solid fa-xmark text-danger rename disabled"></i>
-                    <?php endif; ?>
+                <div class="input-group m-0 mb-4">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <label for="dob" class="m-0 text-muted" style="width: 250px;">Date of Birth</label>
+                        <input type="date" name="dob" id="dob" value="<?= $user['birth_date'] ?>" required disabled/>
+                    </div>
+                </div>
+                <div class="input-group m-0 mb-4">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <label for="sex" class="m-0 text-muted" style="width: 250px;">Sex</label>
+                        <select name="sex" id="sex" required style="padding: 12px 0.75rem; flex-grow: 1;">
+                            <option value="" disabled>Select your sex</option>
+                            <option value="male" <?php $user['sex'] == 'male' ? 'selected' : '' ?>>Male</option>
+                            <option value="female" <?php $user['sex'] == 'female' ? '' : 'selected' ?>>Female</option>
+                        </select>
+                        <span class="text-danger" id="sex_err"></span>
+                    </div>
                 </div>
             </div>
-            <?php endforeach; ?>
         </div>
-    </div>
-
-    <!-- Operating Hours Modal -->
-    <div class="modal fade" id="operatinghours" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="operatinghoursLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-custom-width">
-            <form method="POST" id="operatingHoursForm">
-                <input type="hidden" name="update_operating_hours" value="1">
-                <input type="hidden" name="operating_hours" id="operating_hours">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="operatinghoursLabel">Edit Operating Hours</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="operatinghours">
-                            <div class="add-schedule mb-4 small">
-                                <label class="mb-3">What are your business operating hours? <span style="color: #CD5C08;">*</span></label>
-                                <div id="timeForm">
-                                    <div class="oh">
-                                        <div class="och mb-3">
-                                            <label>Open at</label>
-                                            <div>
-                                                <select name="open_hour" id="open_hour">
-                                                    <script>
-                                                        for (let i = 1; i <= 12; i++) {
-                                                            document.write('<option value="'+i+'">'+String(i).padStart(2, "0")+'</option>');
-                                                        }
-                                                    </script>
-                                                </select>
-                                                :
-                                                <select name="open_minute" id="open_minute">
-                                                    <script>
-                                                        for (let i = 0; i < 60; i++) {
-                                                            document.write('<option value="'+i+'">'+String(i).padStart(2, "0")+'</option>');
-                                                        }
-                                                    </script>
-                                                </select>
-                                                <select name="open_ampm" id="open_ampm">
-                                                    <option value="AM">AM</option>
-                                                    <option value="PM">PM</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="och mb-3">
-                                            <label>Close at</label>
-                                            <div>
-                                                <select name="close_hour" id="close_hour">
-                                                    <script>
-                                                        for (let i = 1; i <= 12; i++) {
-                                                            document.write('<option value="'+i+'">'+String(i).padStart(2, "0")+'</option>');
-                                                        }
-                                                    </script>
-                                                </select>
-                                                :
-                                                <select name="close_minute" id="close_minute">
-                                                    <script>
-                                                        for (let i = 0; i < 60; i++) {
-                                                            document.write('<option value="'+i+'">'+String(i).padStart(2, "0")+'</option>');
-                                                        }
-                                                    </script>
-                                                </select>
-                                                <select name="close_ampm" id="close_ampm">
-                                                    <option value="AM">AM</option>
-                                                    <option value="PM">PM</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="day-checkboxes mb-2">
-                                        <label><input type="checkbox" name="days" value="Monday"> Monday</label>
-                                        <label><input type="checkbox" name="days" value="Tuesday"> Tuesday</label>
-                                        <label><input type="checkbox" name="days" value="Wednesday"> Wednesday</label>
-                                        <label><input type="checkbox" name="days" value="Thursday"> Thursday</label>
-                                        <label><input type="checkbox" name="days" value="Friday"> Friday</label>
-                                        <label><input type="checkbox" name="days" value="Saturday"> Saturday</label>
-                                        <label><input type="checkbox" name="days" value="Sunday"> Sunday</label>
-                                    </div>
-                                    <button type="button" class="add-hours-btn mt-2" onclick="addOperatingHours()">+ Add</button>
-                                </div>
-                            </div>
-                            <div class="schedule-list small">
-                                <h6>Operating Hours</h6>
-                                <div id="scheduleContainer"></div>
-                            </div>
-                            <script>
-                                let operatingHoursData = [];
-                                
-                                <?php if (!empty($operatingHours)) : ?>
-                                    <?php foreach ($operatingHours as $row) : 
-                                        $daysList = explode(', ', $row['days']);
-                                    ?>
-                                        operatingHoursData.push({
-                                            days: <?= json_encode($daysList) ?>,
-                                            openTime: '<?= $row['open_time'] ?>',
-                                            closeTime: '<?= $row['close_time'] ?>'
-                                        });
-                                        document.addEventListener('DOMContentLoaded', function() {
-                                            const scheduleText = '<?= implode(", ", $daysList) ?>' + '<br>' + '<?= $row['open_time'] ?> - <?= $row['close_time'] ?>';
-                                            const scheduleContainer = document.getElementById('scheduleContainer');
-                                            const scheduleItem = document.createElement('p');
-                                            scheduleItem.innerHTML = scheduleText;
-                                            const deleteButton = document.createElement('button');
-                                            deleteButton.innerHTML = '<i class="fa-regular fa-circle-xmark"></i>';
-                                            deleteButton.classList.add('delete-btn');
-                                            deleteButton.onclick = function() {
-                                                scheduleContainer.removeChild(scheduleItem);
-                                                operatingHoursData = operatingHoursData.filter(
-                                                    entry =>
-                                                        !(entry.days.join(',') === '<?= implode(",", $daysList) ?>' &&
-                                                          entry.openTime === '<?= $row['open_time'] ?>' &&
-                                                          entry.closeTime === '<?= $row['close_time'] ?>')
-                                                );
-                                                document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
-                                            };
-                                            scheduleItem.insertBefore(deleteButton, scheduleItem.firstChild);
-                                            scheduleContainer.appendChild(scheduleItem);
-                                        });
-                                    <?php endforeach; ?>
-                                    document.addEventListener('DOMContentLoaded', function() {
-                                        document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
+        <div class="d-flex justify-content-center mt-4">
+            <input type="submit" class="addpro px-5" value="Save">
+        </div>
+    </form>
+    <br><br><br><br>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Reset delete account form when modal is closed
+            $('#deleteaccount').on('hidden.bs.modal', function () {
+                $('#delete-account-form').trigger('reset');
+            });
+            
+            // Handle delete account form submission
+            $('#delete-account-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                const currentPassword = $('#currentpassword').val();
+                const confirmation = $('#confirmation').val();
+                
+                if (!currentPassword || !confirmation) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Please fill in all fields'
+                    });
+                    return;
+                }
+                
+                // Show final confirmation SweetAlert
+                Swal.fire({
+                    title: 'Are you absolutely sure?',
+                    text: "This action cannot be undone. All your data will be permanently deleted.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete my account',
+                    cancelButtonText: 'No, keep my account'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Close the delete account modal
+                        $('#deleteaccount').modal('hide');
+                        
+                        // Proceed with account deletion
+                        $.ajax({
+                            type: 'POST',
+                            url: 'delete_account.php',
+                            data: {
+                                current_password: currentPassword,
+                                confirmation: confirmation
+                            },
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: response.message,
+                                        allowOutsideClick: false
+                                    }).then((result) => {
+                                        window.location.href = 'index.php'; // Redirect to homepage after successful deletion
                                     });
-                                <?php endif; ?>
-                                
-                                function addOperatingHours() {
-                                    const openHour = String(document.getElementById('open_hour').value).padStart(2, '0');
-                                    const openMinute = String(document.getElementById('open_minute').value).padStart(2, '0');
-                                    const openAmpm = document.getElementById('open_ampm').value;
-                                    const closeHour = String(document.getElementById('close_hour').value).padStart(2, '0');
-                                    const closeMinute = String(document.getElementById('close_minute').value).padStart(2, '0');
-                                    const closeAmpm = document.getElementById('close_ampm').value;
-                                    const days = Array.from(document.querySelectorAll('input[name="days"]:checked'))
-                                        .map(checkbox => checkbox.value);
-                                    if (days.length === 0) {
-                                        alert("Please select at least one day.");
-                                        return;
-                                    }
-                                    for (let entry of operatingHoursData) {
-                                        for (let day of days) {
-                                            if (entry.days.includes(day)) {
-                                                alert('The day "' + day + '" has already been added.');
-                                                return;
-                                            }
-                                        }
-                                    }
-                                    const scheduleText = days.join(', ') + '<br>' + openHour + ':' + openMinute + ' ' + openAmpm + ' - ' + closeHour + ':' + closeMinute + ' ' + closeAmpm;
-                                    operatingHoursData.push({
-                                        days: days,
-                                        openTime: openHour + ':' + openMinute + ' ' + openAmpm,
-                                        closeTime: closeHour + ':' + closeMinute + ' ' + closeAmpm
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: response.message
                                     });
-                                    document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
-                                    const scheduleContainer = document.getElementById("scheduleContainer");
-                                    const scheduleItem = document.createElement("p");
-                                    scheduleItem.innerHTML = scheduleText;
-                                    const deleteButton = document.createElement("button");
-                                    deleteButton.innerHTML = '<i class="fa-regular fa-circle-xmark"></i>';
-                                    deleteButton.classList.add("delete-btn");
-                                    deleteButton.onclick = function() {
-                                        scheduleContainer.removeChild(scheduleItem);
-                                        operatingHoursData = operatingHoursData.filter(
-                                            entry =>
-                                                JSON.stringify(entry) !==
-                                                JSON.stringify({
-                                                    days: days,
-                                                    openTime: openHour + ':' + openMinute + ' ' + openAmpm,
-                                                    closeTime: closeHour + ':' + closeMinute + ' ' + closeAmpm
-                                                })
-                                        );
-                                        document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
-                                    };
-                                    scheduleItem.insertBefore(deleteButton, scheduleItem.firstChild);
-                                    scheduleContainer.appendChild(scheduleItem);
-                                    
-                                    document.getElementById('open_hour').selectedIndex = 0;
-                                    document.getElementById('open_minute').selectedIndex = 0;
-                                    document.getElementById('open_ampm').selectedIndex = 0;
-                                    document.getElementById('close_hour').selectedIndex = 0;
-                                    document.getElementById('close_minute').selectedIndex = 0;
-                                    document.getElementById('close_ampm').selectedIndex = 0;
-                                    document.querySelectorAll('input[name="days"]').forEach(checkbox => checkbox.checked = false);
                                 }
-                            </script>
-                        </div>
-                    </div>
-                    <div class="modal-footer d-flex justify-content-center">
-                        <button type="submit" class="btn btn-primary" onclick="return validateOperatingHours();">Save changes</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Delete Park Modal -->
-    <div class="modal fade" id="deletepark" tabindex="-1" aria-labelledby="deleteparkLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="POST" id="deleteBusinessForm">
-                <input type="hidden" name="delete_business" value="1">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="d-flex justify-content-end">
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="fw-bold mb-4"><i class="fa-solid fa-circle-exclamation"></i> Delete Food Park</h4>
-                            <span>You are about to delete this food park.<br>Are you sure?</span><br><br>
-                            <strong>This action cannot be undone. All associated data, including stalls under this park will be permanently removed.</strong>
-                            <div class="mt-5 mb-3">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Delete</button>
-                            </div>
-                        </div>
-                        <?php if(isset($delete_err)) { echo '<p class="text-danger">'.$delete_err.'</p>'; } ?>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <br><br><br><br><br>
-
-    
-    
+                            },
+                            error: function(xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred: ' + error
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 </main>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    function validateOperatingHours() {
-        let operatingHoursInput = document.getElementById('operating_hours').value;
-        try {
-            let operatingHours = JSON.parse(operatingHoursInput);
-            if (!Array.isArray(operatingHours) || operatingHours.length === 0) {
-                alert("Please add at least one operating hour schedule.");
-                return false;
-            }
-        } catch (e) {
-            alert("Invalid operating hours data. Please try again.");
-            return false;
-        }
-        return true;
-    }
-</script>
-
-<?php 
-include_once 'footer.php'; 
-?>
+<?php include_once 'footer.php'; ?>

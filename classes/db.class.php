@@ -78,48 +78,37 @@ class User {
         return false;
     }
 
-    public function editUser($user_id, $current_password, $current_phone) {
-        // $age = $this->calculateAge($this->birth_date);
-        // if ($age < 18)
-        //     return false;
-        
-        // if ($this->validateEmail($this->email))
-        //     return false;
-        
-        // if ($this->changeEmail($this->email, $this->email))
-        //     return 'email';
-
-        if ($this->validatePhone($this->phone))
-            return false;
-
-        if ($this->changePhone($this->phone, $current_phone))
-            return 'phone';
-
-        if (!($this->sex == "male" || $this->sex == "female"))
-            return false;
-
+    public function editUser($user_id, $current_password) {
         $sql = "SELECT password FROM users WHERE id = :id;";
         $query = $this->db->connect()->prepare($sql);
         $query->execute(array(':id' => $user_id));
         $result = $query->fetch();
-
+    
         if (password_verify($current_password, $result['password'])) {
-
-            $sql = "UPDATE users SET first_name = :first_name, last_name = :last_name, sex = :sex, phone = :phone, profile_img = :profile_img WHERE id = :id;";
+            $sql = "UPDATE users 
+                    SET first_name = :first_name, 
+                        middle_name = :middle_name, 
+                        last_name = :last_name, 
+                        birth_date = :birth_date, 
+                        sex = :sex, 
+                        phone = :phone, 
+                        profile_img = :profile_img 
+                    WHERE id = :id;";
             $query = $this->db->connect()->prepare($sql);
-
             return $query->execute(array(
                 ':id' => $user_id,
                 ':first_name' => $this->first_name,
+                ':middle_name' => $this->middle_name,
                 ':last_name' => $this->last_name,
-                // ':birth_date' => $this->birth_date,
-                // ':email' => $this->email,
+                ':birth_date' => $this->birth_date,
                 ':sex' => $this->sex,
                 ':phone' => $this->phone,
                 ':profile_img' => $this->profile_img
             ));
         }
+        return false;
     }
+    
 
     public function deleteUser($user_id){ 
         try {
