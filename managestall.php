@@ -421,7 +421,10 @@ if (isset($_POST['report_update'])) {
                 dataType: "json",
                 delay: 250,
                 data: function (params) {
-                    return { search: params.term };
+                    return { 
+                        search: params.term,
+                        park_id: "<?= urlencode(encrypt($park_id)) ?>"
+                    };
                 },
                 processResults: function (data) {
                     return { 
