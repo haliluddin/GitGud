@@ -223,7 +223,7 @@ foreach ($cartGrouped as $stallName => $items) {
                     <div class="d-flex justify-content-between align-items-center border-bottom pb-2 stall-header">
                         <div class="d-flex gap-2 align-items-center">
                             <span class="fw-bold"><?= htmlspecialchars($stallName) ?></span> 
-                            <button type="button" class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php'">View Stall</button>
+                            <button type="button" class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php?id=<?= urlencode(encrypt($stall_id)) ?>'">View Stall</button>
                         </div>
                     </div>
                     <?php foreach ($items as $item): 

@@ -1,8 +1,20 @@
 <?php
+    ob_start();
+
     include_once 'links.php'; 
     include_once 'header.php'; 
     include_once 'bootstrap.php';
     require_once 'classes/encdec.class.php'; 
+
+    if (!isset($_GET['id'])) {
+        die('Missing stall ID.');
+    }
+    $id = urldecode(decrypt($_GET['id']));
+    
+    $redirectPage = 'managestall.php';
+    if (isset($_GET['source']) && $_GET['source'] == 'stall') {
+        $redirectPage = 'stall.php?id=' . urlencode(encrypt($id));
+    }
 
     $stalllogo = $businessname = $description = $businessemail = $businessphonenumber = $website = '';
     $categories = $paymentMethods = [];
@@ -18,13 +30,12 @@
                 $businessemail = $record['email'];
                 $businessphonenumber = $record['phone'];
                 $website = $record['website'];
-                $categories = explode(", ", $record['categories']);
-                $paymentMethods = explode(", ", $record['payment_methods']);
-                $operatingHours = explode("; ", $record['operating_hours']);
+                $categories = !empty($record['categories']) ? explode(", ", $record['categories']) : [];
+                $paymentMethods = !empty($record['payment_methods']) ? explode(", ", $record['payment_methods']) : [];
+                $operatingHours = !empty($record['operating_hours']) ? explode("; ", $record['operating_hours']) : [];
             } 
         }
     } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        
         $id = urldecode(decrypt($_GET['id']));
 
         $businessname = clean_input($_POST['businessname']);
@@ -33,8 +44,8 @@
         $businessphonenumber = clean_input($_POST['businessphonenumber']);
         $website = clean_input($_POST['website']);
     
-        $categories = isset($_POST['categories']) ? $_POST['categories'] : []; // Get categories
-        $paymentMethods = isset($_POST['payment_methods']) ? $_POST['payment_methods'] : []; // Get payment methods
+        $categories = isset($_POST['categories']) ? $_POST['categories'] : [];
+        $paymentMethods = isset($_POST['payment_methods']) ? $_POST['payment_methods'] : [];
     
         if (isset($_FILES['stalllogo']) && $_FILES['stalllogo']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = 'uploads/business/';
@@ -59,7 +70,6 @@
         $operatingHoursJson = $_POST['operating_hours'];
         $operatingHours = json_decode($operatingHoursJson, true);
     
-        // Pass categories and payment methods to addStall function
         $stall = $parkObj->editStall($id, $businessname, $description, $businessemail, $businessphonenumber, $website, $stalllogo, $operatingHours, $categories, $paymentMethods);
 
         if (isset($_GET['id'])) {
@@ -72,11 +82,14 @@
                 $businessemail = $record['email'];
                 $businessphonenumber = $record['phone'];
                 $website = $record['website'];
-                $categories = explode(", ", $record['categories']);
-                $paymentMethods = explode(", ", $record['payment_methods']);
-                $operatingHours = explode("; ", $record['operating_hours']);
+                $categories = !empty($record['categories']) ? explode(", ", $record['categories']) : [];
+                $paymentMethods = !empty($record['payment_methods']) ? explode(", ", $record['payment_methods']) : [];
+                $operatingHours = !empty($record['operating_hours']) ? explode("; ", $record['operating_hours']) : [];
             } 
         } 
+
+        header("Location: $redirectPage");
+        exit;
     } 
 ?>
 
@@ -91,9 +104,9 @@
 </style>
 <main>
     <div class="d-flex justify-content-end">
-    <button class="addpro mb-3 prev" onclick="window.history.back();">
-        <i class="fa-solid fa-chevron-left me-2"></i> Previous
-    </button>
+        <button class="addpro mb-3 prev" onclick="window.location.href='<?= $redirectPage ?>';">
+            <i class="fa-solid fa-chevron-left me-2"></i> Previous
+        </button>
     </div>
     <form action="" class="srform rounded-2 bg-white p-5" method="POST" enctype="multipart/form-data">
         <div class="pagehead mb-4 border-bottom">
@@ -122,13 +135,13 @@
             <script>
                 function displayImage(event) {
                     const file = event.target.files[0];
-                    if (file && file.size <= 5 * 1024 * 1024) { // Check file size
+                    if (file && file.size <= 5 * 1024 * 1024) { 
                         const reader = new FileReader();
                         reader.onload = function(e) {
                             const logoContainer = document.getElementById('logoContainer');
                             logoContainer.style.backgroundImage = `url('${e.target.result}')`;
-                            logoContainer.innerHTML = ''; // Remove icon and text
-                            logoContainer.appendChild(event.target); // Re-append the input field
+                            logoContainer.innerHTML = '';
+                            logoContainer.appendChild(event.target);
                         };
                         reader.readAsDataURL(file);
                     } else {
@@ -146,12 +159,21 @@
                 <div class="form-group m-0 select2Part select2multiple w-100 floating-group">
                     <label class="floating-label">Categories <span style="color: #CD5C08;">*</span></label>
                     <select name="categories[]" id="categories" class="form-control customSelectMultiple floating-control" multiple>
-                        <option value="Drinks" <?= in_array('Drinks', $categories) ? 'selected' : '' ?>>Drinks</option>
-                        <option value="Vegetables" <?= in_array('Vegetables', $categories) ? 'selected' : '' ?>>Vegetables</option>
+                        <option value="BBQ" <?= in_array('BBQ', $categories) ? 'selected' : '' ?>>BBQ</option>
+                        <option value="Seafood" <?= in_array('Seafood', $categories) ? 'selected' : '' ?>>Seafood</option>
                         <option value="Desserts" <?= in_array('Desserts', $categories) ? 'selected' : '' ?>>Desserts</option>
+                        <option value="Snacks" <?= in_array('Snacks', $categories) ? 'selected' : '' ?>>Snacks</option>
+                        <option value="Beverages" <?= in_array('Beverages', $categories) ? 'selected' : '' ?>>Beverages</option>
+                        <option value="Vegan" <?= in_array('Vegan', $categories) ? 'selected' : '' ?>>Vegan</option>
+                        <option value="Asian" <?= in_array('Asian', $categories) ? 'selected' : '' ?>>Asian</option>
+                        <option value="Burgers" <?= in_array('Burgers', $categories) ? 'selected' : '' ?>>Burgers</option>
+                        <option value="Tacos" <?= in_array('Tacos', $categories) ? 'selected' : '' ?>>Tacos</option>
+                        <option value="Fusion" <?= in_array('Fusion', $categories) ? 'selected' : '' ?>>Fusion</option>
+                        <option value="Pasta" <?= in_array('Pasta', $categories) ? 'selected' : '' ?>>Pasta</option>
+                        <option value="Salads" <?= in_array('Salads', $categories) ? 'selected' : '' ?>>Salads</option>
                     </select>
-
                 </div>
+
                 <script src="assets/js/selectcategory.js"></script>
                 
                 <div class="form-floating mt-3">
@@ -209,7 +231,6 @@
                                 </select>
                             </div>
                         </div>
-                    
                         <div class="och mb-3">
                             <label>Close at</label>
                             <div>
@@ -234,7 +255,7 @@
                                 </select>
                             </div>
                         </div>
-                    </div>  
+                    </div>
                     <div class="day-checkboxes mb-2">
                         <label><input type="checkbox" name="days" value="Monday"> Monday</label>
                         <label><input type="checkbox" name="days" value="Tuesday"> Tuesday</label>
@@ -244,7 +265,6 @@
                         <label><input type="checkbox" name="days" value="Saturday"> Saturday</label>
                         <label><input type="checkbox" name="days" value="Sunday"> Sunday</label>
                     </div>
-
                     <button type="button" class="add-hours-btn mt-2" onclick="addOperatingHours()">+ Add</button>
                 </div>
             </div>
@@ -255,41 +275,28 @@
             <script>
                 let operatingHoursData = [];
                 
-                // Load existing operating hours if available
                 <?php if (isset($operatingHours) && !empty($operatingHours)) : ?>
                     <?php foreach ($operatingHours as $hourString) : ?>
                         <?php
-                            // Parse the operating hours string
                             $parts = explode(" - ", $hourString);
                             if (count($parts) >= 2) {
-                                // The first part contains days and open time
-                                $dayTimeParts = explode(" ", $parts[0]);
+                                $openTime = substr($parts[0], -8);
+                                $days = trim(substr($parts[0], 0, -8));
                                 $closeTime = $parts[1];
+                                $daysList = explode(", ", $days);
                                 
-                                // The last element is the open time
-                                $openTime = array_pop($dayTimeParts);
-                                
-                                // The remaining elements are the days
-                                $days = implode(" ", $dayTimeParts);
-                                $days = str_replace("<br>", "", $days);
-                                $daysList = explode(" & ", $days);
-                                
-                                // Output JavaScript to populate the data
                                 echo "operatingHoursData.push({
                                     days: ['" . implode("', '", $daysList) . "'],
                                     openTime: '$openTime',
                                     closeTime: '$closeTime'
                                 });\n";
                                 
-                                // Display in the schedule container
                                 echo "
                                     document.addEventListener('DOMContentLoaded', function() {
-                                        const scheduleText = '" . implode(", ", $daysList) . " <br> $openTime - $closeTime';
+                                        const scheduleText = '" . implode(", ", $daysList) . "<br>$openTime - $closeTime';
                                         const scheduleContainer = document.getElementById('scheduleContainer');
-                                        
                                         const scheduleItem = document.createElement('p');
                                         scheduleItem.innerHTML = scheduleText;
-                                        
                                         const deleteButton = document.createElement('button');
                                         deleteButton.innerHTML = '<i class=\"fa-regular fa-circle-xmark\"></i>';
                                         deleteButton.classList.add('delete-btn');
@@ -303,7 +310,6 @@
                                             );
                                             document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
                                         };
-                                        
                                         scheduleItem.insertBefore(deleteButton, scheduleItem.firstChild);
                                         scheduleContainer.appendChild(scheduleItem);
                                     });
@@ -311,8 +317,6 @@
                             }
                         ?>
                     <?php endforeach; ?>
-                    
-                    // Update the hidden input field with the existing data
                     document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
                     });
@@ -325,16 +329,12 @@
                     const closeHour = String(document.getElementById('close_hour').value).padStart(2, '0');
                     const closeMinute = String(document.getElementById('close_minute').value).padStart(2, '0');
                     const closeAmpm = document.getElementById('close_ampm').value;
-
                     const days = Array.from(document.querySelectorAll('input[name="days"]:checked'))
                         .map(checkbox => checkbox.value);
-
                     if (days.length === 0) {
                         alert("Please select at least one day.");
                         return;
                     }
-
-                    // Check for duplicate days
                     for (let entry of operatingHoursData) {
                         for (let day of days) {
                             if (entry.days.includes(day)) {
@@ -343,24 +343,16 @@
                             }
                         }
                     }
-
-                    // Add to the operatingHoursData array
                     operatingHoursData.push({
                         days: days,
                         openTime: `${openHour}:${openMinute} ${openAmpm}`,
                         closeTime: `${closeHour}:${closeMinute} ${closeAmpm}`
                     });
-
-                    // Update the hidden input field with the JSON string
                     document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
-
-                    // Display in the UI
-                    const scheduleText = `${days.join(', ')} <br> ${openHour}:${openMinute} ${openAmpm} - ${closeHour}:${closeMinute} ${closeAmpm}`;
+                    const scheduleText = `${days.join(', ')}<br>${openHour}:${openMinute} ${openAmpm} - ${closeHour}:${closeMinute} ${closeAmpm}`;
                     const scheduleContainer = document.getElementById("scheduleContainer");
-
                     const scheduleItem = document.createElement("p");
                     scheduleItem.innerHTML = scheduleText;
-
                     const deleteButton = document.createElement("button");
                     deleteButton.innerHTML = '<i class="fa-regular fa-circle-xmark"></i>';
                     deleteButton.classList.add("delete-btn");
@@ -377,11 +369,8 @@
                         );
                         document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
                     };
-
                     scheduleItem.insertBefore(deleteButton, scheduleItem.firstChild);
                     scheduleContainer.appendChild(scheduleItem);
-
-                    // Reset inputs
                     document.getElementById('open_hour').selectedIndex = 0;
                     document.getElementById('open_minute').selectedIndex = 0;
                     document.getElementById('open_ampm').selectedIndex = 0;
@@ -392,24 +381,20 @@
                 }
             </script>
         </div>
-        
+
         <div class="paymentmethod mt-4">
             <div class="add-schedule">
                 <label for="" class="mb-3">What payment methods does your business accept? <span style="color: #CD5C08;">*</span></label>
-                
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="payment_methods[]" value="Cash" id="flexCheckCash" <?= in_array('Cash', $paymentMethods) ? 'checked' : '' ?>>
                     <label class="form-check-label" for="flexCheckCash">Cash</label>
                 </div>
-
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="payment_methods[]" value="GCash" id="flexCheckGcash" <?= in_array('GCash', $paymentMethods) ? 'checked' : '' ?>>
                     <label class="form-check-label" for="flexCheckGcash">GCash</label>
                 </div>
-
             </div>
         </div>
-
 
         <div class="text-center pt-4 mt-4 createpage">
             <button type="submit" class="btn btn-primary send px-5">SAVE EDIT</button>

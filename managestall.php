@@ -158,8 +158,8 @@ if (isset($_POST['report_update'])) {
                             </button>
                         </form>
                     <?php else: ?>
-                        <i class="fa-solid fa-check text-success rename disabled" style="cursor:not-allowed;"></i>
-                        <i class="fa-solid fa-xmark text-danger rename disabled" style="cursor:not-allowed;"></i>
+                        <i class="fa-solid fa-check text-success rename disabled"></i>
+                        <i class="fa-solid fa-xmark text-danger rename disabled"></i>
                     <?php endif; ?>
                 </div>
             </div>
@@ -187,7 +187,7 @@ if (isset($_POST['report_update'])) {
                         <div class="position-relative">
                             <img src="<?= $stall['logo'] ?>" class="card-img-top" alt="Stall Logo">
                             <div class="position-absolute d-flex gap-2 smaction">
-                                <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= urlencode(encrypt($stall['id'])) ?>'"></i>
+                                <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editpage.php?id=<?= urlencode(encrypt($stall['id'])) ?>&source=managestall'"></i>
                                 <i class="fa-solid fa-trash-can" data-bs-toggle="modal" data-bs-target="#deletestall"></i>
                             </div>
                         </div>

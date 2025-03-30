@@ -364,17 +364,14 @@
                         }
                     }
 
-                    // Add to the operatingHoursData array
                     operatingHoursData.push({
                         days: days,
                         openTime: `${openHour}:${openMinute} ${openAmpm}`,
                         closeTime: `${closeHour}:${closeMinute} ${closeAmpm}`
                     });
 
-                    // Update the hidden input field with the JSON string
                     document.getElementById('operating_hours').value = JSON.stringify(operatingHoursData);
 
-                    // Display in the UI
                     const scheduleText = `${days.join(', ')} <br> ${openHour}:${openMinute} ${openAmpm} - ${closeHour}:${closeMinute} ${closeAmpm}`;
                     const scheduleContainer = document.getElementById("scheduleContainer");
 

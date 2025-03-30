@@ -285,11 +285,9 @@ class Park {
         ])) {
             
     
-            // Remove old categories
             $conn->prepare("DELETE FROM stall_categories WHERE stall_id = :stall_id")
                 ->execute([':stall_id' => $stall_id]);
     
-            // Insert updated categories
             if (!empty($categories)) {
                 $stmt = $conn->prepare("INSERT INTO stall_categories (stall_id, name) VALUES (:stall_id, :name)");
                 foreach ($categories as $category) {
@@ -300,11 +298,9 @@ class Park {
                 }
             }
     
-            // Remove old payment methods
             $conn->prepare("DELETE FROM stall_payment_methods WHERE stall_id = :stall_id")
                 ->execute([':stall_id' => $stall_id]);
     
-            // Insert updated payment methods
             if (!empty($payment_methods)) {
                 $stmt = $conn->prepare("INSERT INTO stall_payment_methods (stall_id, method) VALUES (:stall_id, :method)");
                 foreach ($payment_methods as $method) {
@@ -315,15 +311,13 @@ class Park {
                 }
             }
             
-            // Remove old operating hours
             $conn->prepare("DELETE FROM stall_operating_hours WHERE stall_id = :stall_id")
                 ->execute([':stall_id' => $stall_id]);
                 
-            // Insert updated operating hours
             if (!empty($operatingHours)) {
                 $stmt = $conn->prepare("INSERT INTO stall_operating_hours (stall_id, days, open_time, close_time) VALUES (:stall_id, :days, :open_time, :close_time)");
                 foreach ($operatingHours as $schedule) {
-                    $days = implode(' & ', $schedule['days']);
+                    $days = implode(', ', $schedule['days']);
                     $openTime = $schedule['openTime'];
                     $closeTime = $schedule['closeTime'];
             
