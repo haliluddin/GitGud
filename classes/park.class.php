@@ -9,7 +9,7 @@ class Park {
         $this->db = new Database();
     }
  
-    function getParks() {
+    public function getParks() {
         $sql = "
             SELECT business.*, GROUP_CONCAT(DISTINCT CONCAT(operating_hours.days, '<br>', operating_hours.open_time, ' - ', operating_hours.close_time) SEPARATOR '; ') AS operating_hours
             FROM business
@@ -21,7 +21,7 @@ class Park {
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    function getPark($park_id) {
+    public function getPark($park_id) {
         $sql = "
             SELECT 
                 business.*, 
