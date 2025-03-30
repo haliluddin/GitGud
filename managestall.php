@@ -180,6 +180,59 @@ if (isset($_POST['report_update'])) {
                 <button class="variation-btn addrem m-2" data-bs-toggle="modal" data-bs-target="#operatinghours">Operating Hours</button>
                 <button class="variation-btn addrem" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button>
             </div>
+            <h5 class="fw-bold m-0">Reports</h5>
+            <span class="small text-muted">Resolve or reject customer's report on your stalls</span>
+            <?php 
+            $reports = $parkObj->getStallReports($park_id);
+            if (empty($reports)) : ?>
+                <div class="text-center py-5 mt-2 border rounded-2">
+                    <p class="text-muted">No reports found.</p>
+                </div>
+            <?php else: ?>
+                <?php 
+                foreach ($reports as $report): 
+                    if ($report['status'] == 'Pending') {
+                        $statusIcon = '<i class="fa-solid fa-circle text-warning" style="font-size:9px;"></i>';
+                    } elseif ($report['status'] == 'Resolved') {
+                        $statusIcon = '<i class="fa-solid fa-circle text-success" style="font-size:9px;"></i>';
+                    } elseif ($report['status'] == 'Rejected') {
+                        $statusIcon = '<i class="fa-solid fa-circle text-danger" style="font-size:9px;"></i>';
+                    }
+                ?>
+                <div class="d-flex align-items-center border gap-4 rounded-2 p-3 mt-2" id="report-<?= $report['id']; ?>">
+                    <?= $statusIcon; ?>
+                    <div class="d-flex gap-3 w-100">
+                        <img src="<?= htmlspecialchars($report['profile_img']); ?>" width="40px" height="40px" style="border-radius:50%;">
+                        <div>
+                            <h6><?= htmlspecialchars($report['first_name'] . ' ' . $report['last_name']); ?> reported <?= htmlspecialchars($report['stall_name']); ?></h6>
+                            <p class="text-muted m-0 my-1" style="font-size:12px;">"<?= htmlspecialchars($report['reason']); ?>"</p>
+                            <span style="font-size:12px;"><?= htmlspecialchars($report['created_at']); ?></span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2" id="actions-<?= $report['id']; ?>">
+                        <?php if ($report['status'] == 'Pending'): ?>
+                            <form method="POST" action="" style="display:inline-block;">
+                                <input type="hidden" name="report_id" value="<?= $report['id']; ?>">
+                                <input type="hidden" name="action" value="resolve">
+                                <button type="submit" name="report_update" style="background: none; border: none; cursor: pointer;">
+                                    <i class="fa-solid fa-check text-success rename"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="" style="display:inline-block;">
+                                <input type="hidden" name="report_id" value="<?= $report['id']; ?>">
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" name="report_update" style="background: none; border: none; cursor: pointer;">
+                                    <i class="fa-solid fa-xmark text-danger rename"></i>
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <i class="fa-solid fa-check text-success rename disabled"></i>
+                            <i class="fa-solid fa-xmark text-danger rename disabled"></i>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 
