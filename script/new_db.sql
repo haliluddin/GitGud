@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 28, 2025 at 02:52 AM
+-- Generation Time: Mar 30, 2025 at 06:52 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,22 +43,16 @@ CREATE TABLE `business` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `business_logo` varchar(255) NOT NULL,
   `url` varchar(255) NOT NULL,
-  `rejection_reason` varchar(255) DEFAULT NULL
+  `rejection_reason` varchar(255) DEFAULT NULL,
+  `status` enum('Available','Unavailable') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `business`
 --
 
-INSERT INTO `business` (`id`, `user_id`, `business_name`, `business_type`, `region_province_city`, `barangay`, `street_building_house`, `business_phone`, `business_email`, `business_permit`, `business_status`, `created_at`, `updated_at`, `business_logo`, `url`, `rejection_reason`) VALUES
-(60, 14, 'Sample', 'Food Park', 'Mindanao, Zamboanga Del Sur, Zamboanga City', 'Sample', 'Sample', '9000000000', 'institutionalflss@indigobook.com', 'uploads/business/permit_67e22ee1c4c718.45059713.jpg', 'Approved', '2025-03-25 04:19:45', '2025-03-25 04:37:37', 'uploads/business/logo_67e22ee1c637c8.78084630.jpg', '67e22ee1c7dbe', NULL),
-(61, 14, 'KDKKD', 'Food Park', 'Mindanao, Zamboanga Del Sur, Zamboanga City', 'KDKD', 'KDKKD', '9000000000', 'institutionalflss@indigobook.com', 'uploads/business/permit_67e28e93e28599.31735291.jpg', 'Approved', '2025-03-25 11:08:03', '2025-03-25 11:08:24', 'uploads/business/logo_67e28e93e2d328.45147243.jpg', '67e28e93e35ce', NULL),
-(62, 14, 'sksks', 'Food Park', 'Mindanao, Zamboanga Del Sur, Zamboanga City', 'Baliwasan', 'ksksks', '9000000000', 'institutionalflss@indigobook.com', 'uploads/business/permit_67e29e26b984d3.28077234.jpg', 'Approved', '2025-03-25 12:14:30', '2025-03-25 14:29:41', 'uploads/business/logo_67e29e26ba0216.91648702.jpg', '67e29e26baf59', NULL),
-(63, 14, 'Sample', 'Food Park', 'Mindanao, Zamboanga Del Sur, Zamboanga City', 'Arena Blanco', 'KSKSKS', '9000000000', 'institutionalflss@indigobook.com', 'uploads/business/permit_67e2be0210e5a2.09383642.jpg', 'Rejected', '2025-03-25 14:30:26', '2025-03-25 14:30:50', 'uploads/business/logo_67e2be0211a012.31192985.jpg', '67e2be021268b', NULL),
-(64, 17, 'Hello', 'Food Park', 'Mindanao, Zamboanga Del Sur, Zamboanga City', 'Bunguiao', 'akkakakaa', '9222222222', '225male@indigobook.com', 'uploads/business/permit_67e2c3c43b4908.13788569.jpg', 'Approved', '2025-03-25 14:55:00', '2025-03-27 13:26:48', 'uploads/business/logo_67e2c3c43ba7f2.38482358.jpg', '67e2c3c43c22c', NULL),
-(65, 14, 'REAPPLY', 'Food Park', 'Mindanao, Zamboanga Del Sur, Zamboanga City', 'Baluno', 'KKDKDKD', '9000000000', 'institutionalflss@indigobook.com', 'uploads/business/permit_67e550d4a72c66.15957255.jpg', 'Approved', '2025-03-27 13:21:24', '2025-03-28 00:57:00', 'uploads/business/logo_67e550d4a7b5f8.65701203.jpg', '67e550d4a869b', NULL),
-(66, 17, 'TEST', 'Food Park', 'Mindanao, Zamboanga Del Sur, Zamboanga City', 'Arena Blanco', 'TEST', '9222222222', '225male@indigobook.com', 'uploads/business/permit_67e5f295462651.33717172.jpg', 'Rejected', '2025-03-28 00:51:33', '2025-03-28 01:05:23', 'uploads/business/logo_67e5f29546a0c8.02476975.jpg', '67e5f29547420', 'Name, Email, Phone'),
-(67, 17, 'hello again', 'Food Park', 'Mindanao, Zamboanga Del Sur, Zamboanga City', 'Arena Blanco', 'lolsi', '9222222222', '225male@indigobook.com', 'uploads/business/permit_67e5fe8c532760.48688938.jpg', 'Rejected', '2025-03-28 01:42:36', '2025-03-28 01:46:49', 'uploads/business/logo_67e5fe8c538e49.50489735.jpg', '67e5fe8c54d13', 'Name, Email, Phone');
+INSERT INTO `business` (`id`, `user_id`, `business_name`, `business_type`, `region_province_city`, `barangay`, `street_building_house`, `business_phone`, `business_email`, `business_permit`, `business_status`, `created_at`, `updated_at`, `business_logo`, `url`, `rejection_reason`, `status`) VALUES
+(70, 14, 'Sample', 'Food Park', 'Mindanao, Zamboanga Del Sur, Zamboanga City', 'Ayala', 'Sample', '9000000000', 'institutionalflss@indigobook.com', 'uploads/business/permit_67e917018b42d5.74732368.png', 'Approved', '2025-03-30 10:03:45', '2025-03-30 10:30:36', 'uploads/business/logo_67e91d4cbfd3f8.98912763.jpg', '67e917018bfb5', NULL, 'Available');
 
 -- --------------------------------------------------------
 
@@ -97,8 +91,21 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `name`, `created_at`, `updated_at`, `stall_id`) VALUES
-(18, 'hello', '2025-03-25 04:47:57', '2025-03-25 04:47:57', 115),
-(19, 'sksks', '2025-03-25 06:27:28', '2025-03-25 06:27:28', 116);
+(22, 'Pastries', '2025-03-30 10:08:43', '2025-03-30 10:08:43', 120),
+(23, 'kkekeke', '2025-03-30 12:47:14', '2025-03-30 12:47:14', 120);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `deactivation`
+--
+
+CREATE TABLE `deactivation` (
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `deactivated_until` date NOT NULL,
+  `deactivation_reason` varchar(255) NOT NULL,
+  `status` enum('Active','Deactivated') NOT NULL DEFAULT 'Active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -132,14 +139,6 @@ CREATE TABLE `notifications` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `notifications`
---
-
-INSERT INTO `notifications` (`id`, `user_id`, `order_id`, `stall_id`, `message`, `status`, `created_at`) VALUES
-(28, 15, 83, 115, 'Order ID 0083: Preparing Order', 'Unread', '2025-03-25 05:08:18'),
-(29, 15, 83, 115, 'Order ID 0083: Payment Confirmed!', 'Unread', '2025-03-25 05:08:18');
-
 -- --------------------------------------------------------
 
 --
@@ -160,14 +159,8 @@ CREATE TABLE `operating_hours` (
 --
 
 INSERT INTO `operating_hours` (`id`, `days`, `open_time`, `close_time`, `created_at`, `business_id`) VALUES
-(43, 'Monday', '01:00 AM', '01:00 AM', '2025-03-25 04:19:45', 60),
-(44, 'Saturday', '01:00 AM', '01:00 AM', '2025-03-25 11:08:03', 61),
-(45, 'Monday', '01:00 AM', '01:00 AM', '2025-03-25 12:14:30', 62),
-(46, 'Tuesday', '01:00 AM', '01:00 AM', '2025-03-25 14:30:26', 63),
-(47, 'Monday', '01:00 AM', '01:00 AM', '2025-03-25 14:55:00', 64),
-(48, 'Monday', '01:00 AM', '01:00 AM', '2025-03-27 13:21:24', 65),
-(49, 'Monday', '01:00 AM', '01:00 AM', '2025-03-28 00:51:33', 66),
-(50, 'Monday', '01:00 AM', '01:00 AM', '2025-03-28 01:42:36', 67);
+(67, 'Monday, Tuesday, Wednesday, Thursday, Friday', '07:00 AM', '07:00 PM', '2025-03-30 10:31:02', 70),
+(68, 'Sunday', '01:00 AM', '01:00 AM', '2025-03-30 10:31:02', 70);
 
 -- --------------------------------------------------------
 
@@ -183,14 +176,6 @@ CREATE TABLE `orders` (
   `order_type` enum('Dine In','Take Out') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `orders`
---
-
-INSERT INTO `orders` (`id`, `user_id`, `total_price`, `payment_method`, `order_type`, `created_at`) VALUES
-(83, 15, 300.00, 'Cash', 'Dine In', '2025-03-25 04:54:41'),
-(84, 16, 400.00, 'Cash', 'Dine In', '2025-03-25 06:28:29');
 
 -- --------------------------------------------------------
 
@@ -210,17 +195,6 @@ CREATE TABLE `order_items` (
   `request` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `order_items`
---
-
-INSERT INTO `order_items` (`id`, `order_stall_id`, `product_id`, `quantity`, `price`, `subtotal`, `created_at`, `variations`, `request`) VALUES
-(181, 121, 40, 1, 200.00, 200.00, '2025-03-25 04:54:41', 'HEHEHE, HOHO', ''),
-(182, 121, 39, 1, 100.00, 100.00, '2025-03-25 04:54:41', NULL, ''),
-(183, 122, 40, 1, 200.00, 200.00, '2025-03-25 06:28:29', 'HEHEHEHHEHEHE, HOHO', ''),
-(184, 122, 39, 1, 100.00, 100.00, '2025-03-25 06:28:29', NULL, ''),
-(185, 123, 41, 1, 100.00, 100.00, '2025-03-25 06:28:29', NULL, '');
-
 -- --------------------------------------------------------
 
 --
@@ -238,15 +212,6 @@ CREATE TABLE `order_stalls` (
   `cancellation_reason` varchar(255) DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `order_stalls`
---
-
-INSERT INTO `order_stalls` (`id`, `order_id`, `stall_id`, `subtotal`, `status`, `created_at`, `queue_number`, `cancellation_reason`, `updated_at`) VALUES
-(121, 83, 115, 300.00, 'Preparing', '2025-03-25 04:54:41', 1, NULL, '2025-03-25 05:08:18'),
-(122, 84, 115, 300.00, 'Pending', '2025-03-25 06:28:29', NULL, NULL, '2025-03-25 06:28:29'),
-(123, 84, 116, 100.00, 'Pending', '2025-03-25 06:28:29', NULL, NULL, '2025-03-25 06:28:29');
 
 -- --------------------------------------------------------
 
@@ -288,9 +253,8 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `stall_id`, `category_id`, `name`, `code`, `description`, `base_price`, `discount`, `start_date`, `end_date`, `image`, `created_at`) VALUES
-(39, 115, 18, 'Product 1', '67e235972c122', 'HELLO', 100.00, 0.00, NULL, NULL, 'uploads/images (1).jpg', '2025-03-25 04:48:23'),
-(40, 115, 18, 'hello', '67e235ce12796', 'HELLO', 100.00, 0.00, NULL, NULL, 'uploads/images (1).jpg', '2025-03-25 04:49:18'),
-(41, 116, 19, 'lolsi', '67e24ce6b7283', 'kskks', 100.00, 0.00, NULL, NULL, 'uploads/images (1).jpg', '2025-03-25 06:27:50');
+(45, 120, 23, 'Burger masarap', '67e9184bf24e7', 'Lameh kaayo', 100.00, 0.00, NULL, NULL, 'tmp/67e9183033cf1.jpg', '2025-03-30 10:09:16'),
+(46, 120, 23, 'Lameh nanaman kk', '67e918a48dc72', 'sample', 100.00, 0.00, NULL, NULL, 'uploads/background.jpg', '2025-03-30 10:10:44');
 
 -- --------------------------------------------------------
 
@@ -309,8 +273,9 @@ CREATE TABLE `product_variations` (
 --
 
 INSERT INTO `product_variations` (`id`, `product_id`, `name`) VALUES
-(24, 40, 'Variation 1'),
-(25, 40, 'Variation 2');
+(38, 46, 'kwkwkw'),
+(39, 46, 'kwkwkwkw'),
+(42, 45, 'Variation 1');
 
 -- --------------------------------------------------------
 
@@ -321,19 +286,11 @@ INSERT INTO `product_variations` (`id`, `product_id`, `name`) VALUES
 CREATE TABLE `reports` (
   `id` int(11) NOT NULL,
   `reported_by` int(10) UNSIGNED NOT NULL,
-  `reported_user` int(10) UNSIGNED NOT NULL,
+  `reported_park` int(11) NOT NULL,
   `reason` text NOT NULL,
   `status` enum('Pending','Resolved','Rejected') DEFAULT 'Pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `reports`
---
-
-INSERT INTO `reports` (`id`, `reported_by`, `reported_user`, `reason`, `status`, `created_at`) VALUES
-(1, 16, 14, 'hello', 'Resolved', '2025-03-25 08:05:37'),
-(2, 16, 14, 'lol', 'Rejected', '2025-03-25 08:37:37');
 
 -- --------------------------------------------------------
 
@@ -352,16 +309,17 @@ CREATE TABLE `stalls` (
   `logo` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `park_id` int(11) NOT NULL
+  `park_id` int(11) NOT NULL,
+  `status` enum('Available','Unavailable') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `stalls`
 --
 
-INSERT INTO `stalls` (`id`, `user_id`, `name`, `description`, `email`, `phone`, `website`, `logo`, `created_at`, `updated_at`, `park_id`) VALUES
-(115, 15, 'Sample', 'Sample', 'hnailataji@gmail.com', '9554638281', 'Sample', 'uploads/business/stall_67e23422d9abc6.08893400.jpg', '2025-03-25 04:42:10', '2025-03-25 04:42:10', 60),
-(116, 16, 'Stall 2', 'sample', 'hnailataji@gmail.com', '9554638281', 'Sample', 'uploads/business/stall_67e24c9df34381.42154387.jpg', '2025-03-25 06:26:37', '2025-03-25 06:26:37', 60);
+INSERT INTO `stalls` (`id`, `user_id`, `name`, `description`, `email`, `phone`, `website`, `logo`, `created_at`, `updated_at`, `park_id`, `status`) VALUES
+(120, 15, 'Stall 1', 'Hahahahaha', 'hnailataji@gmail.com', '9554638281', 'Sample', 'uploads/business/stall_67e917a1187884.70078221.png', '2025-03-30 10:06:25', '2025-03-30 10:06:25', 70, 'Available'),
+(121, 16, 'Food stall 2', 'hahahaha', 'hnailataji@gmail.com', '9554638281', 'Sample', 'uploads/business/stall_67e917d433a5f3.16424562.png', '2025-03-30 10:07:16', '2025-03-30 10:07:16', 70, 'Available');
 
 -- --------------------------------------------------------
 
@@ -380,9 +338,10 @@ CREATE TABLE `stall_categories` (
 --
 
 INSERT INTO `stall_categories` (`id`, `stall_id`, `name`) VALUES
-(41, 115, 'BBQ'),
-(42, 115, 'Seafood'),
-(43, 116, 'Seafood');
+(70, 120, 'BBQ'),
+(71, 121, 'Desserts'),
+(72, 121, 'Snacks'),
+(73, 121, 'Beverages');
 
 -- --------------------------------------------------------
 
@@ -405,8 +364,8 @@ CREATE TABLE `stall_invitations` (
 --
 
 INSERT INTO `stall_invitations` (`id`, `user_id`, `park_id`, `invitation_token`, `token_expiration`, `last_sent`, `is_used`) VALUES
-(12, 15, 60, '67e23407d148d', '2025-04-01 05:41:43', 1742877703, 0),
-(13, 16, 60, '67e24c803d77c', '2025-04-01 07:26:08', 1742883968, 0);
+(16, 15, 70, '67e9172918677', '2025-04-06 12:04:25', 1743329065, 0),
+(17, 16, 70, '67e917291a8ed', '2025-04-06 12:04:25', 1743329065, 0);
 
 -- --------------------------------------------------------
 
@@ -420,13 +379,6 @@ CREATE TABLE `stall_likes` (
   `stall_id` int(10) UNSIGNED NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `stall_likes`
---
-
-INSERT INTO `stall_likes` (`id`, `user_id`, `stall_id`, `created_at`) VALUES
-(21, 14, 115, '2025-03-25 04:42:33');
 
 -- --------------------------------------------------------
 
@@ -447,8 +399,8 @@ CREATE TABLE `stall_operating_hours` (
 --
 
 INSERT INTO `stall_operating_hours` (`id`, `stall_id`, `days`, `open_time`, `close_time`) VALUES
-(48, 115, 'Monday, Tuesday', '01:00 AM', '01:00 AM'),
-(49, 116, 'Monday', '01:00 AM', '01:00 AM');
+(101, 120, 'Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday', '01:00 AM', '01:00 PM'),
+(102, 121, 'Monday, Tuesday, Wednesday, Thursday, Friday', '07:00 AM', '07:00 PM');
 
 -- --------------------------------------------------------
 
@@ -467,10 +419,24 @@ CREATE TABLE `stall_payment_methods` (
 --
 
 INSERT INTO `stall_payment_methods` (`id`, `stall_id`, `method`) VALUES
-(42, 115, 'Cash'),
-(43, 115, 'GCash'),
-(44, 116, 'Cash'),
-(45, 116, 'GCash');
+(98, 120, 'Cash'),
+(99, 120, 'GCash'),
+(100, 121, 'Cash');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stall_reports`
+--
+
+CREATE TABLE `stall_reports` (
+  `id` int(11) NOT NULL,
+  `reported_by` int(10) UNSIGNED NOT NULL,
+  `reported_stall` int(10) UNSIGNED NOT NULL,
+  `reason` text NOT NULL,
+  `status` enum('Pending','Resolved','Rejected') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -490,12 +456,12 @@ CREATE TABLE `stocks` (
 --
 
 INSERT INTO `stocks` (`id`, `product_id`, `variation_option_id`, `quantity`) VALUES
-(52, 39, NULL, 98),
-(53, 40, 59, 9),
-(54, 40, 60, 9),
-(55, 40, 61, 9),
-(56, 40, 62, 9),
-(57, 41, NULL, 99);
+(83, 46, 86, 100),
+(84, 46, 87, 1),
+(85, 46, 88, 10),
+(86, 46, 89, 10),
+(91, 45, 93, 109),
+(92, 45, 94, 10);
 
 -- --------------------------------------------------------
 
@@ -526,11 +492,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `last_name`, `first_name`, `email`, `sex`, `phone`, `password`, `birth_date`, `status`, `role`, `profile_img`, `user_session`, `created_at`, `updated_at`, `middle_name`) VALUES
-(13, 'Haliluddin', 'Naila ko', 'bronzegwendolen@indigobook.com', 'female', '9554638281', '$2y$10$W/R4Y9HV/rqkQxjMcBJeBuh85cMwSXp7cW/T8n27x6Nxx2qokRsQe', '2007-03-23', 'Active', 'Admin', 'assets/images/profile.jpg', '202f75dc4e10fece15bdb155334cce79d53a74f6b25b406313fedd257ef3032a1151d61d9bfb44f9a8544f16c6f54ed3449b0689fd667c652d173be9a4ca43eb4ef3ae498305982d8e83b950ca78f78a67cbf1fdcc6a', '2025-03-24 01:31:49', '2025-03-25 09:16:49', 'Taji'),
-(14, 'Haliluddin', 'Jimar', 'institutionalflss@indigobook.com', 'male', '9000000000', '$2y$10$eMSpb7p..y1HUn8p0mqS9OR0Ruepg1NO2W6Xn.sFBb91v.YgPsvVe', '2007-03-24', 'Active', 'Park Owner', 'assets/images/profile.jpg', '2c335ad916ad17065902b9a7b3e885b647bd9cf8345bf7a6bad9d2bab3530566de3fb1f53688cc537a134521f2ae5adef1f128ea0f9ae992435199d15900478098a3a24ed5599b5f0769bdc1993af075abb07707f706', '2025-03-25 01:36:22', '2025-03-25 04:19:45', 'Taji'),
+(14, 'Haliluddin', 'Jimar hahaha', 'institutionalflss@indigobook.com', 'female', '9000000000', '$2y$10$dBhNa2E5Kl/upn6.uXBD7ubBwhtaCRaj9YkPJyKR5HQVz7xXq3Y5C', '2007-03-30', 'Active', 'Park Owner', 'uploads/profiles/14.png', '2c335ad916ad17065902b9a7b3e885b647bd9cf8345bf7a6bad9d2bab3530566de3fb1f53688cc537a134521f2ae5adef1f128ea0f9ae992435199d15900478098a3a24ed5599b5f0769bdc1993af075abb07707f706', '2025-03-25 01:36:22', '2025-03-30 16:45:32', 'Taji'),
 (15, 'Haliluddin', 'Jimboy', 'amaranthagricultural@indigobook.com', 'male', '9999999999', '$2y$10$EI4zDutcOV8fDYycnHbX0url61IjSLxbvL.9/AE1eTiNdxAIxJuKi', '2007-03-24', 'Active', 'Stall Owner', 'assets/images/profile.jpg', '71d69a0c6b9f2b4be7ee603c593a267359a4c5f81bd742c27c2b5f85ea3b05bb31c15c7346b474808cd0a267eb49f4ba340e7a6ff7f38426dca66fccfd6d76a01038810a3b283d27239b526dbaa0f9c79c51210aba22', '2025-03-25 04:40:09', '2025-03-25 04:42:10', 'Taji'),
-(16, 'Haliluddin', 'Jimbang', 'intense85@indigobook.com', 'male', '9777777777', '$2y$10$NJXp6yNbNx82IKjDO7eaHu5SqevevJD3zGLzCStk/vcuoQwj1hjH6', '2007-03-24', 'Active', 'Stall Owner', 'assets/images/profile.jpg', '18e83e59653f4ead1ddd92103e3bb0456c1b94fcd574ac4366dac83d82d0ac1ee3e712ec1253392e0326ce5e3219df0971109acdf5742858d29a39c373b48169757aa942337ebbd56e06c267f42309bf82cc2bb1e8c8', '2025-03-25 06:25:17', '2025-03-25 06:26:38', ''),
-(17, 'Haliluddin', 'Mariam', '225male@indigobook.com', 'female', '9222222222', '$2y$10$w8lpulCHEXQVm1S/BOcGr.KVgAtzhoAFpZEHELBdi4TvMGqbBncHq', '2007-03-24', 'Active', 'Park Owner', 'assets/images/profile.jpg', '10bdb9b5062ef52d7ca73cfab3f53fc102f1a71f23b34b503c2e169c94e0e5699c0081c8ba6f06a32143e52133dc603311eb31ba8f09e546e2e0f3f013dff327b4581c4d09db2fc0933fa625f292d23d2b28dbdedcd3', '2025-03-25 10:47:35', '2025-03-25 14:55:00', 'Taji');
+(16, 'Haliluddin', 'Jimbang', 'intense85@indigobook.com', 'male', '9777777777', '$2y$10$NJXp6yNbNx82IKjDO7eaHu5SqevevJD3zGLzCStk/vcuoQwj1hjH6', '2007-03-24', '', 'Stall Owner', 'assets/images/profile.jpg', '18e83e59653f4ead1ddd92103e3bb0456c1b94fcd574ac4366dac83d82d0ac1ee3e712ec1253392e0326ce5e3219df0971109acdf5742858d29a39c373b48169757aa942337ebbd56e06c267f42309bf82cc2bb1e8c8', '2025-03-25 06:25:17', '2025-03-28 11:19:21', ''),
+(17, 'Haliluddin', 'Mariam', '225male@indigobook.com', 'female', '9222222222', '$2y$10$w8lpulCHEXQVm1S/BOcGr.KVgAtzhoAFpZEHELBdi4TvMGqbBncHq', '2007-03-24', 'Active', 'Admin', 'assets/images/profile.jpg', '10bdb9b5062ef52d7ca73cfab3f53fc102f1a71f23b34b503c2e169c94e0e5699c0081c8ba6f06a32143e52133dc603311eb31ba8f09e546e2e0f3f013dff327b4581c4d09db2fc0933fa625f292d23d2b28dbdedcd3', '2025-03-25 10:47:35', '2025-03-28 11:55:49', 'Taji');
 
 -- --------------------------------------------------------
 
@@ -552,10 +517,12 @@ CREATE TABLE `variation_options` (
 --
 
 INSERT INTO `variation_options` (`id`, `variation_id`, `name`, `add_price`, `subtract_price`, `image`) VALUES
-(59, 24, 'HEHEHE', 0.00, 0.00, 'tmp/67e235b2e32a6.jpg'),
-(60, 24, 'HEHEHEHHEHEHE', 0.00, 0.00, 'uploads/images (1).jpg'),
-(61, 25, 'HOHO', 0.00, 0.00, NULL),
-(62, 25, 'HOHO', 0.00, 0.00, NULL);
+(86, 38, 'Op 1 rrrr', 10.00, 0.00, 'tmp/67e9187ad4dc5.jpg'),
+(87, 38, 'ksksksksks', 11.00, 0.00, ''),
+(88, 39, 'Op 3', 0.00, 0.00, 'tmp/67e9188e0d451.jpg'),
+(89, 39, 'Op 4', 0.00, 0.00, 'tmp/67e91890a2ee7.jpg'),
+(93, 42, 'kdkkd', 0.00, 0.00, ''),
+(94, 42, 'flflf', 0.00, 0.00, '');
 
 -- --------------------------------------------------------
 
@@ -608,6 +575,12 @@ ALTER TABLE `cart`
 ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`),
   ADD KEY `stall_id` (`stall_id`);
+
+--
+-- Indexes for table `deactivation`
+--
+ALTER TABLE `deactivation`
+  ADD PRIMARY KEY (`user_id`);
 
 --
 -- Indexes for table `inventory`
@@ -685,7 +658,7 @@ ALTER TABLE `product_variations`
 ALTER TABLE `reports`
   ADD PRIMARY KEY (`id`),
   ADD KEY `reported_by` (`reported_by`),
-  ADD KEY `reported_user` (`reported_user`);
+  ADD KEY `reported_park` (`reported_park`);
 
 --
 -- Indexes for table `stalls`
@@ -731,6 +704,14 @@ ALTER TABLE `stall_payment_methods`
   ADD KEY `stall_id` (`stall_id`);
 
 --
+-- Indexes for table `stall_reports`
+--
+ALTER TABLE `stall_reports`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `reported_by` (`reported_by`),
+  ADD KEY `reported_stall` (`reported_stall`);
+
+--
 -- Indexes for table `stocks`
 --
 ALTER TABLE `stocks`
@@ -768,19 +749,19 @@ ALTER TABLE `verification`
 -- AUTO_INCREMENT for table `business`
 --
 ALTER TABLE `business`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=280;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=283;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `inventory`
@@ -798,7 +779,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `operating_hours`
 --
 ALTER TABLE `operating_hours`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT for table `orders`
@@ -828,73 +809,79 @@ ALTER TABLE `password_resets`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT for table `product_variations`
 --
 ALTER TABLE `product_variations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `reports`
 --
 ALTER TABLE `reports`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `stalls`
 --
 ALTER TABLE `stalls`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=122;
 
 --
 -- AUTO_INCREMENT for table `stall_categories`
 --
 ALTER TABLE `stall_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT for table `stall_invitations`
 --
 ALTER TABLE `stall_invitations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `stall_likes`
 --
 ALTER TABLE `stall_likes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `stall_operating_hours`
 --
 ALTER TABLE `stall_operating_hours`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
 
 --
 -- AUTO_INCREMENT for table `stall_payment_methods`
 --
 ALTER TABLE `stall_payment_methods`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
+
+--
+-- AUTO_INCREMENT for table `stall_reports`
+--
+ALTER TABLE `stall_reports`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `stocks`
 --
 ALTER TABLE `stocks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `variation_options`
 --
 ALTER TABLE `variation_options`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
 
 --
 -- Constraints for dumped tables
@@ -910,15 +897,21 @@ ALTER TABLE `business`
 -- Constraints for table `cart`
 --
 ALTER TABLE `cart`
-  ADD CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`),
-  ADD CONSTRAINT `cart_ibfk_3` FOREIGN KEY (`variation_option_id`) REFERENCES `variation_options` (`id`);
+  ADD CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `cart_ibfk_3` FOREIGN KEY (`variation_option_id`) REFERENCES `variation_options` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `categories`
 --
 ALTER TABLE `categories`
-  ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`);
+  ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `deactivation`
+--
+ALTER TABLE `deactivation`
+  ADD CONSTRAINT `deactivation_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `inventory`
@@ -939,7 +932,7 @@ ALTER TABLE `notifications`
 -- Constraints for table `operating_hours`
 --
 ALTER TABLE `operating_hours`
-  ADD CONSTRAINT `operating_hours_ibfk_1` FOREIGN KEY (`business_id`) REFERENCES `business` (`id`);
+  ADD CONSTRAINT `operating_hours_ibfk_1` FOREIGN KEY (`business_id`) REFERENCES `business` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `orders`
@@ -985,39 +978,46 @@ ALTER TABLE `product_variations`
 --
 ALTER TABLE `reports`
   ADD CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`reported_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `reports_ibfk_2` FOREIGN KEY (`reported_user`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `reports_ibfk_2` FOREIGN KEY (`reported_park`) REFERENCES `business` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `stalls`
 --
 ALTER TABLE `stalls`
   ADD CONSTRAINT `stalls_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `stalls_ibfk_3` FOREIGN KEY (`park_id`) REFERENCES `business` (`id`);
+  ADD CONSTRAINT `stalls_ibfk_3` FOREIGN KEY (`park_id`) REFERENCES `business` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `stall_categories`
 --
 ALTER TABLE `stall_categories`
-  ADD CONSTRAINT `stall_categories_ibfk_1` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`);
+  ADD CONSTRAINT `stall_categories_ibfk_1` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `stall_likes`
 --
 ALTER TABLE `stall_likes`
-  ADD CONSTRAINT `stall_likes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `stall_likes_ibfk_2` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`);
+  ADD CONSTRAINT `stall_likes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `stall_likes_ibfk_2` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `stall_operating_hours`
 --
 ALTER TABLE `stall_operating_hours`
-  ADD CONSTRAINT `stall_operating_hours_ibfk_1` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`);
+  ADD CONSTRAINT `stall_operating_hours_ibfk_1` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `stall_payment_methods`
 --
 ALTER TABLE `stall_payment_methods`
-  ADD CONSTRAINT `stall_payment_methods_ibfk_1` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`);
+  ADD CONSTRAINT `stall_payment_methods_ibfk_1` FOREIGN KEY (`stall_id`) REFERENCES `stalls` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `stall_reports`
+--
+ALTER TABLE `stall_reports`
+  ADD CONSTRAINT `stall_reports_ibfk_1` FOREIGN KEY (`reported_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `stall_reports_ibfk_2` FOREIGN KEY (`reported_stall`) REFERENCES `stalls` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `stocks`
