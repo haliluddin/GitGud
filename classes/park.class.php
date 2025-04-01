@@ -10,16 +10,23 @@ class Park {
     }
  
     public function getParks() {
+        $currentDate = date('Y-m-d');
+    
         $sql = "
-            SELECT business.*, GROUP_CONCAT(DISTINCT CONCAT(operating_hours.days, '<br>', operating_hours.open_time, ' - ', operating_hours.close_time) SEPARATOR '; ') AS operating_hours
+            SELECT business.*, 
+                   GROUP_CONCAT(DISTINCT CONCAT(operating_hours.days, '<br>', operating_hours.open_time, ' - ', operating_hours.close_time) SEPARATOR '; ') AS operating_hours
             FROM business
             JOIN operating_hours ON operating_hours.business_id = business.id
+            LEFT JOIN deactivation ON deactivation.user_id = business.user_id
+            WHERE (deactivation.user_id IS NULL OR deactivation.deactivated_until < :currentDate)
             GROUP BY business.id
         ";
+    
         $query = $this->db->connect()->prepare($sql);
-        $query->execute();
+        $query->execute([':currentDate' => $currentDate]);
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
+    
 
     public function getPark($park_id) {
         $sql = "

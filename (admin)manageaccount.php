@@ -174,68 +174,6 @@ if (isset($_POST['report_update'])) {
     header("Location: " . $_SERVER['PHP_SELF'] . "#reports");
     exit();
 }
-
-if (isset($_POST['deactivate_user'])) {
-    $user_id = $_POST['deactivate_user_id'];
-    $deactivation_reason = htmlspecialchars(trim($_POST['deactivation_reason']));
-    $duration = $_POST['deactivation_duration'];
-    
-    $today = new DateTime();
-    $deactivated_until = clone $today;
-    
-    switch ($duration) {
-        case '3days':
-            $deactivated_until->add(new DateInterval('P3D'));
-            break;
-        case '7days':
-            $deactivated_until->add(new DateInterval('P7D'));
-            break;
-        case '1month':
-            $deactivated_until->add(new DateInterval('P1M'));
-            break;
-        case 'forever':
-            $deactivated_until = new DateTime('9999-12-31'); // Far future date for "forever"
-            break;
-        default:
-            $deactivated_until->add(new DateInterval('P3D')); // Default to 3 days
-    }
-    
-    $deactivated_until_str = $deactivated_until->format('Y-m-d');
-
-    $deactivate = $adminObj->deactivateUser($user_id, $deactivated_until_str, $deactivation_reason);
-    
-    if ($deactivate) {
-        echo "
-        <script>
-            Swal.fire({
-                title: 'User Deactivated',
-                text: 'The user has been deactivated successfully.',
-                icon: 'success',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'OK'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '" . $_SERVER['PHP_SELF'] . "';
-                }
-            });
-        </script>";
-    } else {
-        echo "
-        <script>
-            Swal.fire({
-                title: 'Error',
-                text: 'Failed to deactivate user.',
-                icon: 'failed',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'OK'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '" . $_SERVER['PHP_SELF'] . "';
-                }
-            });
-        </script>";
-    }
-}
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
@@ -288,10 +226,11 @@ if (isset($_POST['deactivate_user'])) {
                 $statusMap = [];
                 foreach ($getStatusRecords as $record) {
                     $statusMap[$record['user_id']] = [
-                        'status' => $record['status'],
+                        'status' => !empty($record['deactivated_until']) ? 'Deactivated' : 'Active',
                         'deactivated_until' => $record['deactivated_until']
                     ];
                 }
+
                 
                 if ($users) {
                     foreach ($users as $user) {
@@ -746,7 +685,7 @@ if (isset($_POST['deactivate_user'])) {
     <div class="modal fade" id="deactivateuser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="" method="POST">
+                <form id="deactivateUserForm" action="" method="POST">
                     <input type="hidden" name="deactivate_user_id" id="deactivateUserId" value="">
                     <div class="modal-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -775,7 +714,7 @@ if (isset($_POST['deactivate_user'])) {
                         </div>
                         <div class="text-center mt-4">
                             <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">Close</button>
-                            <button type="submit" name="deactivate_user" class="btn btn-primary">Deactivate</button> 
+                            <button type="button" id="submitDeactivation" class="btn btn-primary">Deactivate</button> 
                         </div>
                     </div>
                 </form>
@@ -977,8 +916,8 @@ if (isset($_POST['deactivate_user'])) {
     </script>
     <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/adminresponse.js?v=<?php echo time(); ?>"></script>
-    <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/pagination.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
 
     <!-- ACTIVATE AND DEACTIVATE USER -->
     <script src="assets/js/activate.js?v=<?php echo time(); ?>"></script>

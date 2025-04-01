@@ -340,16 +340,17 @@ class Admin {
             $db = $this->db->connect();
             $db->beginTransaction();
     
+            // Update user status
             $updateUserQuery = "UPDATE users SET status = 'Deactivated' WHERE id = :user_id";
             $stmt = $db->prepare($updateUserQuery);
             $stmt->execute([':user_id' => $user_id]);
     
-            $query = "INSERT INTO deactivation (user_id, deactivated_until, deactivation_reason, status) 
-                      VALUES (:user_id, :deactivated_until, :reason, 'Deactivated')
+            // Insert or update deactivation record (removing the non-existent 'status' column)
+            $query = "INSERT INTO deactivation (user_id, deactivated_until, deactivation_reason) 
+                      VALUES (:user_id, :deactivated_until, :reason)
                       ON DUPLICATE KEY UPDATE 
-                          deactivated_until = VALUES(deactivated_until),
-                          deactivation_reason = VALUES(deactivation_reason),
-                          status = 'Deactivated'";
+                          deactivated_until = :deactivated_until,
+                          deactivation_reason = :reason";
             $stmt = $db->prepare($query);
             $stmt->execute([
                 ':user_id' => $user_id,
@@ -364,7 +365,7 @@ class Admin {
             error_log("Error deactivating user: " . $e->getMessage());
             return false;
         }
-    }   
+    }    
     
     public function getDeactivationRecords() {
         $query = "SELECT d.*, u.first_name, u.last_name FROM deactivation d JOIN users u ON d.user_id = u.id";

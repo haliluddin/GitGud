@@ -60,6 +60,7 @@ function getNextOpening($operatingHoursArray) {
 }
 
 $parks = $parkObj->getParks();
+
 $validParks = array_filter($parks, function($park) {
     return $park['business_status'] === 'Approved';
 });

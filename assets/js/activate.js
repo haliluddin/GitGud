@@ -10,33 +10,81 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const deactivateModal = document.getElementById("deactivateuser");
-    deactivateModal.querySelector(".btn-primary").addEventListener("click", () => {
-        if (currentRow) {
-            const statusCell = currentRow.querySelector("td:nth-child(7)");
-            const actionCell = currentRow.querySelector("td:nth-child(10)");
-
-            // Determine deactivation duration
-            const duration = deactivateModal.querySelector("input[name='flexRadioDefault']:checked");
-            if (duration) {
-                const deactivationText = `Deactivated for ${duration.nextElementSibling.textContent}`;
-                statusCell.textContent = deactivationText;
-
-                // Update Action to Activate
-                actionCell.innerHTML = `
-                    <div class="dropdown position-relative">
-                        <i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>
-                        <ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edituser">Edit</a></li>
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser">Delete</a></li>
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#activateuser">Activate</a></li>
-                            <li><a class="dropdown-item" href="#">Activity</a></li>
-                        </ul>
-                    </div>`;
+    const submitDeactivation = document.getElementById("submitDeactivation");
+    
+    if (submitDeactivation) {
+        submitDeactivation.addEventListener("click", () => {
+            // Get form data
+            const userId = document.getElementById("deactivateUserId").value;
+            const duration = deactivateModal.querySelector("input[name='deactivation_duration']:checked");
+            const reason = document.getElementById("deactivation_reason").value;
+            
+            // Validate form
+            if (!duration) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Please select a deactivation duration',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+                return;
             }
-            // Close the modal
-            bootstrap.Modal.getInstance(deactivateModal).hide();
-        }
-    });
+            
+            if (!reason.trim()) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Please provide a reason for deactivation',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            // Send AJAX request
+            fetch("classes/deactivate_user.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `deactivate_user_id=${userId}&deactivation_duration=${duration.value}&deactivation_reason=${encodeURIComponent(reason)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(deactivateModal).hide();
+                    Swal.fire({
+                        title: 'User Deactivated',
+                        text: 'The user has been deactivated successfully.',
+                        icon: 'success',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to deactivate user: ' + (data.message || ''),
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred while processing your request.',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            });
+        });
+    }
 
     // Activate User
     const activateModal = document.getElementById("activateuser");
@@ -50,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (currentRow) {
             const userId = currentRow.querySelector("[data-user-id]").getAttribute("data-user-id");
 
-            fetch("classes/activate.user.php", {
+            fetch("classes/activate_user.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: `action=activateUser&user_id=${userId}`
