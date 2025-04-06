@@ -392,4 +392,82 @@ class Admin {
         }
     }
     
+    public function updateApplication($application_id, $business_name, $business_email, $business_phone) {
+        try {
+            $sql = "UPDATE business SET 
+                    business_name = :business_name, 
+                    business_email = :business_email, 
+                    business_phone = :business_phone 
+                    WHERE id = :application_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->bindParam(':application_id', $application_id);
+            $stmt->bindParam(':business_name', $business_name);
+            $stmt->bindParam(':business_email', $business_email);
+            $stmt->bindParam(':business_phone', $business_phone);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error updating application: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function deleteApplication($application_id) {
+        try {
+            // Begin transaction
+            $db = $this->db->connect();
+            $db->beginTransaction();
+            
+            // Delete related operating hours first (foreign key constraint)
+            $sql1 = "DELETE FROM operating_hours WHERE business_id = :application_id";
+            $stmt1 = $db->prepare($sql1);
+            $stmt1->bindParam(':application_id', $application_id);
+            $stmt1->execute();
+            
+            // Delete the business record
+            $sql2 = "DELETE FROM business WHERE id = :application_id";
+            $stmt2 = $db->prepare($sql2);
+            $stmt2->bindParam(':application_id', $application_id);
+            $stmt2->execute();
+            
+            // Commit transaction
+            $db->commit();
+            return true;
+        } catch (PDOException $e) {
+            // Rollback in case of error
+            $db->rollBack();
+            error_log("Error deleting application: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function updateReport($report_id, $reason) {
+        try {
+            $sql = "UPDATE reports SET reason = :reason WHERE id = :report_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->bindParam(':report_id', $report_id);
+            $stmt->bindParam(':reason', $reason);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error updating report: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function deleteReport($report_id) {
+        try {
+            $sql = "DELETE FROM reports WHERE id = :report_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->bindParam(':report_id', $report_id);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error deleting report: " . $e->getMessage());
+            return false;
+        }
+    }
 }
