@@ -42,7 +42,7 @@ if ($user['role'] == 'Park Owner') {
 }
 
 $first_name = $user['first_name'];
-$middle_name = $user['middle_name'];
+$middle_name = $user['middle_name'] ?? '';
 $last_name = $user['last_name'];
 $email = $user['email'];
 $phone = $user['phone'];
@@ -197,8 +197,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <label for="firstname">First Name <span style="color: #CD5C08;">*</span></label>
                 </div>
                 <div class="form-floating mb-4">
-                    <input type="text" class="form-control c" id="middlename" name="middlename" placeholder="Middle Name" value="<?= $middle_name ?>" required readonly>
-                    <label for="middlename">Middle Name <span style="color: #CD5C08;">*</span></label>
+                    <input type="text" class="form-control c" id="middlename" name="middlename" placeholder="Middle Name" value="<?= $middle_name ?>" readonly>
+                    <label for="middlename">Middle Name</label>
                 </div>
                 <div class="form-floating mb-4">
                     <input type="text" class="form-control c" id="lastname" name="lastname" placeholder="Last Name" value="<?= $last_name ?>" required readonly>

@@ -14,6 +14,7 @@ $(document).ready(function () {
         action = 'deny';
         statusCell = $(this).closest('tr').find('td.status-cell');
         $('#rejectReasonModal input[type="checkbox"]').prop('checked', false);
+        $('#customRejectionReason').val(''); // Clear the textarea
         $('#rejectReasonModal').modal('show');
     });
     
@@ -29,6 +30,7 @@ $(document).ready(function () {
                     var row = statusCell.closest('tr');
                     row.find('.approve-btn, .deny-btn').prop('disabled', true);
                     alert(response.message);
+                    location.reload();
                 } else {
                     alert('Error: ' + response.message);
                 }
@@ -42,11 +44,27 @@ $(document).ready(function () {
     
     $('#saveRejection').click(function () {
         var reasons = [];
+        
+        // Get selected checkboxes
         $('#rejectReasonModal input[type="checkbox"]:checked').each(function() {
             var label = $(this).siblings('label').text().trim();
             reasons.push(label);
         });
+        
+        // Get custom rejection reason from textarea
+        var customReason = $('#customRejectionReason').val().trim();
+        
+        // Build the rejection reason string
         var rejection_reason = reasons.join(', ');
+        
+        // Add custom reason if provided
+        if (customReason) {
+            if (rejection_reason) {
+                rejection_reason += ', Additional details: ' + customReason;
+            } else {
+                rejection_reason = 'Additional details: ' + customReason;
+            }
+        }
         
         $.ajax({
             url: 'adminresponse.php',

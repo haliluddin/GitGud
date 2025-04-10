@@ -340,16 +340,17 @@ class Admin {
             $db = $this->db->connect();
             $db->beginTransaction();
     
+            // Update user status
             $updateUserQuery = "UPDATE users SET status = 'Deactivated' WHERE id = :user_id";
             $stmt = $db->prepare($updateUserQuery);
             $stmt->execute([':user_id' => $user_id]);
     
-            $query = "INSERT INTO deactivation (user_id, deactivated_until, deactivation_reason, status) 
-                      VALUES (:user_id, :deactivated_until, :reason, 'Deactivated')
+            // Insert or update deactivation record (removing the non-existent 'status' column)
+            $query = "INSERT INTO deactivation (user_id, deactivated_until, deactivation_reason) 
+                      VALUES (:user_id, :deactivated_until, :reason)
                       ON DUPLICATE KEY UPDATE 
-                          deactivated_until = VALUES(deactivated_until),
-                          deactivation_reason = VALUES(deactivation_reason),
-                          status = 'Deactivated'";
+                          deactivated_until = :deactivated_until,
+                          deactivation_reason = :reason";
             $stmt = $db->prepare($query);
             $stmt->execute([
                 ':user_id' => $user_id,
@@ -364,7 +365,7 @@ class Admin {
             error_log("Error deactivating user: " . $e->getMessage());
             return false;
         }
-    }   
+    }    
     
     public function getDeactivationRecords() {
         $query = "SELECT d.*, u.first_name, u.last_name FROM deactivation d JOIN users u ON d.user_id = u.id";
@@ -391,4 +392,82 @@ class Admin {
         }
     }
     
+    public function updateApplication($application_id, $business_name, $business_email, $business_phone) {
+        try {
+            $sql = "UPDATE business SET 
+                    business_name = :business_name, 
+                    business_email = :business_email, 
+                    business_phone = :business_phone 
+                    WHERE id = :application_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->bindParam(':application_id', $application_id);
+            $stmt->bindParam(':business_name', $business_name);
+            $stmt->bindParam(':business_email', $business_email);
+            $stmt->bindParam(':business_phone', $business_phone);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error updating application: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function deleteApplication($application_id) {
+        try {
+            // Begin transaction
+            $db = $this->db->connect();
+            $db->beginTransaction();
+            
+            // Delete related operating hours first (foreign key constraint)
+            $sql1 = "DELETE FROM operating_hours WHERE business_id = :application_id";
+            $stmt1 = $db->prepare($sql1);
+            $stmt1->bindParam(':application_id', $application_id);
+            $stmt1->execute();
+            
+            // Delete the business record
+            $sql2 = "DELETE FROM business WHERE id = :application_id";
+            $stmt2 = $db->prepare($sql2);
+            $stmt2->bindParam(':application_id', $application_id);
+            $stmt2->execute();
+            
+            // Commit transaction
+            $db->commit();
+            return true;
+        } catch (PDOException $e) {
+            // Rollback in case of error
+            $db->rollBack();
+            error_log("Error deleting application: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function updateReport($report_id, $reason) {
+        try {
+            $sql = "UPDATE reports SET reason = :reason WHERE id = :report_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->bindParam(':report_id', $report_id);
+            $stmt->bindParam(':reason', $reason);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error updating report: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function deleteReport($report_id) {
+        try {
+            $sql = "DELETE FROM reports WHERE id = :report_id";
+            
+            $stmt = $this->db->connect()->prepare($sql);
+            $stmt->bindParam(':report_id', $report_id);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error deleting report: " . $e->getMessage());
+            return false;
+        }
+    }
 }

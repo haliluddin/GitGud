@@ -174,68 +174,6 @@ if (isset($_POST['report_update'])) {
     header("Location: " . $_SERVER['PHP_SELF'] . "#reports");
     exit();
 }
-
-if (isset($_POST['deactivate_user'])) {
-    $user_id = $_POST['deactivate_user_id'];
-    $deactivation_reason = htmlspecialchars(trim($_POST['deactivation_reason']));
-    $duration = $_POST['deactivation_duration'];
-    
-    $today = new DateTime();
-    $deactivated_until = clone $today;
-    
-    switch ($duration) {
-        case '3days':
-            $deactivated_until->add(new DateInterval('P3D'));
-            break;
-        case '7days':
-            $deactivated_until->add(new DateInterval('P7D'));
-            break;
-        case '1month':
-            $deactivated_until->add(new DateInterval('P1M'));
-            break;
-        case 'forever':
-            $deactivated_until = new DateTime('9999-12-31'); // Far future date for "forever"
-            break;
-        default:
-            $deactivated_until->add(new DateInterval('P3D')); // Default to 3 days
-    }
-    
-    $deactivated_until_str = $deactivated_until->format('Y-m-d');
-
-    $deactivate = $adminObj->deactivateUser($user_id, $deactivated_until_str, $deactivation_reason);
-    
-    if ($deactivate) {
-        echo "
-        <script>
-            Swal.fire({
-                title: 'User Deactivated',
-                text: 'The user has been deactivated successfully.',
-                icon: 'success',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'OK'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '" . $_SERVER['PHP_SELF'] . "';
-                }
-            });
-        </script>";
-    } else {
-        echo "
-        <script>
-            Swal.fire({
-                title: 'Error',
-                text: 'Failed to deactivate user.',
-                icon: 'failed',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'OK'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '" . $_SERVER['PHP_SELF'] . "';
-                }
-            });
-        </script>";
-    }
-}
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
@@ -288,10 +226,11 @@ if (isset($_POST['deactivate_user'])) {
                 $statusMap = [];
                 foreach ($getStatusRecords as $record) {
                     $statusMap[$record['user_id']] = [
-                        'status' => $record['status'],
+                        'status' => !empty($record['deactivated_until']) ? 'Deactivated' : 'Active',
                         'deactivated_until' => $record['deactivated_until']
                     ];
                 }
+
                 
                 if ($users) {
                     foreach ($users as $user) {
@@ -407,6 +346,10 @@ if (isset($_POST['deactivate_user'])) {
                         echo '<button class="approve-btn bg-success text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px" ' . $disabled . '>Approve</button>';
                         echo '<button class="deny-btn bg-danger text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px" ' . $disabled . '>Deny</button>';
                         echo '</div>';
+                        echo '<div class="d-flex gap-2 justify-content-center mt-1">';
+                        echo '<button class="update-app-btn bg-primary text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" data-bs-toggle="modal" data-bs-target="#updateApplicationModal" data-business-name="' . htmlspecialchars($business['business_name']) . '" data-status="' . htmlspecialchars($business['business_status']) . '" data-rejection-reason="' . htmlspecialchars($business['rejection_reason'] ?? '') . '" style="width:60px" ' . ($businessStatus == 'Pending Approval' ? 'disabled' : '') . '>Update</button>';
+                        echo '<button class="delete-app-btn text-white border-0 small py-1 rounded-1" style="background-color:#dc3545; width:60px" data-id="' . htmlspecialchars($business['id']) . '" data-bs-toggle="modal" data-bs-target="#deleteApplicationModal" data-business-name="' . htmlspecialchars($business['business_name']) . '">Delete</button>';
+                        echo '</div>';
                         echo '</td>';
                         echo '</tr>';
                     }
@@ -480,6 +423,10 @@ if (isset($_POST['deactivate_user'])) {
             <input class="form-check-input" type="checkbox" value="" id="reasonPermit">
             <label class="form-check-label" for="reasonPermit">Permit</label>
             </div>
+            <div class="form-group mt-3">
+                <label for="customRejectionReason">Additional Rejection Details:</label>
+                <textarea class="form-control" id="customRejectionReason" rows="3" placeholder="Please provide additional details about the rejection reason"></textarea>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -535,6 +482,7 @@ if (isset($_POST['deactivate_user'])) {
                         echo '<td class="fw-normal small py-3 px-4">' . $statusHTML . '</td>';
                         echo '<td class="fw-normal small py-3 px-4">';
                         if ($report['status'] == 'Pending') {
+                            echo '<div class="d-flex gap-2 justify-content-center mb-1">';
                             echo '<form method="POST" action="" style="display:inline-block; margin-right:5px;">
                                     <input type="hidden" name="report_id" value="' . $report['id'] . '">
                                     <input type="hidden" name="action" value="resolve">
@@ -545,10 +493,19 @@ if (isset($_POST['deactivate_user'])) {
                                     <input type="hidden" name="action" value="reject">
                                     <input type="submit" name="report_update" value="Reject" class="bg-danger text-white border-0 small py-1 rounded-1" style="width:60px;">
                                 </form>';
+                            echo '</div>';
                         } else {
+                            echo '<div class="d-flex gap-2 justify-content-center mb-1">';
                             echo '<input type="button" value="Resolve" class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px;" disabled>
                                 <input type="button" value="Reject" class="bg-muted text-white border-0 small py-1 rounded-1" style="width:60px;" disabled>';
+                            echo '</div>';
                         }
+                        echo '<div class="d-flex gap-2 justify-content-center">';
+                        echo '<button class="update-report-btn bg-primary text-white border-0 small py-1 rounded-1" data-id="' . $report['id'] . '" data-reporter="' . $fullReporter . '" data-park="' . $reportedParkName . '" data-reason="' . htmlspecialchars($report['reason']) . '" data-status="' . htmlspecialchars($report['status']) . '" data-bs-toggle="modal" data-bs-target="#updateReportModal" style="width:60px"' . ($report['status'] == 'Pending' ? 'disabled' : '') . '>Update</button>';
+                        echo '<button class="delete-report-btn text-white border-0 small py-1 rounded-1" style="background-color:#dc3545; width:60px"' . 
+                        ' data-id="' . $report['id'] . '" data-reporter="' . $fullReporter . '" data-park="' . $reportedParkName . 
+                        '" data-bs-toggle="modal" data-bs-target="#deleteReportModal">Delete</button>';
+                        echo '</div>';
                         echo '</td>';
                         echo '</tr>';
                     }
@@ -746,7 +703,7 @@ if (isset($_POST['deactivate_user'])) {
     <div class="modal fade" id="deactivateuser" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="" method="POST">
+                <form id="deactivateUserForm" action="" method="POST">
                     <input type="hidden" name="deactivate_user_id" id="deactivateUserId" value="">
                     <div class="modal-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -775,7 +732,7 @@ if (isset($_POST['deactivate_user'])) {
                         </div>
                         <div class="text-center mt-4">
                             <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">Close</button>
-                            <button type="submit" name="deactivate_user" class="btn btn-primary">Deactivate</button> 
+                            <button type="button" id="submitDeactivation" class="btn btn-primary">Deactivate</button> 
                         </div>
                     </div>
                 </form>
@@ -977,13 +934,279 @@ if (isset($_POST['deactivate_user'])) {
     </script>
     <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/adminresponse.js?v=<?php echo time(); ?>"></script>
-    <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/pagination.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
 
     <!-- ACTIVATE AND DEACTIVATE USER -->
     <script src="assets/js/activate.js?v=<?php echo time(); ?>"></script>
     
-    
+    <!-- Update Application Modal -->
+    <div class="modal fade" id="updateApplicationModal" tabindex="-1" aria-labelledby="updateApplicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-4">
+                <div class="modal-header p-0 border-0 m-0">
+                    <h5 class="m-0">Update Application Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 m-0">
+                    <form id="updateApplicationForm" method="POST" action="update_application.php">
+                        <input type="hidden" id="updateAppId" name="application_id">
+                        <div class="input-group">
+                            <label for="updateBusinessName">Business Name</label>
+                            <input type="text" id="updateBusinessName" class="form-control" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label for="updateAppStatus">Status</label>
+                            <select name="status" id="updateAppStatus" class="form-control" required>
+                                <option value="Pending Approval">Pending Approval</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div id="rejectionReasonGroup">
+                            <div class="input-group mb-2">
+                                <label>Rejection Reasons</label>
+                            </div>
+                            <div class="form-check ms-3 mb-2">
+                                <input class="form-check-input" type="checkbox" value="Name" id="updateReasonName" name="rejection_reasons[]">
+                                <label class="form-check-label" for="updateReasonName">Name</label>
+                            </div>
+                            <div class="form-check ms-3 mb-2">
+                                <input class="form-check-input" type="checkbox" value="Email" id="updateReasonEmail" name="rejection_reasons[]">
+                                <label class="form-check-label" for="updateReasonEmail">Email</label>
+                            </div>
+                            <div class="form-check ms-3 mb-2">
+                                <input class="form-check-input" type="checkbox" value="Phone" id="updateReasonPhone" name="rejection_reasons[]">
+                                <label class="form-check-label" for="updateReasonPhone">Phone</label>
+                            </div>
+                            <div class="form-check ms-3 mb-2">
+                                <input class="form-check-input" type="checkbox" value="Logo" id="updateReasonLogo" name="rejection_reasons[]">
+                                <label class="form-check-label" for="updateReasonLogo">Logo</label>
+                            </div>
+                            <div class="form-check ms-3 mb-2">
+                                <input class="form-check-input" type="checkbox" value="Operating Hours" id="updateReasonHours" name="rejection_reasons[]">
+                                <label class="form-check-label" for="updateReasonHours">Operating Hours</label>
+                            </div>
+                            <div class="form-check ms-3 mb-2">
+                                <input class="form-check-input" type="checkbox" value="Barangay" id="updateReasonBarangay" name="rejection_reasons[]">
+                                <label class="form-check-label" for="updateReasonBarangay">Barangay</label>
+                            </div>
+                            <div class="form-check ms-3 mb-2">
+                                <input class="form-check-input" type="checkbox" value="Street, Building, House" id="updateReasonStreet" name="rejection_reasons[]">
+                                <label class="form-check-label" for="updateReasonStreet">Street, Building, House</label>
+                            </div>
+                            <div class="form-check ms-3 mb-2">
+                                <input class="form-check-input" type="checkbox" value="Permit" id="updateReasonPermit" name="rejection_reasons[]">
+                                <label class="form-check-label" for="updateReasonPermit">Permit</label>
+                            </div>
+                            <div class="input-group mt-3">
+                                <label for="updateRejectionReason">Other Rejection Reason</label>
+                                <textarea name="rejection_reason" id="updateRejectionReason" class="form-control" rows="3" placeholder="Please provide additional details about the rejection reason"></textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-end mt-3">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Status</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Application Modal -->
+    <div class="modal fade" id="deleteApplicationModal" tabindex="-1" aria-labelledby="deleteApplicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-4">
+                <div class="modal-header p-0 border-0 m-0">
+                    <h5 class="m-0">Delete Application</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 m-0">
+                    <p>Are you sure you want to delete the application for <span id="deleteBusinessName"></span>?</p>
+                    <form id="deleteApplicationForm" method="POST" action="delete_application.php">
+                        <input type="hidden" id="deleteAppId" name="application_id">
+                        <div class="d-flex gap-2 justify-content-end mt-3">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Report Modal -->
+    <div class="modal fade" id="updateReportModal" tabindex="-1" aria-labelledby="updateReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-4">
+                <div class="modal-header p-0 border-0 m-0">
+                    <h5 class="m-0">Update Report Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 m-0">
+                    <form id="updateReportForm" method="POST" action="update_report.php">
+                        <input type="hidden" id="updateReportId" name="report_id">
+                        <div class="input-group">
+                            <label for="updateReporter">Reported By</label>
+                            <input type="text" id="updateReporter" class="form-control" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label for="updateReportedPark">Reported Park</label>
+                            <input type="text" id="updateReportedPark" class="form-control" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label for="updateReportReason">Reason</label>
+                            <textarea id="updateReportReason" class="form-control" readonly></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label for="updateReportStatus">Status</label>
+                            <select name="status" id="updateReportStatus" class="form-control" required>
+                                <option value="Pending">Pending</option>
+                                <option value="Resolved">Resolved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-end mt-3">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Status</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Report Modal -->
+    <div class="modal fade" id="deleteReportModal" tabindex="-1" aria-labelledby="deleteReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-4">
+                <div class="modal-header p-0 border-0 m-0">
+                    <h5 class="m-0">Delete Report</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 m-0">
+                    <p>Are you sure you want to delete the report from <span id="deleteReporter"></span> about <span id="deleteReportedPark"></span>?</p>
+                    <form id="deleteReportForm" method="POST" action="delete_report.php">
+                        <input type="hidden" id="deleteReportId" name="report_id">
+                        <div class="d-flex gap-2 justify-content-end mt-3">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    $(document).ready(function() {
+        // Application update modal
+        $('.update-app-btn').click(function() {
+            var id = $(this).data('id');
+            var businessName = $(this).data('business-name');
+            var status = $(this).data('status');
+            var rejectionReason = $(this).data('rejection-reason') || '';
+            
+            // Reset form
+            $('#updateApplicationForm')[0].reset();
+            $('input[name="rejection_reasons[]"]').prop('checked', false);
+            
+            // Set basic values
+            $('#updateAppId').val(id);
+            $('#updateBusinessName').val(businessName);
+            $('#updateAppStatus').val(status);
+            
+            // Process existing rejection reasons
+            if (rejectionReason) {
+                // Check for standard rejection reasons in the string
+                var reasonChecks = {
+                    'Name': '#updateReasonName',
+                    'Email': '#updateReasonEmail',
+                    'Phone': '#updateReasonPhone',
+                    'Logo': '#updateReasonLogo',
+                    'Operating Hours': '#updateReasonHours',
+                    'Barangay': '#updateReasonBarangay',
+                    'Street, Building, House': '#updateReasonStreet',
+                    'Permit': '#updateReasonPermit'
+                };
+                
+                // Check boxes that match existing reasons
+                var additionalText = rejectionReason;
+                
+                $.each(reasonChecks, function(reason, selector) {
+                    if (rejectionReason.includes(reason)) {
+                        $(selector).prop('checked', true);
+                        // Remove this reason from additional text
+                        additionalText = additionalText.replace(reason, '');
+                    }
+                });
+                
+                // Extract any additional details
+                var additionalDetails = '';
+                var match = additionalText.match(/Additional details:\s*(.+)/i);
+                if (match && match[1]) {
+                    additionalDetails = match[1].trim();
+                }
+                
+                $('#updateRejectionReason').val(additionalDetails);
+            } else {
+                $('#updateRejectionReason').val('');
+            }
+            
+            // Show/hide rejection reason based on status
+            if (status === 'Rejected') {
+                $('#rejectionReasonGroup').show();
+            } else {
+                $('#rejectionReasonGroup').hide();
+            }
+            
+            // Add change handler for status dropdown
+            $('#updateAppStatus').off('change').on('change', function() {
+                if ($(this).val() === 'Rejected') {
+                    $('#rejectionReasonGroup').show();
+                } else {
+                    $('#rejectionReasonGroup').hide();
+                }
+            });
+        });
+        
+        // Application delete modal
+        $('.delete-app-btn').click(function() {
+            var id = $(this).data('id');
+            var businessName = $(this).data('business-name');
+            
+            $('#deleteAppId').val(id);
+            $('#deleteBusinessName').text(businessName);
+        });
+        
+        // Report update modal
+        $('.update-report-btn').click(function() {
+            var id = $(this).data('id');
+            var reporter = $(this).data('reporter');
+            var park = $(this).data('park');
+            var reason = $(this).data('reason');
+            var status = $(this).data('status');
+            
+            $('#updateReportId').val(id);
+            $('#updateReporter').val(reporter);
+            $('#updateReportedPark').val(park);
+            $('#updateReportReason').val(reason);
+            $('#updateReportStatus').val(status);
+        });
+        
+        // Report delete modal
+        $('.delete-report-btn').click(function() {
+            var id = $(this).data('id');
+            var reporter = $(this).data('reporter');
+            var park = $(this).data('park');
+            
+            $('#deleteReportId').val(id);
+            $('#deleteReporter').text(reporter);
+            $('#deleteReportedPark').text(park);
+        });
+    });
+</script>
 </script>
     <br><br><br><br>
 </main>

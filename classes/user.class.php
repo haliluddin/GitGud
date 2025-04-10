@@ -73,11 +73,31 @@ class UserClass {
         return ['success' => false, 'message' => 'Failed to update password.'];
     }
 
-    public function getNotifications($user_id) {
-        $sql = "SELECT * FROM notifications WHERE user_id = :user_id";
+    public function getUserStatus($user_id) {
+        $sql = "SELECT deactivated_until FROM deactivation WHERE user_id = :id;";
         $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':user_id', $user_id);
-        $query->execute();
-        return $query->fetchAll();
-    }
+        $query->execute(array(':id' => $user_id));
+        $deactivatedUser = $query->fetch();
+    
+        if ($deactivatedUser) {
+            $currentDate = date('Y-m-d');
+            if ($deactivatedUser['deactivated_until'] >= $currentDate) {
+                return array(
+                    'status' => 'deactivated',
+                    'deactivated_until' => $deactivatedUser['deactivated_until']
+                );
+            }
+        }
+    
+        $sql = "SELECT * FROM users WHERE id = :id;";
+        $query = $this->db->connect()->prepare($sql);
+        $query->execute(array(':id' => $user_id));
+        $user = $query->fetch();
+    
+        if (!$user) {
+            return false;
+        }
+
+        return array('status' => 'active');
+    }    
 }
