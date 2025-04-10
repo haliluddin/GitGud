@@ -5,17 +5,59 @@
     
 }
 @media (max-width: 1024px){
-    .top, .bottom{padding: 10px 60px;}
-    .first, .second, .third{padding: 10px 60px;}
-    .first .inside div h1{
-        font-size: 45px;
+    .bottom{
+        padding: 10px 30px !important;
+    }
+    .first, .second, .third{
+        padding: 0 30px;
+    }
+    .first .firstinside{
+        padding: 20px 0;
+    }
+    .second .secondinside{
+        padding: 40px 0;
+    }
+    .first .firstinside img{
+        height: 400px;
+    }
+    .second .secondinside img{
+        height: 300px;
+    }
+    .first .firstinside div h1{
+        font-size: 40px;
+    }
+    .second .secondinside div h1{
+        font-size: 25px;
+    }
+    .first .firstinside div p, .second .secondinside div p{
+        font-size: 13px;
+    }
+    .headerheader{
+        padding: 0 30px !important;
+    }
+    .whole{
+        gap: 50px;
+    }
+    .whole .leftside{
+        width: 40%;
+    }
+    .whole .form{
+        width: 42%;
+    }
+    .whole .leftside p{
+        font-size: 30px;
     }
 }
 @media (max-width: 768px) {
-    
+    .whole .leftside{
+        display: none !important;
+    }
+    .whole .form{
+        width: 52%;
+    }
 }
 @media (max-width: 425px) {
-  
+    .whole .form{
+        width: 100% !important;
+    }
 }
-
-

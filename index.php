@@ -188,7 +188,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
         echo "<p class='text-center my-5'>No food parks available at this time.</p>";
     } else { 
     ?>
-        <div class="row row-cols-1 row-cols-md-4 g-3">
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
         <?php 
             foreach ($validParks as $park) { 
                 $isOpen = false;

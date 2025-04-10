@@ -1559,3 +1559,7 @@ padding: 20px;
 .form-floating input, .form-floating .form-select, .form-floating label::after {
     background-color: #F8F8F8 !important;
 }
+.secondheader .bottom{
+  padding: 10px 120px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
