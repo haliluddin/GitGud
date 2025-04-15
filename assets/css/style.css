@@ -128,19 +128,19 @@ nav ul li a{text-decoration: none;}
 .first, .second, .third{padding: 0 120px;}
 .second{box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);}
 .first{background-color: #f4f4f4;}
-.first .firstinside, .second .secondinside{
+.firstinside, .second .secondinside{
     display: flex;
     padding: 50px 0;
     align-items: center;
 }
-.first .firstinside img, .second .secondinside img{
+.firstinside img, .second .secondinside img{
     width: 50%;
     height: 500px;
 }
 .second .secondinside img{height: 400px;}
-.first .firstinside div, .second .secondinside div{width: 50%;}
+.firstinside div, .second .secondinside div{width: 50%;}
 .second .secondinside div{margin-left: 50px;}
-.first .firstinside div h1, .second .secondinside div h1{
+.firstinside div h1, .second .secondinside div h1{
     font-weight: bold;
     font-size: 50px;
     line-height: 1.2;
@@ -154,27 +154,81 @@ nav ul li a{text-decoration: none;}
     border: none;
     color: white;
 }
-.first .firstinside div p, .second .secondinside div p{
+.firstinside div p, .second .secondinside div p{
     font-size: 16px;
     margin: 20px 0;
 }
-.first .firstinside div form{
+.firstinside div form{
     justify-content: space-between;
     background-color: #fff;
     width: 100%;
     border-radius: 10px;
 }
-.first .firstinside div form input{
+.firstinside div form input{
     width: 100%;
     margin-left: 15px;
 }
-.first .firstinside div form button{
+.firstinside div form button{
     height: 40px;
     width: 45px;
     border-radius: 50%;
     background-color: #CD5C08;
     color: white;
 }
+
+/* index.php inline css */
+.lpseemore {
+  background-color: #e5e5e5;
+  cursor: pointer;
+} 
+#searchResults {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  max-height: 250px;
+  overflow-y: auto;
+  display: none;
+  z-index: 1000;
+  border-radius: 10px;
+}
+.search-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+  width: 100% !important;
+}
+.search-item:hover {
+  background: #f5f5f5;
+}
+.search-logo {
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.search-name {
+  margin: 0 !important;
+  margin-bottom: 7px;
+}
+.search-location {
+  margin: 0 !important;
+  font-size: small !important;
+  color: gray;
+}
+.no-results {
+  padding: 10px;
+  color: gray;
+  text-align: center;
+}
+.closed {
+  z-index: 2;
+}
+
+/* end */
+
 .fa-ellipsis-vertical, .add{
     position: absolute;
     top: 10px;

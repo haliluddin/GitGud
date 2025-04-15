@@ -24,6 +24,9 @@
                 <img src="<?= htmlspecialchars($user['profile_img'] ?? '') ?>" alt="Profile Image" width="30" height="30" class="rounded-circle"> 
                 <span><?= htmlspecialchars($user['full_name'] ?? '') ?></span>
             </a>
+            <a href="#" data-bs-toggle="dropdown" aria-expanded="false" class="lhuser text-decoration-none text-dark">
+                <i class="fa-regular fa-user"></i>
+            </a>
             <ul class="dropdown-menu dropdown-menu-center p-0 mt-2" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
                 <?php if ($user && $user['role'] === 'Admin'): ?>
                     <li>
@@ -50,5 +53,6 @@
             <button onclick="window.location.href='signin.php';" class="rounded-3 bg-white py-1 px-3 inupbtn">Sign in</button>
             <button onclick="window.location.href='signup.php';" class="rounded-3 py-1 px-3 text-white border-0 inupbtn" style="background: #CD5C08;">Sign Up</button>
         </div>
+        <i class="fa-solid fa-arrow-right-to-bracket lhuser" onclick="window.location.href='signin.php';"></i>
     <?php endif; ?>
 </div>

@@ -1,144 +1,95 @@
 <?php
-ob_start();
+    ob_start();
 
-session_start();
-include_once 'landingheader.php';
-include_once 'links.php';
-include_once 'modals.php';
-require_once __DIR__ . '/classes/db.class.php';
-require_once __DIR__ . '/classes/park.class.php';
-require_once __DIR__ . '/classes/encdec.class.php';
-require_once __DIR__ . '/classes/user.class.php';
+    session_start();
+    include_once 'landingheader.php';
+    include_once 'links.php';
+    include_once 'modals.php';
+    require_once __DIR__ . '/classes/db.class.php';
+    require_once __DIR__ . '/classes/park.class.php';
+    require_once __DIR__ . '/classes/encdec.class.php';
+    require_once __DIR__ . '/classes/user.class.php';
 
-$userObj = new User();
-$parkObj = new Park();
-$isLoggedIn = false;
-if (isset($_SESSION['user'])) {
-    $user = $userObj->getUser($_SESSION['user']['id']);
-    if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
-        $isLoggedIn = true;
+    $userObj = new User();
+    $parkObj = new Park();
+    $isLoggedIn = false;
+    if (isset($_SESSION['user'])) {
+        $user = $userObj->getUser($_SESSION['user']['id']);
+        if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
+            $isLoggedIn = true;
+        } else {
+            echo '<script> window.location.href = "email/verify_email.php" </script>';
+            exit();
+        }
     } else {
-        echo '<script> window.location.href = "email/verify_email.php" </script>';
+        $user = ['role' => 'Guest'];
+    }
+
+    if (isset($_POST['report_submit'])) {
+        if (isset($_SESSION['user'])) {
+            $reported_by  = $_SESSION['user']['id'];
+            $reported_park = $_POST['reported_park']; 
+            $reason       = $_POST['reason'];
+            if ($userObj->reportFoodPark($reported_by, $reported_park, $reason)) {
+                echo "<script>alert('Report submitted successfully.');</script>";
+            } else {
+                echo "<script>alert('Error submitting report.');</script>";
+            }
+        } else {
+            echo "<script>alert('You must be logged in to report.');</script>";
+        }
+    }
+
+    date_default_timezone_set('Asia/Manila');
+    $currentDateTime = date("l, F j, Y h:i A");
+    $currentDay = date('l'); 
+    $currentTime = date('H:i');
+
+    function getNextOpening($operatingHoursArray) {
+        if (!empty($operatingHoursArray)) {
+            $first = $operatingHoursArray[0];
+            if (strpos($first, '<br>') !== false) {
+                list($days, $timeRange) = explode('<br>', $first);
+                $daysArray = array_map('trim', explode(',', $days));
+                $day = !empty($daysArray) ? $daysArray[0] : 'Unknown';
+                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                return $day . ' ' . date('g:i A', strtotime($openTime));
+            }
+        }
+        return "N/A";
+    }
+
+    $parks = $parkObj->getParks();
+
+    $validParks = array_filter($parks, function($park) {
+        return $park['business_status'] === 'Approved';
+    });
+
+    if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
+        $parkId = $_POST['parkId'];
+        $newStatus = $_POST['status'];
+        $parkObj->updateParkStatus($parkId, $newStatus);
+        header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($parkId));
         exit();
     }
-} else {
-    $user = ['role' => 'Guest'];
-}
-
-if (isset($_POST['report_submit'])) {
-    if (isset($_SESSION['user'])) {
-        $reported_by  = $_SESSION['user']['id'];
-        $reported_park = $_POST['reported_park']; 
-        $reason       = $_POST['reason'];
-        if ($userObj->reportFoodPark($reported_by, $reported_park, $reason)) {
-            echo "<script>alert('Report submitted successfully.');</script>";
-        } else {
-            echo "<script>alert('Error submitting report.');</script>";
-        }
-    } else {
-        echo "<script>alert('You must be logged in to report.');</script>";
-    }
-}
-
-date_default_timezone_set('Asia/Manila');
-$currentDateTime = date("l, F j, Y h:i A");
-$currentDay = date('l'); 
-$currentTime = date('H:i');
-
-function getNextOpening($operatingHoursArray) {
-    if (!empty($operatingHoursArray)) {
-        $first = $operatingHoursArray[0];
-        if (strpos($first, '<br>') !== false) {
-            list($days, $timeRange) = explode('<br>', $first);
-            $daysArray = array_map('trim', explode(',', $days));
-            $day = !empty($daysArray) ? $daysArray[0] : 'Unknown';
-            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-            return $day . ' ' . date('g:i A', strtotime($openTime));
-        }
-    }
-    return "N/A";
-}
-
-$parks = $parkObj->getParks();
-
-$validParks = array_filter($parks, function($park) {
-    return $park['business_status'] === 'Approved';
-});
-
-if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
-    $parkId = $_POST['parkId'];
-    $newStatus = $_POST['status'];
-    $parkObj->updateParkStatus($parkId, $newStatus);
-    header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($parkId));
-    exit();
-}
 ?>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GitGud PMS</title>
-<style>
-.lpseemore {
-    background-color: #e5e5e5;
-    cursor: pointer;
-}
-#searchResults {
-    position: absolute;
-    background: white;
-    border: 1px solid #ccc;
-    max-height: 250px;
-    overflow-y: auto;
-    display: none;
-    z-index: 1000;
-    border-radius: 10px;
-}
-.search-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-bottom: 1px solid #ddd;
-    width: 100% !important;
-}
-.search-item:hover {
-    background: #f5f5f5;
-}
-.search-logo {
-    width: 60px !important;
-    height: 60px !important;
-    border-radius: 50%;
-    margin-right: 15px;
-}
-.search-info {
-}
-.search-name {
-    margin: 0 !important;
-    margin-bottom: 7px;
-}
-.search-location {
-    margin: 0 !important;
-    font-size: small !important;
-    color: gray;
-}
-.no-results {
-    padding: 10px;
-    color: gray;
-    text-align: center;
-}
-.closed {
-    z-index: 2;
-}
-</style>
+
 <section class="first">
     <br>
     <div class="firstinside">
         <div>
-            <h1>Bringing taste and community together</h1>
-            <p>Experience the flavor of connection at your local Food Park</p>
+            <h1 class="ind-h1-tm">Bringing taste and community together</h1>
+            <p class="ind-p-tm">Experience the flavor of connection at your local Food Park</p>
             <form action="" method="post">
                 <input type="text" id="searchInput" placeholder="Search Food Park" autocomplete="off">
                 <button type="submit"><i class="fas fa-search fa-lg"></i></button>
             </form>
             <div id="searchResults"></div>
         </div>
-        <img src="assets/images/first.png">
+        <img src="assets/images/first.png" class="img-tm">
     </div>
     <br>
 </section>
@@ -189,7 +140,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
         echo "<p class='text-center my-5'>No food parks available at this time.</p>";
     } else { 
     ?>
-    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
         <?php 
             foreach ($validParks as $park) { 
                 $isOpen = false;
