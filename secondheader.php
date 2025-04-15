@@ -2,16 +2,12 @@
     include_once 'links.php'; 
 ?>
 <style>
-    .bottom{
-        padding: 10px 120px;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    }
     a{
         color: #CD5C08;
         text-decoration: none;
     }
 </style>
-<div class="bottom d-flex justify-content-between align-items-center">
+<div class="bottom d-flex justify-content-between align-items-center py-3">
     <a href="index.php"><i class="fa-solid fa-arrow-left-from-bracket"></i> 
         <?php
             $currentDir = dirname($_SERVER['SCRIPT_NAME']);
@@ -24,8 +20,8 @@
     </a>
     <?php 
         if (isset($_SESSION['user']['id']))
-            echo '<a href="../logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>';
+            echo '<a href="../logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>';
         else
-            echo '<a href="../index.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Back</a>';
+            echo '<a href="../index.php"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>';
     ?>
 </div> 

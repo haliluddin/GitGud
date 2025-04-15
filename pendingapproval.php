@@ -1,55 +1,19 @@
 <?php
     include_once 'links.php'; 
-    include_once 'secondheader.php';
-    
-    /*if (isset($_SESSION['user']['id'])) {
-        if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
-            $user = $userObj->getUser($_SESSION['user']['id']);
-            if ($user) {
-                if ($user['role'] == 'Park Owner') {
-                    $status = $userObj->getBusinessStatus($_SESSION['user']['id']);
-                    if ($status == 'Pending Approval') {
-                        header('Location: pendingapproval.php');
-                        exit();
-                    } else if ($status == 'Approved') {
-                        header('Location: dashboard.php');
-                        exit();
-                    } else if ($status == 'Rejected') {
-                        echo 'Your business registration has been rejected.';
-                    } else {
-                        echo $status;
-                    }
-                }
-    
-                $first_name = $user['first_name'];
-                $last_name = $user['last_name'];
-                $email = $user['email'];
-                $phone = $user['phone'];
-            } else {
-                header('Location: email/verify_email.php');
-                exit();
-            }
-        } else {
-            header('Location: email/verify_email.php');
-            exit();
-        }
-    } else {
-        header('Location: signin.php');
-        exit();
-    }*/
+    include_once 'secondheader.php'; 
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="assets/css/styles.css?v=<?php echo time(); ?>">
 <style>
-    main {
-    display: flex;
-    height: calc(100vh - 65.61px); 
-    overflow: hidden;
-    background-color: white;
+    .main-pp {
+        display: flex;
+        height: calc(100vh - 77.61px); 
+        overflow: hidden;
+        background-color: white;
     }
-
     .penappleft {
-    background-color: #f4f4f4;
-    text-align: center;
+        background-color: #f4f4f4;
+        text-align: center;
     }
     .penappleft, .penappright{
         display: flex;
@@ -63,7 +27,7 @@
         margin-bottom: 20px;
     }
 </style>
-<main>
+<main class="main-pp">
     <div class="penappleft">
         <div>
             <img src="assets/images/approve.png" alt="">

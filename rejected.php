@@ -12,22 +12,23 @@ if (isset($_SESSION['user']['id'])) {
     $rejection_reason = $userObj->getRejectionReason($owner_id);
 }
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-   main {
+    .main-pp {
         display: flex;
-        height: calc(100vh - 65.61px); 
+        height: calc(100vh - 77.61px); 
         background-color: white;
     }
 </style>
-<main>
-    <div style="background-color: #f4f4f4" class="w-50 d-flex justify-content-center align-items-center text-center">
+<main class="main-pp">
+    <div style="background-color: #f4f4f4" class="w-50 d-flex justify-content-center align-items-center text-center penappleft">
         <div>
-            <img src="assets/images/rejected.png" height="300" width="300">
+            <img src="assets/images/rejected.png" height="250" width="250">
             <h3 class="fw-bold mb-3">Your food park registration has been declined</h3>
             <i>Reason: Did not meet eligibility criteria for <span class="fw-bold"><?php echo htmlspecialchars($rejection_reason); ?></span></i>
         </div>
     </div>
-    <div class="w-50 d-flex justify-content-center align-items-center text-center" style="padding: 100px;">
+    <div class="w-50 d-flex justify-content-center align-items-center text-center penappright" style="padding: 100px;">
         <div>
             <h5 class="lh-3">
                 Please review your application against our eligibility criteria and update your details accordingly. 

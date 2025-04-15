@@ -1,158 +1,157 @@
 <?php
-session_start();
-include_once 'links.php'; 
-include_once 'secondheader.php';
-require_once './classes/db.class.php';
-$userObj = new User();
+    session_start();
+    include_once 'links.php'; 
+    include_once 'secondheader.php';
+    require_once './classes/db.class.php';
+    $userObj = new User();
 
-if (isset($_GET['user_id'])) {
-    $owner_id = $_GET['user_id'];
-} elseif (isset($_SESSION['user']['id'])) {
-    $owner_id = $_SESSION['user']['id'];
-} else {
-    header('Location: signin.php');
-    exit();
-}
-
-if ($userObj->isVerified($owner_id) != 1) {
-    header('Location: email/verify_email.php');
-    exit();
-}
-
-$user = $userObj->getUser($owner_id);
-if (!$user) {
-    header('Location: email/verify_email.php');
-    exit();
-}
-
-if ($user['role'] == 'Park Owner') {
-    $status = $userObj->getBusinessStatus($owner_id);
-    if (!isset($_GET['reapply'])) {
-        if ($status == 'Pending Approval') {
-            header('Location: pendingapproval.php');
-            exit();
-        } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
-            header('Location: parkregistration.php');
-            exit();
-        } else if ($status == 'Rejected') {
-            header('Location: rejected.php');
-            exit();
-        }
-    }
-}
-
-$first_name = $user['first_name'];
-$middle_name = $user['middle_name'] ?? '';
-$last_name = $user['last_name'];
-$email = $user['email'];
-$phone = $user['phone'];
-
-$business_name = $business_type = $branches = $business_email = $business_phone = $region_province_city = $barangay = $street_building_house = $business_permit = $business_logo = '';
-$email_cb = false;
-$phone_cb = false;
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $first_name = htmlspecialchars(trim($_POST['firstname']), ENT_QUOTES, 'UTF-8');
-    $middle_name = htmlspecialchars(trim($_POST['middlename']), ENT_QUOTES, 'UTF-8');
-    $last_name = htmlspecialchars(trim($_POST['lastname']), ENT_QUOTES, 'UTF-8');
-    $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
-    $phone = filter_var(trim($_POST['phonenumber']), FILTER_SANITIZE_STRING);
-    $business_name = filter_var(trim($_POST['businessname']), FILTER_SANITIZE_STRING);
-    $business_type = filter_var(trim($_POST['businesstype']), FILTER_SANITIZE_STRING);
-    
-    $email_cb = isset($_POST['flexCheckEmail']);
-    $phone_cb = isset($_POST['flexCheckPhone']);
-    
-    if ($email_cb) {
-        $business_email = $email;
+    if (isset($_GET['user_id'])) {
+        $owner_id = $_GET['user_id'];
+    } elseif (isset($_SESSION['user']['id'])) {
+        $owner_id = $_SESSION['user']['id'];
     } else {
-        $business_email = filter_var(trim($_POST['businessemail']), FILTER_SANITIZE_EMAIL);
-    }
-    
-    if ($phone_cb) {
-        $business_phone = $phone;
-    } else {
-        $business_phone = htmlspecialchars(trim($_POST['businessphonenumber']), ENT_QUOTES, 'UTF-8');
-    }
-
-    $region_province_city = htmlspecialchars(trim($_POST['rpc']), ENT_QUOTES, 'UTF-8');
-    $barangay = htmlspecialchars(trim($_POST['barangay']), ENT_QUOTES, 'UTF-8');
-    $street_building_house = htmlspecialchars(trim($_POST['sbh']), ENT_QUOTES, 'UTF-8');
-    $business_permit = isset($_FILES['businesspermit']) ? $_FILES['businesspermit'] : '';
-    $business_logo = isset($_FILES['businesslogo']) ? $_FILES['businesslogo'] : '';
-
-    if (isset($_FILES['businesspermit']) && $_FILES['businesspermit']['error'] == UPLOAD_ERR_OK) {
-        $uploadDir = 'uploads/business/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-        $fileExtension = pathinfo($_FILES['businesspermit']['name'], PATHINFO_EXTENSION);
-        $uniqueFileName = $uploadDir . uniqid('permit_', true) . '.' . $fileExtension;
-        if (move_uploaded_file($_FILES['businesspermit']['tmp_name'], $uniqueFileName)) {
-            $business_permit = $uniqueFileName;
-        } else {
-            $business_permit_err = 'Failed to upload the business permit.';
-        }
-    }
-
-    if (isset($_FILES['businesslogo']) && $_FILES['businesslogo']['error'] == UPLOAD_ERR_OK) {
-        $uploadDir = 'uploads/business/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-        $fileExtension = pathinfo($_FILES['businesslogo']['name'], PATHINFO_EXTENSION);
-        $uniqueFileName = $uploadDir . uniqid('logo_', true) . '.' . $fileExtension;
-        if (move_uploaded_file($_FILES['businesslogo']['tmp_name'], $uniqueFileName)) {
-            $business_logo = $uniqueFileName;
-        } else {
-            $business_logo_err = 'Failed to upload the business logo.';
-        }
-    }    
-
-    $operatingHoursJson = $_POST['operating_hours'];
-    $operatingHours = json_decode($operatingHoursJson, true);
-    
-    $business_id = $userObj->registerBusiness($owner_id, $business_name, $business_type, $region_province_city, $barangay, $street_building_house, $business_phone, $business_email, $business_permit, $business_logo, $operatingHours);
-    if ($business_id) {
-        header('Location: pendingapproval.php');
+        header('Location: signin.php');
         exit();
-    } else if ($business_id == "Park Owner") {
+    }
+
+    if ($userObj->isVerified($owner_id) != 1) {
+        header('Location: email/verify_email.php');
+        exit();
+    }
+
+    $user = $userObj->getUser($owner_id);
+    if (!$user) {
+        header('Location: email/verify_email.php');
+        exit();
+    }
+
+    if ($user['role'] == 'Park Owner') {
         $status = $userObj->getBusinessStatus($owner_id);
-        if ($status == 'Pending Approval') {
-            header('Location: pendingapproval.php');
-            exit();
-        } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
-            header('Location: parkregistration.php');
-            exit();
-        } else if ($status == 'Rejected') {
-            header('Location: rejected.php');
+        if (!isset($_GET['reapply'])) {
+            if ($status == 'Pending Approval') {
+                header('Location: pendingapproval.php');
+                exit();
+            } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
+                header('Location: parkregistration.php');
+                exit();
+            } else if ($status == 'Rejected') {
+                header('Location: rejected.php');
+                exit();
+            }
         }
     }
-}
+
+    $first_name = $user['first_name'];
+    $middle_name = $user['middle_name'] ?? '';
+    $last_name = $user['last_name'];
+    $email = $user['email'];
+    $phone = $user['phone'];
+
+    $business_name = $business_type = $branches = $business_email = $business_phone = $region_province_city = $barangay = $street_building_house = $business_permit = $business_logo = '';
+    $email_cb = false;
+    $phone_cb = false;
+
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $first_name = htmlspecialchars(trim($_POST['firstname']), ENT_QUOTES, 'UTF-8');
+        $middle_name = htmlspecialchars(trim($_POST['middlename']), ENT_QUOTES, 'UTF-8');
+        $last_name = htmlspecialchars(trim($_POST['lastname']), ENT_QUOTES, 'UTF-8');
+        $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
+        $phone = filter_var(trim($_POST['phonenumber']), FILTER_SANITIZE_STRING);
+        $business_name = filter_var(trim($_POST['businessname']), FILTER_SANITIZE_STRING);
+        $business_type = filter_var(trim($_POST['businesstype']), FILTER_SANITIZE_STRING);
+        
+        $email_cb = isset($_POST['flexCheckEmail']);
+        $phone_cb = isset($_POST['flexCheckPhone']);
+        
+        if ($email_cb) {
+            $business_email = $email;
+        } else {
+            $business_email = filter_var(trim($_POST['businessemail']), FILTER_SANITIZE_EMAIL);
+        }
+        
+        if ($phone_cb) {
+            $business_phone = $phone;
+        } else {
+            $business_phone = htmlspecialchars(trim($_POST['businessphonenumber']), ENT_QUOTES, 'UTF-8');
+        }
+
+        $region_province_city = htmlspecialchars(trim($_POST['rpc']), ENT_QUOTES, 'UTF-8');
+        $barangay = htmlspecialchars(trim($_POST['barangay']), ENT_QUOTES, 'UTF-8');
+        $street_building_house = htmlspecialchars(trim($_POST['sbh']), ENT_QUOTES, 'UTF-8');
+        $business_permit = isset($_FILES['businesspermit']) ? $_FILES['businesspermit'] : '';
+        $business_logo = isset($_FILES['businesslogo']) ? $_FILES['businesslogo'] : '';
+
+        if (isset($_FILES['businesspermit']) && $_FILES['businesspermit']['error'] == UPLOAD_ERR_OK) {
+            $uploadDir = 'uploads/business/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $fileExtension = pathinfo($_FILES['businesspermit']['name'], PATHINFO_EXTENSION);
+            $uniqueFileName = $uploadDir . uniqid('permit_', true) . '.' . $fileExtension;
+            if (move_uploaded_file($_FILES['businesspermit']['tmp_name'], $uniqueFileName)) {
+                $business_permit = $uniqueFileName;
+            } else {
+                $business_permit_err = 'Failed to upload the business permit.';
+            }
+        }
+
+        if (isset($_FILES['businesslogo']) && $_FILES['businesslogo']['error'] == UPLOAD_ERR_OK) {
+            $uploadDir = 'uploads/business/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $fileExtension = pathinfo($_FILES['businesslogo']['name'], PATHINFO_EXTENSION);
+            $uniqueFileName = $uploadDir . uniqid('logo_', true) . '.' . $fileExtension;
+            if (move_uploaded_file($_FILES['businesslogo']['tmp_name'], $uniqueFileName)) {
+                $business_logo = $uniqueFileName;
+            } else {
+                $business_logo_err = 'Failed to upload the business logo.';
+            }
+        }    
+
+        $operatingHoursJson = $_POST['operating_hours'];
+        $operatingHours = json_decode($operatingHoursJson, true);
+        
+        $business_id = $userObj->registerBusiness($owner_id, $business_name, $business_type, $region_province_city, $barangay, $street_building_house, $business_phone, $business_email, $business_permit, $business_logo, $operatingHours);
+        if ($business_id) {
+            header('Location: pendingapproval.php');
+            exit();
+        } else if ($business_id == "Park Owner") {
+            $status = $userObj->getBusinessStatus($owner_id);
+            if ($status == 'Pending Approval') {
+                header('Location: pendingapproval.php');
+                exit();
+            } else if ($status == 'Approved' && basename($_SERVER['PHP_SELF']) != 'parkregistration.php') {
+                header('Location: parkregistration.php');
+                exit();
+            } else if ($status == 'Rejected') {
+                header('Location: rejected.php');
+            }
+        }
+    }
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     .progressbar{
         max-width: 80%;
         margin: 2rem auto 4rem;
     }
-    main {
-    display: flex;
-    height: calc(100vh - 65.61px); 
-    overflow: hidden;
-    background-color: white;
+    .main-pr {
+        display: flex;
+        height: calc(100vh - 77.61px); 
+        overflow: hidden;
+        background-color: white;
     }
-
     .fixed-image {
-    width: 50%;
-    object-fit: cover; 
+        width: 50%;
+        object-fit: cover; 
     }
-
     .form {
-    width: 50%;
-    overflow-y: auto; 
-    padding: 0 120px; 
-    margin-top: 30px;
-    border: none;
+        width: 50%;
+        overflow-y: auto; 
+        padding: 0 120px; 
+        margin-top: 30px;
+        border: none;
     }
     .btns-group, .btn-group{
         position: sticky;
@@ -170,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         background-color: #F8F8F8 !important;
     }
 </style>
-<main>
+<main class="main-pr">
 
     <img src="assets/images/background.jpg" class="fixed-image">
     
