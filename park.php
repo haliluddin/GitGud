@@ -144,7 +144,7 @@
     <div class="disabled" <?php if(isset($park['status']) && $park['status'] === 'Unavailable') { echo 'style="pointer-events: none; opacity: 0.5;"'; } ?>>
         <section id="searchResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none; ">
             <h3 id="searchHeader" class="mb-3"></h3>
-            <div id="searchResultsContainer" class="row row-cols-1 row-cols-md-3 g-3"></div>
+            <div id="searchResultsContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3"></div>
         </section>
 
         <section id="filterResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none;"></section>

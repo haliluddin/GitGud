@@ -64,7 +64,7 @@ if (isset($_GET['park_id']) && isset($_GET['category'])) {
     
     $numResults = count($results);
     echo '<h3 id="filterHeader" class="mb-3">We found ' . $numResults . ' result' . ($numResults !== 1 ? 's' : '') . ' for "<strong>' . htmlspecialchars($category) . '</strong>"</h3>';
-    echo '<div id="filterResultsContainer" class="row row-cols-1 row-cols-md-3 g-3">';
+    echo '<div id="filterResultsContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">';
     
     foreach ($results as $stall) {
         if (!$parkIsOpen) {
