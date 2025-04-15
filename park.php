@@ -1,62 +1,62 @@
 <?php 
-include_once 'links.php'; 
-include_once 'header.php';
-require_once __DIR__ . '/classes/encdec.class.php';
-require_once __DIR__ . '/classes/park.class.php';
+    include_once 'links.php'; 
+    include_once 'header.php';
+    require_once __DIR__ . '/classes/encdec.class.php';
+    require_once __DIR__ . '/classes/park.class.php';
 
-$popularStalls = $parkObj->getPopularStalls($park_id);
-$promoStalls   = $parkObj->getPromoStalls($park_id);
-$newProdStalls = $parkObj->getNewProductStalls($park_id);
-$allStalls     = $parkObj->getStalls($park_id);
+    $popularStalls = $parkObj->getPopularStalls($park_id);
+    $promoStalls   = $parkObj->getPromoStalls($park_id);
+    $newProdStalls = $parkObj->getNewProductStalls($park_id);
+    $allStalls     = $parkObj->getStalls($park_id);
 
-$popularIds = array_column($popularStalls, 'id');
-$promoIds   = array_column($promoStalls, 'id');
-$newProdIds = array_column($newProdStalls, 'id');
+    $popularIds = array_column($popularStalls, 'id');
+    $promoIds   = array_column($promoStalls, 'id');
+    $newProdIds = array_column($newProdStalls, 'id');
 
-date_default_timezone_set('Asia/Manila'); 
-$currentDay = date('l'); 
-$currentTime = date('H:i');
+    date_default_timezone_set('Asia/Manila'); 
+    $currentDay = date('l'); 
+    $currentTime = date('H:i');
 
-$park = $parkObj->getPark($park_id); 
-$parkOperatingHours = [];
-if (!empty($park['operating_hours'])) {
-    $parkOperatingHours = explode('; ', $park['operating_hours']);
-}
+    $park = $parkObj->getPark($park_id); 
+    $parkOperatingHours = [];
+    if (!empty($park['operating_hours'])) {
+        $parkOperatingHours = explode('; ', $park['operating_hours']);
+    }
 
-$parkIsOpen = false;
-foreach ($parkOperatingHours as $hours) {
-    if (strpos($hours, '<br>') !== false) {
-        list($days, $timeRange) = explode('<br>', $hours);
-        $daysArray = array_map('trim', explode(',', $days));
-        if (in_array($currentDay, $daysArray)) {
-            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-            $openTime24 = date('H:i', strtotime($openTime));
-            $closeTime24 = date('H:i', strtotime($closeTime));
-            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                $parkIsOpen = true;
-                break;
+    $parkIsOpen = false;
+    foreach ($parkOperatingHours as $hours) {
+        if (strpos($hours, '<br>') !== false) {
+            list($days, $timeRange) = explode('<br>', $hours);
+            $daysArray = array_map('trim', explode(',', $days));
+            if (in_array($currentDay, $daysArray)) {
+                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                $openTime24 = date('H:i', strtotime($openTime));
+                $closeTime24 = date('H:i', strtotime($closeTime));
+                if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                    $parkIsOpen = true;
+                    break;
+                }
             }
         }
     }
-}
 
-function getNextOpening($operatingHoursArray) {
-    if (!empty($operatingHoursArray)) {
-        $first = $operatingHoursArray[0];
-        if (strpos($first, '<br>') !== false) {
-            list($days, $timeRange) = explode('<br>', $first);
-            $daysArray = array_map('trim', explode(',', $days));
-            $day = !empty($daysArray) ? $daysArray[0] : 'Unknown';
-            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-            return $day . ' ' . date('g:i A', strtotime($openTime));
+    function getNextOpening($operatingHoursArray) {
+        if (!empty($operatingHoursArray)) {
+            $first = $operatingHoursArray[0];
+            if (strpos($first, '<br>') !== false) {
+                list($days, $timeRange) = explode('<br>', $first);
+                $daysArray = array_map('trim', explode(',', $days));
+                $day = !empty($daysArray) ? $daysArray[0] : 'Unknown';
+                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                return $day . ' ' . date('g:i A', strtotime($openTime));
+            }
         }
+        return "N/A";
     }
-    return "N/A";
-}
 
-$parkNextOpening = getNextOpening($parkOperatingHours);
+    $parkNextOpening = getNextOpening($parkOperatingHours);
 ?>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     main{
         padding: 20px 120px;
@@ -73,12 +73,11 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
         outline: none;
     }
 </style>
-<main>
-
+<main class="hp-tm">
     <form action="" method="post" class="py-2 px-4 border rounded-2 search d-flex align-items-center bg-white mb-3">
         <i class="fas fa-search fa-lg text-muted me-1"></i>
         <input type="text" id="searchInput" placeholder="Search Food Stall" autocomplete="off" class="search-input border-0">
-        <span class="text-muted small">GITGUD</span>
+        <span class="text-muted small search-tm">GITGUD</span>
     </form>
 
     <section class="bg-white border rounded-2 px-5 py-4 mb-3">
@@ -160,7 +159,7 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
                         <?php foreach ($popularStalls as $stall) { ?>
                             <a href="stall.php?id=<?= urlencode(encrypt($stall['id'])) ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
                                 <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
-                                <div class="p-3" style="width:400px;">
+                                <div class="p-3 badge-tm" style="width:400px;">
                                     <div class="d-flex gap-2 align-items-center">
                                         <?php 
                                             $stall_categories = explode(',', $stall['stall_categories']); 
@@ -204,7 +203,7 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
                         <?php foreach ($promoStalls as $stall) { ?>
                             <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
                                 <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
-                                <div class="p-3" style="width:400px;">
+                                <div class="p-3 badge-tm" style="width:400px;">
                                     <div class="d-flex gap-2 align-items-center">
                                         <?php 
                                             $stall_categories = explode(',', $stall['stall_categories']); 
@@ -248,7 +247,7 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
                         <?php foreach ($newProdStalls as $stall) { ?>
                             <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="text-decoration-none bg-white d-flex align-items-center border rounded-2 position-relative">
                                 <img src="<?= $stall['logo'] ?>" class="h-100 rounded-start-2" width="150px">
-                                <div class="p-3" style="width:400px;">
+                                <div class="p-3 badge-tm" style="width:400px;">
                                     <div class="d-flex gap-2 align-items-center">
                                         <?php 
                                             $stall_categories = explode(',', $stall['stall_categories']); 
@@ -283,7 +282,7 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
         <?php } ?>
 
         <section class="bg-white border rounded-2 px-5 py-4 m-0">
-            <div class="mb-3 d-flex justify-content-between align-items-center">
+            <div class="mb-3 d-flex justify-content-between align-items-center allfs-tm">
                 <h3 class="m-0 p-0">All Food Stalls</h3>
                 <div class="oc"> 
                     <button id="openBtn" class="btn btn-outline-secondary">Open</button>
@@ -293,7 +292,7 @@ $parkNextOpening = getNextOpening($parkOperatingHours);
 
             </div>
             
-            <div id="stallsContainer" class="row row-cols-1 row-cols-md-3 g-3">
+            <div id="stallsContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
                 <?php foreach ($allStalls as $stall) { 
                     if (!$parkIsOpen) {
                         $isOpen = false;

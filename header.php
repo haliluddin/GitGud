@@ -60,7 +60,7 @@ if (isset($park_id))
     $allStalls = $parkObj->getStalls($park_id);
 
 ?>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     .nav a{
         text-decoration: none;
@@ -85,45 +85,46 @@ if (isset($park_id))
         border-radius: 5px;
     }
 </style>
-<div class="d-flex justify-content-between align-items-center border-bottom" style="padding: 15px 120px;">
-    <?php if (isset($park_name)): ?>
-        <a href="index.php"><img src="assets/images/logo.png" width="150"></a>
+<div class="border-bottom main-head" style="padding: 15px 120px;">
+    <div class="d-flex justify-content-between align-items-center">
+        <a href="index.php"><img src="assets/images/logo.png" width="150" class="mh-logo"></a>
         <div class="d-flex gap-2 align-items-center parkhead" onclick="window.location.href='park.php'">
             <i class="fa-solid fa-location-crosshairs"></i>
             <h6 class="m-0"><?= htmlspecialchars($park_name) ?></h6>
         </div>
-    <?php else: ?>
-        <a href="index.php"><img src="assets/images/logo.png" width="150"></a>
-        <div class="d-flex gap-2 align-items-center">
-            <i class="fa-solid"></i>
-        </div>
-    <?php endif; ?>
-    <div class="d-flex gap-3 align-items-center nav">
-        <?php if ($user): ?>
-            <a href="cart.php" class="rounded-5 cbu"><i class="fa-solid fa-cart-shopping"></i></a>
-            <a href="notification.php" class="rounded-5 cbu"><i class="fa-solid fa-bell"></i></a>
-            <div class="dropdown">
-                <a href="javascript:void(0)" onclick="toggleDropdown()" class="d-flex gap-2 align-items-center">
-                    <img height="40" width="40" class="rounded-5" src="<?php echo $user['profile_img'] ?? 'assets/images/profile.jpg'; ?>" alt="Profile Image"> 
-                    <i class="fa-solid fa-chevron-down text-muted"></i>
-                </a>
-                <div class="dropdown-content" id="dropdownMenu">
-                    <?php foreach ($nav_links as $link => $data): ?>
-                        <a href="<?php echo $link; ?>">
-                            <i class="<?php echo $data['icon']; ?> me-1"></i> <?php echo $data['label']; ?>
-                        </a>
-                    <?php endforeach; ?>
-                    <a href="./logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+        <div class="d-flex gap-3 align-items-center nav">
+            <?php if ($user): ?>
+                <a href="cart.php" class="rounded-5 cbu"><i class="fa-solid fa-cart-shopping"></i></a>
+                <a href="notification.php" class="rounded-5 cbu"><i class="fa-solid fa-bell"></i></a>
+                <div class="dropdown">
+                    <a href="javascript:void(0)" onclick="toggleDropdown()" class="d-flex gap-2 align-items-center pro-tm">
+                        <img height="40" width="40" class="rounded-5" src="<?php echo $user['profile_img'] ?? 'assets/images/profile.jpg'; ?>" alt="Profile Image"> 
+                        <i class="fa-solid fa-chevron-down text-muted"></i>
+                    </a>
+                    <div class="dropdown-content" id="dropdownMenu">
+                        <?php foreach ($nav_links as $link => $data): ?>
+                            <a href="<?php echo $link; ?>">
+                                <i class="<?php echo $data['icon']; ?> me-1"></i> <?php echo $data['label']; ?>
+                            </a>
+                        <?php endforeach; ?>
+                        <a href="./logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+                    </div>
                 </div>
-            </div>
-        <?php else: ?>
-            <button onclick="window.location.href='signin.php';" class="rounded-3 bg-white py-1 px-3 inupbtn">Sign in</button>
-            <button onclick="window.location.href='signup.php';" class="rounded-3 py-1 px-3 text-white border-0 inupbtn" style="background: #CD5C08;">Sign Up</button>
-        <?php endif; ?>
+            <?php else: ?>
+                <button onclick="window.location.href='signin.php';" class="rounded-3 bg-white py-1 px-3 inupbtn">Sign in</button>
+                <button onclick="window.location.href='signup.php';" class="rounded-3 py-1 px-3 text-white border-0 inupbtn" style="background: #CD5C08;">Sign Up</button>
+            <?php endif; ?>
+        </div>
     </div>
+    <div class="parkhead-tm" onclick="window.location.href='park.php'">
+        <div class="d-flex gap-1 align-items-center justify-content-center mt-3">
+            <i class="fa-solid fa-location-crosshairs"></i>
+            <h6 class="m-0"><?= htmlspecialchars($park_name) ?></h6>
+        </div>
+    </div>
+    
 </div>
 
-<!-- Stall Selection Modal (for admin only) -->
 <div class="modal fade bd-example-modal-lg" id="stallSelectModal" tabindex="-1" role="dialog" aria-labelledby="stallSelectModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -131,7 +132,6 @@ if (isset($park_id))
                 <h5 class="modal-title">Select a Stall</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <!-- Changed container id from stallsContainer to stallsModalContainer -->
             <div id="stallsModalContainer" class="modal-body">
                 <div class="row row-cols-1 row-cols-md-3 g-3">
                     <?php if(isset($allStalls) && !empty($allStalls)): ?>

@@ -1,15 +1,17 @@
 @media (max-width: 2560px) {
-    .lhuser{
-        display: none;
+    .lhuser, .parkhead-tm{
+        display: none !important; 
     }
 }
 @media (max-width: 1024px) {
-    .lhuser{
-        display: none;
+    .lhuser, .parkhead-tm{
+        display: none !important;
     }
-
     .bottom, .first, .second, .third{
         padding: 0 30px;
+    }
+    .main-head, main{
+        padding: 15px 30px !important;
     }
     .img-tm, .second .secondinside img{
         height: 400px;
@@ -24,17 +26,28 @@
 }
 
 @media (max-width: 768px) {
-    .inupbtn, .img-tm, .second .secondinside img, .fixed-image{
+    .inupbtn, .img-tm, .second .secondinside img, .fixed-image, .parkhead{
         display: none !important;
     }
-    .lhuser{
-        display: block;
+    .lhuser, .parkhead-tm{
+        display: block !important;
     }
     .bottom{
         padding: 0 20px;
     }
-    .bottom img{
-        width: 100px;
+    .bottom img, .mh-logo{
+        width: 110px;
+    }
+    .cbu, .pro-tm img{
+        height: 30px !important;
+        width: 30px !important;
+        font-size: 13px !important;
+    }
+    .nav{
+        gap: 10px !important;
+    }
+    .main-head, main{
+        padding: 15px !important;
     }
     .firstinside div, .second .secondinside div{
         width: 100%;
@@ -57,7 +70,6 @@
     .btns-group, .btn-group{
         padding: 20px 0 !important;
     }
-
     .main-pp{
         display: block !important;
         height: auto !important;
@@ -65,6 +77,15 @@
     .penappleft, .penappright{
         width: 100% !important;
         padding: 30px !important;
+    }
+    .parkhead-tm{
+        text-align: center;  
+    }
+    .hp-tm section{
+        padding: 20px !important;
+    }
+    .badge-tm{
+        width: 300px !important;
     }
 }
 @media (max-width: 426px) {
@@ -74,6 +95,18 @@
     .progressbar{
         max-width: 100% !important;
     }
+    .search-tm{
+        display: none;
+    }
+    .allfs-tm {
+        display: block !important;
+    }
+    .allfs-tm .oc{
+        gap: 5px;
+        margin-top: 10px;
+        text-align: left;
+    }
+
 }
 
 @media (min-width: 992px) and (max-width: 1024px) {
@@ -81,5 +114,6 @@
         flex: 0 0 33.33333%;
         max-width: 33.33333%;
     }
+
 }
     
