@@ -47,6 +47,9 @@
     .salsec-tm{
         width: 30% !important;
     }
+    .offcanvas{
+        width: 55% !important;
+    }
 }
 
 @media (max-width: 768px) {
@@ -167,6 +170,9 @@
         flex-wrap: wrap;
         text-align: center;
     }
+    .offcanvas{
+        width: 60% !important;
+    }
 }
 @media (max-width: 426px) {
     .prac{
@@ -275,6 +281,9 @@
    .nav-main.bull{
         padding: 0 !important;
     } 
+    .offcanvas{
+        width: 100% !important;
+    }
 }
 
 @media (min-width: 992px) and (max-width: 1024px) {

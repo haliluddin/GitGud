@@ -68,9 +68,9 @@ if (isset($_POST['report_update'])) {
     exit();
 }
 ?>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    main {
+    .nav-main {
         padding: 20px 120px;
     }
     .btn {
@@ -128,7 +128,7 @@ if (isset($_POST['report_update'])) {
     }
 </style>
 
-<main>
+<main class="nav-main">
     <div class="d-flex mb-3 align-items-center justify-content-end gap-3">
         <button class="addpro flex-shrink-0" type="button" data-bs-toggle="modal" data-bs-target="#invitestall">+ Add Stall</button>
         <i class="fa-solid fa-circle-user fs-1 hover" data-bs-toggle="offcanvas" data-bs-target="#foodparkbranch" aria-controls="foodparkbranch" style="cursor: pointer;"></i>
@@ -460,7 +460,7 @@ if (isset($_POST['report_update'])) {
                   </div>';
         } else {
     ?>
-    <div class="row row-cols-1 row-cols-md-3 g-3">
+    <div class="row row-cols-1 row-cols-md-2  row-cols-lg-3 g-3">
         <?php
             date_default_timezone_set('Asia/Manila'); 
             $currentDay = date('l'); 
