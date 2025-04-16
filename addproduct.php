@@ -139,7 +139,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ob_end_flush();
 ?>
 <style>
-    .nav-main { padding: 40px 200px; }
+    .nav-main .bull{ padding: 40px 200px; }
     .getcg td { padding: 20px; border-bottom: 1px solid #ddd; line-height: 1.5; }
     .getcg .st { vertical-align: top; }
     .addchogro { text-decoration: none; color: #CD5C08; margin-top: 10px; }
@@ -154,7 +154,7 @@ ob_end_flush();
     <p class="m-0">Provide all the necessary information in the fields below to successfully add a new product to your inventory.</p>
     <a href="">Terms and Conditions <i class="fa-solid fa-arrow-right"></i></a>
 </div>
-<main class="nav-main">
+<main class="nav-main bull">
     <form class="productcon" method="post" enctype="multipart/form-data">
         <div class="proimg-tm">
             <div>

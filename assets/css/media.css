@@ -266,7 +266,7 @@
     .inst, .addpeso, .minuspeso{
         width: 100% !important;
     }
-   .nav-main{
+   .nav-main.bull{
         padding: 0 !important;
     }
 
