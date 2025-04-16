@@ -1,16 +1,19 @@
 @media (max-width: 2560px) {
-    .lhuser, .parkhead-tm{
+    .lhuser, .parkhead-tm, .stall-info-tm{
         display: none !important; 
     }
 }
 @media (max-width: 1024px) {
-    .lhuser, .parkhead-tm{
+    .lhuser, .parkhead-tm, .stall-info-tm{
         display: none !important;
     }
-    .bottom, .first, .second, .third{
+    .bottom, .first, .second, .third, .pagefilter, section{
         padding: 0 30px;
     }
-    .main-head, main{
+    .pageinfo{
+        padding: 20px 30px;
+    }
+    .main-head, .hp-tm{
         padding: 15px 30px !important;
     }
     .img-tm, .second .secondinside img{
@@ -23,14 +26,22 @@
     .main-pr .fixed-image{
         width: 40%;
     }
+    .menumodal .modal-dialog, #moreinfoproduct .modal-dialog{
+        max-width: 50%; 
+      }
 }
 
 @media (max-width: 768px) {
-    .inupbtn, .img-tm, .second .secondinside img, .fixed-image, .parkhead{
+    .inupbtn, .img-tm, .second .secondinside img, .fixed-image, .parkhead, .stall-info, .stall-action{
         display: none !important;
     }
     .lhuser, .parkhead-tm{
         display: block !important;
+    }
+    .stall-info-tm{
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
     }
     .bottom{
         padding: 0 20px;
@@ -46,8 +57,11 @@
     .nav{
         gap: 10px !important;
     }
-    .main-head, main{
+    .main-head, .hp-tm, .pageinfo{
         padding: 15px !important;
+    }
+    .pagefilter, section{
+        padding: 0 15px;
     }
     .firstinside div, .second .secondinside div{
         width: 100%;
@@ -87,6 +101,18 @@
     .badge-tm{
         width: 300px !important;
     }
+    .pagelogo img{
+        width: 150px;
+        height: 150px;
+    }
+    .info-tm{
+        display: flex;
+        align-items: center;
+        gap: 25px;
+    }
+    .menumodal .modal-dialog, #moreinfoproduct .modal-dialog{
+        max-width: 70%; 
+    }
 }
 @media (max-width: 426px) {
     .oh, .och{
@@ -106,13 +132,31 @@
         margin-top: 10px;
         text-align: left;
     }
-
+    .pageinfo h5{
+        font-size: 25px !important;
+    }
+    .info-tm{
+        display: block;
+    }
+    .pagelike{
+        padding: 5px 20px;
+    }
+    .other-tm{
+        gap: 20px !important;
+    }
+    .conopepay{
+        padding: 5px 0;
+    }
+    .menumodal .modal-dialog, #moreinfoproduct .modal-dialog{
+        max-width: 100%; 
+    }
 }
+
 
 @media (min-width: 992px) and (max-width: 1024px) {
     .row.row-cols-lg-4 > * {
-        flex: 0 0 33.33333%;
-        max-width: 33.33333%;
+        flex: 0 0 33.33333% !important;
+        max-width: 33.33333% !important;
     }
 
 }

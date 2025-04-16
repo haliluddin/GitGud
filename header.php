@@ -110,10 +110,13 @@ if (isset($park_id))
                         <a href="./logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
                     </div>
                 </div>
-            <?php else: ?>
-                <button onclick="window.location.href='signin.php';" class="rounded-3 bg-white py-1 px-3 inupbtn">Sign in</button>
-                <button onclick="window.location.href='signup.php';" class="rounded-3 py-1 px-3 text-white border-0 inupbtn" style="background: #CD5C08;">Sign Up</button>
-            <?php endif; ?>
+                <?php else: ?>
+                    <div>
+                        <button onclick="window.location.href='signin.php';" class="rounded-3 bg-white py-1 px-3 inupbtn">Sign in</button>
+                        <button onclick="window.location.href='signup.php';" class="rounded-3 py-1 px-3 text-white border-0 inupbtn" style="background: #CD5C08;">Sign Up</button>
+                    </div>
+                    <i class="fa-solid fa-arrow-right-to-bracket lhuser" onclick="window.location.href='signin.php';"></i>
+                <?php endif; ?>
         </div>
     </div>
     <div class="parkhead-tm" onclick="window.location.href='park.php'">

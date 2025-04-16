@@ -58,7 +58,7 @@
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    main{
+    .hp-tm{
         padding: 20px 120px;
     }
     .btn.active {
