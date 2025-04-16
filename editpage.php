@@ -92,23 +92,23 @@
         exit;
     } 
 ?>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="assets/css/styles.css?v=<?php echo time(); ?>">
 <style>
-     main {
+     .nav-main {
         padding: 20px 120px;
     }
     .form-floating input, .form-floating textarea, .form-floating label::after, .logo, .add-schedule, .schedule-list{
         background-color: #F8F8F8 !important;
     }
 </style>
-<main>
+<main class="nav-main">
     <div class="d-flex justify-content-end">
         <button class="addpro mb-3 prev" onclick="window.location.href='<?= $redirectPage ?>';">
             <i class="fa-solid fa-chevron-left me-2"></i> Previous
         </button>
     </div>
-    <form action="" class="srform rounded-2 bg-white p-5" method="POST" enctype="multipart/form-data" id="editForm">
+    <form action="" class="ep srform rounded-2 bg-white p-5" method="POST" enctype="multipart/form-data" id="editForm">
         <div class="pagehead mb-4 border-bottom">
             <div>
                 <h4 class="fw-bold m-0">Edit Business Page</h4>
@@ -116,7 +116,7 @@
             </div>
             <p class="par mt-2">Update your page to ensure it has the latest and most accurate information about your business. This will help people find and connect with your business more effectively.</p>
         </div>
-        <div class="d-flex gap-3 align-items-center">
+        <div class="d-flex gap-3 align-items-center picdet-tm">
             <div class="logo px-4 py-5 text-center border flex-shrink-0" id="logoContainer" 
                 onclick="document.getElementById('stalllogo').click();" 
                 style="background-size: cover; background-position: center; <?= !empty($stalllogo) ? 'background-image: url(\'' . $stalllogo . '\');' : '' ?>">
@@ -150,7 +150,7 @@
                 }
             </script>
             
-            <div class="flex-grow-1 ms-4">
+            <div class="flex-grow-1">
                 <div class="form-floating mb-3">
                     <input type="text" class="form-control" style="color: black;" id="businessname" name="businessname" placeholder="Business Name" value="<?= $businessname ?>">
                     <label for="businessname">Business Name <span style="color: #CD5C08;">*</span></label>
@@ -400,6 +400,7 @@
             <button type="submit" class="btn btn-primary send px-5">SAVE EDIT</button>
         </div>
     </form>
+    <br><br><br><br>
 </main>
 
 <?php
