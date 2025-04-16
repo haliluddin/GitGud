@@ -10,6 +10,9 @@
     .bottom, .first, .second, .third, .pagefilter, section{
         padding: 0 30px;
     }
+    .nav-main{
+        padding: 20px 30px !important;
+    }
     .pageinfo{
         padding: 20px 30px;
     }
@@ -57,7 +60,7 @@
     .nav{
         gap: 10px !important;
     }
-    .main-head, .hp-tm, .pageinfo{
+    .main-head, .hp-tm, .pageinfo, .nav-main{
         padding: 15px !important;
     }
     .pagefilter, section{
@@ -113,6 +116,13 @@
     .menumodal .modal-dialog, #moreinfoproduct .modal-dialog{
         max-width: 70%; 
     }
+    .acc-tm{
+        display: block !important;
+    }
+    .acc-tm div{
+        width: 100% !important;
+        margin-bottom: 20px;
+    }
 }
 @media (max-width: 426px) {
     .oh, .och{
@@ -149,6 +159,15 @@
     }
     .menumodal .modal-dialog, #moreinfoproduct .modal-dialog{
         max-width: 100%; 
+    }
+    .acc-tm div .input-group div{
+        display: block !important;
+    }
+    .acc-tm div .input-group label{
+        width: 100% !important;
+    }
+    .nav-main form{
+        padding: 20px !important;
     }
 }
 

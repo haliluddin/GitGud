@@ -104,8 +104,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    main {
+    .nav-main {
         padding: 20px 120px;
     }
     .profileImage {
@@ -120,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         font-size: 0.9rem;
     }
 </style>
-<main>
+<main class="nav-main">
     <form id="accountForm" class="bg-white rounded-2 p-5" method="POST" enctype="multipart/form-data">
         <div class="dropdown position-relative">
             <i class="fa-solid fa-gear rename text-dark fs-5" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>
@@ -129,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteaccount">Delete Account</a></li>
             </ul>
         </div>
-        <div class="d-flex ">
+        <div class="d-flex acc-tm">
             <div class="d-flex justify-content-center" style="width: 40%;">
                 <div class="text-center">
                     <img src="<?= htmlspecialchars(!empty($user['profile_img']) ? $user['profile_img'] : 'default_profile_image.png'); ?>" class="profileImage" id="profilePreview">
@@ -189,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="d-flex align-items-center flex-grow-1">
                         <label for="phone" class="m-0 text-muted" style="width: 250px;">Phone Number</label>
                         <div class="w-100">
-                            <div class="input-group m-0">
+                            <div class="input-group m-0" style="display: flex !important;">
                                 <span class="input-group-text rounded-0">+63</span>
                                 <input type="tel" name="phone" id="phone" class="form-control phone-input rounded-0" value="<?= htmlspecialchars($user['phone']); ?>" maxlength="10" placeholder="Enter your phone number" required>
                             </div>
@@ -210,6 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
         <input type="hidden" name="current_password" id="current_password">
     </form>
+    <br><br><br><br><br>
 </main>
 <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -232,6 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </form>
     </div>
 </div>
+
 <?php include_once 'footer.php'; ?>
 <script>
 document.getElementById('profile_img').addEventListener('change', function(e) {
