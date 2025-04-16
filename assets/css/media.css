@@ -66,6 +66,9 @@
     .pagefilter, section{
         padding: 0 15px;
     }
+    .indicator{
+        padding: 0 15px !important;
+    }
     .firstinside div, .second .secondinside div{
         width: 100%;
     }
@@ -123,6 +126,13 @@
         width: 100% !important;
         margin-bottom: 20px;
     }
+    .orderbtns button{
+        width: 120px !important;
+        font-size: small;
+    }
+    .fw-tm div div{
+        padding: 5px 10px !important;
+    }
 }
 @media (max-width: 426px) {
     .oh, .och{
@@ -178,6 +188,14 @@
     .fw-tm div{
         gap: 8px !important;
     }
+    .orderbtns, .orderbtns button{
+        width: 100% !important;
+        padding: 8px 20px !important;
+    }
+    .orderbtns{
+        margin-bottom: 10px !important;
+    }
+
 }
 
 @media (min-width: 992px) and (max-width: 1024px) {

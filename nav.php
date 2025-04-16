@@ -24,12 +24,14 @@
         justify-content: center;
         gap: 50px;
         padding: 0 120px;
+        overflow-y: auto;
     }
     .indicator a {
         color: #bbbbbb;
         padding: 18px 5px;
         font-size: 15px;
         text-decoration: none;
+        white-space: nowrap;
     }
     .indicator a:hover {
         color: black;

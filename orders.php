@@ -45,7 +45,7 @@ $statusMapping = [
 
 ?>
 <style>
-    main{
+    .nav-main{
         padding: 20px 120px;
     }
     .orderbtns button{
@@ -66,9 +66,9 @@ $statusMapping = [
         background-color: gray;
     }
 </style>
-<main>
+<main class="nav-main">
     <!-- Navigation -->
-    <div class="nav-container d-flex gap-3 my-2">
+    <div class="nav-container d-flex gap-3 my-2 flex-wrap">
         <a href="#all" class="nav-link" data-target="all">All</a>
         <a href="#pendingpayment" class="nav-link" data-target="pendingpayment">Pending Payment</a>
         <a href="#preparing" class="nav-link" data-target="preparing">Preparing</a>
@@ -93,9 +93,9 @@ $statusMapping = [
                                     (($status == 'Ready') ? "READY FOR PICKUP" :
                                     (($status == 'Completed') ? "COMPLETED" : "CANCELED")));
                     ?>
-                    <div class="border rounded-2 bg-white mb-3 d-flex">
+                    <div class="border rounded-2 bg-white mb-3 d-flex fw-tm">
                         <div class="flex-grow-1 border-end">
-                            <div class="d-flex justify-content-between align-items-center border-bottom py-3 px-5">
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-3 px-5 fw-tm">
                                 <div class="d-flex gap-3 align-items-center">
                                     <?php if (!empty($orderGroup['queue_number'])): ?>
                                         <span class="prequeue fw-bold text-white d-flex align-items-center justify-content-center">
@@ -113,7 +113,7 @@ $statusMapping = [
                             </div>
                             <?php 
                             foreach ($orderGroup['items'] as $item) { ?>
-                                <div class="d-flex justify-content-between border-bottom py-2 px-5">
+                                <div class="d-flex justify-content-between border-bottom py-2 px-5 fw-tm">
                                     <div class="d-flex gap-3 align-items-center">
                                         <img src="<?php echo htmlspecialchars($item['product_image']); ?>" width="85px" height="85px" class="border rounded-2">
                                         <div>
@@ -132,7 +132,7 @@ $statusMapping = [
                                     </div>
                                 </div>
                             <?php } ?>
-                            <div class="d-flex justify-content-between py-2 px-5">
+                            <div class="d-flex justify-content-between py-2 px-5 fw-tm">
                                 <div class="d-flex gap-3 align-items-center text-muted small">
                                     <span>Payment Method: <?php echo $item['payment_method']; ?></span>
                                     <span class="dot text-muted"></span>
@@ -159,7 +159,6 @@ $statusMapping = [
                             <?php elseif($status == 'Canceled'): ?>
                                 <span class="text-muted text-center">Reason<br>(<?php echo htmlspecialchars($orderGroup['cancellation_reason']); ?>)</span>
                             <?php endif; ?>
-
                         </div>
                     </div>
                     <?php 
@@ -182,9 +181,9 @@ $statusMapping = [
                                  (($status == 'Ready') ? "READY FOR PICKUP" :
                                  (($status == 'Completed') ? "COMPLETED" : "CANCELED")));
                 ?>
-                <div class="border rounded-2 bg-white mb-3 d-flex">
+                <div class="border rounded-2 bg-white mb-3 d-flex fw-tm">
                     <div class="flex-grow-1 border-end">
-                        <div class="d-flex justify-content-between align-items-center border-bottom py-3 px-5">
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-3 px-5 fw-tm">
                             <div class="d-flex gap-3 align-items-center">
                                 <?php if (!empty($orderGroup['queue_number'])): ?>
                                     <span class="prequeue fw-bold text-white d-flex align-items-center justify-content-center">
@@ -203,7 +202,7 @@ $statusMapping = [
                         </div>
                         <?php 
                         foreach ($orderGroup['items'] as $item) { ?>
-                            <div class="d-flex justify-content-between border-bottom py-2 px-5">
+                            <div class="d-flex justify-content-between border-bottom py-2 px-5 fw-tm">
                                 <div class="d-flex gap-3 align-items-center">
                                     <img src="<?php echo htmlspecialchars($item['product_image']); ?>" width="85px" height="85px" class="border rounded-2">
                                     <div>
@@ -222,7 +221,7 @@ $statusMapping = [
                                 </div>
                             </div>
                         <?php } ?>
-                        <div class="d-flex justify-content-between py-2 px-5">
+                        <div class="d-flex justify-content-between py-2 px-5 fw-tm">
                             <div class="d-flex gap-3 align-items-center text-muted small">
                                 <span>Payment Method: <?php echo $item['payment_method']; ?></span>
                                 <span class="dot text-muted"></span>
