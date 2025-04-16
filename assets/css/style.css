@@ -874,6 +874,7 @@ h6{margin:0;}
 .variation-btn-group, .choice-group-btn-group{
   display: flex;
   gap: 5px;
+  flex-wrap: wrap;
 }
 .variation-btn.addrem, .choice-group-btn.addrem {
   border-radius: 50px;
@@ -897,7 +898,7 @@ h6{margin:0;}
 
 .prohelp{
   border-bottom: 1px #ddd solid;
-  padding: 20px 0;
+  padding: 20px 15px;
   font-size: 17.5px;
   background-color: #f4f4f4;
 }

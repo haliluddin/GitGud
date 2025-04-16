@@ -159,8 +159,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ob_end_flush();
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    main { padding: 40px 200px; }
+    .nav-main { padding: 40px 200px; }
     .getcg td { padding: 20px; border-bottom: 1px solid #ddd; line-height: 1.5; }
     .addchogro { text-decoration: none; color: #CD5C08; margin-top: 10px; }
     .addchogro:hover { color: black; }
@@ -174,25 +175,29 @@ ob_end_flush();
     <p class="m-0">Edit the product details below to update your product in the inventory.</p>
     <a href="">Terms and Conditions <i class="fa-solid fa-arrow-right"></i></a>
 </div>
-<main>
+<main class="nav-main">
     <form class="productcon" method="post" enctype="multipart/form-data">
-        <div>
-            <label for="productimage" class="mb-2">Product Image</label>
-            <div class="productimage text-center py-5 px-3 mb-3" id="productimageContainer" onclick="document.getElementById('productimage').click();">
-                <div id="placeholderContent">
-                    <?php if (!empty($imagePath)): ?>
-                        <img src="<?= $imagePath ?>?t=<?= time() ?>" alt="Product Image" style="max-width:100%;">
-                    <?php else: ?>
-                        <i class="fa-solid fa-arrow-up-long mb-3"></i>
-                        <p class="small m-0">Select an image to upload. Or drag the image file here.</p>
-                    <?php endif; ?>
+        <div class="proimg-tm">
+            <div>
+                <label for="productimage" class="mb-2">Product Image</label>
+                <div class="productimage text-center py-5 px-3 mb-3" id="productimageContainer" onclick="document.getElementById('productimage').click();">
+                    <div id="placeholderContent">
+                        <?php if (!empty($imagePath)): ?>
+                            <img src="<?= $imagePath ?>?t=<?= time() ?>" alt="Product Image" style="max-width:100%;">
+                        <?php else: ?>
+                            <i class="fa-solid fa-arrow-up-long mb-3"></i>
+                            <p class="small m-0">Select an image to upload. Or drag the image file here.</p>
+                        <?php endif; ?>
+                    </div>
+                    <input type="file" id="productimage" name="productimage" accept="image/jpeg, image/png, image/jpg" style="display:none;" onchange="displayProductImage(event)">
                 </div>
-                <input type="file" id="productimage" name="productimage" accept="image/jpeg, image/png, image/jpg" style="display:none;" onchange="displayProductImage(event)">
             </div>
-            <p class="text-muted pirem m-0 mb-3">
-                Recommended size is 160x151. Image must be less than 500KB. Only JPG, JPEG, and PNG formats are allowed.
-            </p>
-            <span class="errormessage"><?php echo $imagePathErr; ?></span>
+            <div>
+                <p class="text-muted pirem m-0 mb-3">
+                    Recommended size is 160x151. Image must be less than 500KB. Only JPG, JPEG, and PNG formats are allowed.
+                </p>
+                <span class="errormessage"><?php echo $imagePathErr; ?></span>
+            </div>
             <input type="hidden" name="tempImagePath" id="tempImagePath" value="<?php echo htmlspecialchars($imagePath); ?>">
             <script>
                 window.addEventListener('load', function() {
@@ -458,7 +463,7 @@ ob_end_flush();
                     });
                 }
             </script>
-            <div class="d-flex gap-3">
+            <div class="d-flex gap-3 flex-wrap">
                 <div class="input-group w-50 m-0 mb-4">
                     <label for="discount">Discount (Optional)</label>
                     <input type="number" name="discount" id="discount" placeholder="Enter discount" step="0.01" value="<?php echo htmlspecialchars($discount); ?>"/>
