@@ -169,8 +169,16 @@
     .nav-main form{
         padding: 20px !important;
     }
+    .fw-tm{
+        display: block !important;
+    }
+    .fw-tm div:first-child{
+        margin-bottom: 10px;
+    }
+    .fw-tm div{
+        gap: 8px !important;
+    }
 }
-
 
 @media (min-width: 992px) and (max-width: 1024px) {
     .row.row-cols-lg-4 > * {

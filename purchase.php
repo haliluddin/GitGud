@@ -37,13 +37,14 @@ $statusMapping = [
     'Canceled'  => 'canceled'
 ];
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    main { padding: 20px 120px; }
+    .nav-main { padding: 20px 120px; }
 </style>
 <script> const userId = <?php echo $user['user_session']; ?>; </script>
-<main>
+<main class="nav-main">
     <!-- Navigation -->
-    <div class="nav-container d-flex gap-3 my-2">
+    <div class="nav-container d-flex gap-3 my-2 flex-wrap">
         <a href="#all" class="nav-link" data-target="all">All</a>
         <a href="#topay" class="nav-link" data-target="topay">To Pay</a>
         <a href="#preparing" class="nav-link" data-target="preparing">Preparing</a>
@@ -70,7 +71,7 @@ $statusMapping = [
                                     (($status == 'Completed') ? "COMPLETED" : "CANCELED")));
                     ?>
                     <div class="border py-3 px-4 rounded-2 bg-white mb-3">
-                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 fw-tm">
                             <div class="d-flex gap-3 align-items-center">
                                 <span class="fw-bold">ORDER ID: <?php echo $formattedOrderId; ?></span>
                                 <span class="dot text-muted"></span>
@@ -87,7 +88,7 @@ $statusMapping = [
                         </div>
                         <?php 
                         foreach ($orderGroup['items'] as $item) { ?>
-                            <div class="d-flex justify-content-between border-bottom py-2">
+                            <div class="d-flex justify-content-between border-bottom py-2 fw-tm">
                                 <div class="d-flex gap-3 align-items-center">
                                     <img src="<?php echo htmlspecialchars($item['product_image']); ?>" width="85px" height="85px" class="border rounded-2">
                                     <div>
@@ -106,7 +107,7 @@ $statusMapping = [
                                 </div>
                             </div>
                         <?php } ?>
-                        <div class="d-flex justify-content-between pt-2">
+                        <div class="d-flex justify-content-between pt-2 fw-tm">
                             <div class="d-flex gap-3 align-items-center text-muted small">
                                 <span>Payment Method: <?php echo $item['payment_method']; ?></span>
                                 <span class="dot text-muted"></span>
@@ -161,7 +162,7 @@ $statusMapping = [
                                  (($status == 'Completed') ? "COMPLETED" : "CANCELED")));
                 ?>
                 <div class="border py-3 px-4 rounded-2 bg-white mb-3">
-                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 fw-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <span class="fw-bold">ORDER ID: <?php echo $formattedOrderId; ?></span>
                             <span class="dot text-muted"></span>
@@ -178,7 +179,7 @@ $statusMapping = [
                     </div>
                     <?php 
                     foreach ($orderGroup['items'] as $item) { ?>
-                        <div class="d-flex justify-content-between border-bottom py-2">
+                        <div class="d-flex justify-content-between border-bottom py-2 fw-tm">
                             <div class="d-flex gap-3 align-items-center">
                                 <img src="<?php echo htmlspecialchars($item['product_image']); ?>" width="85px" height="85px" class="border rounded-2">
                                 <div>
@@ -197,7 +198,7 @@ $statusMapping = [
                             </div>
                         </div>
                     <?php } ?>
-                    <div class="d-flex justify-content-between pt-2">
+                    <div class="d-flex justify-content-between pt-2 fw-tm">
                         <div class="d-flex gap-3 align-items-center text-muted small">
                             <span>Payment Method: <?php echo $item['payment_method']; ?></span>
                             <span class="dot text-muted"></span>
