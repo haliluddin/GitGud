@@ -35,13 +35,13 @@
     $categories = $productObj->getCategories($stall_id);
 
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    main{ 
+    .nav-main{ 
         padding: 20px 120px;
     }
 </style>
-
-<main>
+<main class="nav-main">
     <div class="d-flex justify-content-end mb-3">
         <div class="dropdown">
             <button class="addpro dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">+ Add New</button>
@@ -136,27 +136,28 @@
 
                                     <div class="d-flex justify-content-between productdet rounded-2">
                                         <div class="d-flex gap-4 align-items-center proinf">
-                                            <div class="position-relative">
-                                                <img src="<?= htmlspecialchars($product['image']); ?>" alt="">
-                                                
-                                                <?php if ($noStock): ?>
-                                                    <div class="prostockstat bg-danger">NO STOCK</div>
-                                                <?php elseif ($lowStock): ?>
-                                                    <div class="prostockstat bg-warning">LOW STOCK</div>
-                                                <?php else: ?>
-                                                    <div class="prostockstat bg-success">IN STOCK</div>
-                                                <?php endif; ?>
-                                            </div>
-
                                             <div>
-                                                <div class="d-flex gap-3 m-0 small">
-                                                    <!-- <span><?= htmlspecialchars($product['code']); ?></span>
-                                                    <span>|</span> -->
-                                                    <span><?= htmlspecialchars($product['category_name']); ?></span>
+                                                <div class="position-relative">
+                                                    <img src="<?= htmlspecialchars($product['image']); ?>" alt="">
+                                                    
+                                                    <?php if ($noStock): ?>
+                                                        <div class="prostockstat bg-danger">NO STOCK</div>
+                                                    <?php elseif ($lowStock): ?>
+                                                        <div class="prostockstat bg-warning">LOW STOCK</div>
+                                                    <?php else: ?>
+                                                        <div class="prostockstat bg-success">IN STOCK</div>
+                                                    <?php endif; ?>
                                                 </div>
+                                                <div class="proaction d-flex gap-2 my-1 prac-tm text-center">
+                                                    <i class="fa-solid fa-box" onclick="window.location.href='stocks.php?id=<?= urlencode(encrypt($product['id'])) ?>';"></i>
+                                                    <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editproduct.php?id=<?= urlencode(encrypt($product['id'])) ?>';"></i>
+                                                    <i class="fa-solid fa-trash" data-bs-toggle="modal" data-bs-target="#deleteproduct" data-product-id="<?= $product['id']; ?>"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <span class="small"><?= htmlspecialchars($product['category_name']); ?></span>
                                                 <h5 class="fw-bold my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                                 <span class="small"><?= htmlspecialchars($product['description']); ?></span>
-                                                
                                                 <?php
                                                     $today = date('Y-m-d');
                                                     if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
@@ -168,12 +169,12 @@
                                                         $today >= $product['start_date'] && $today <= $product['end_date']) {
                                                         $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
                                                 ?>
-                                                        <div class="my-3">
+                                                        <div class="my-3 bp-tm">
                                                             <span class="proprice">₱<?= number_format($discountedPrice, 2); ?></span>
                                                             <span class="pricebefore small">₱<?= number_format($product['base_price'], 2); ?></span>
                                                         </div>
                                                 <?php } else { ?>
-                                                        <div class="my-3">
+                                                        <div class="my-3 bp-tm">
                                                             <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
                                                         </div>
                                                 <?php } ?>
@@ -185,7 +186,7 @@
                                                 <?php endif; ?>
                                             </div>
                                         </div>
-                                        <div class="proaction d-flex gap-2 mt-3">
+                                        <div class="proaction d-flex gap-2 mt-3 prac">
                                             <i class="fa-solid fa-box" onclick="window.location.href='stocks.php?id=<?= urlencode(encrypt($product['id'])) ?>';"></i>
                                             <i class="fa-solid fa-pen-to-square" onclick="window.location.href='editproduct.php?id=<?= urlencode(encrypt($product['id'])) ?>';"></i>
                                             <i class="fa-solid fa-trash" data-bs-toggle="modal" data-bs-target="#deleteproduct" data-product-id="<?= $product['id']; ?>"></i>

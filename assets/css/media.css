@@ -1,10 +1,10 @@
 @media (max-width: 2560px) {
-    .lhuser, .parkhead-tm, .stall-info-tm{
+    .lhuser, .parkhead-tm, .stall-info-tm, .prac-tm{
         display: none !important; 
     }
 }
 @media (max-width: 1024px) {
-    .lhuser, .parkhead-tm, .stall-info-tm{
+    .lhuser, .parkhead-tm, .stall-info-tm, .prac-tm{
         display: none !important;
     }
     .bottom, .first, .second, .third, .pagefilter, section{
@@ -31,11 +31,17 @@
     }
     .menumodal .modal-dialog, #moreinfoproduct .modal-dialog{
         max-width: 50%; 
+    }
+    .inventory {
+        display: block;
       }
+      .productdet:first-child{
+        margin-bottom: 10px;
+    }
 }
 
 @media (max-width: 768px) {
-    .inupbtn, .img-tm, .second .secondinside img, .fixed-image, .parkhead, .stall-info, .stall-action{
+    .inupbtn, .img-tm, .second .secondinside img, .fixed-image, .parkhead, .stall-info, .stall-action, .prac-tm{
         display: none !important;
     }
     .lhuser, .parkhead-tm{
@@ -135,8 +141,11 @@
     }
 }
 @media (max-width: 426px) {
-    .oh, .och{
-        display: block;
+    .prac{
+        display: none !important;
+    }
+    .oh, .och, .prac-tm{
+        display: block !important;
     }
     .progressbar{
         max-width: 100% !important;
@@ -195,6 +204,28 @@
     .orderbtns{
         margin-bottom: 10px !important;
     }
+    .proinf img{
+        width: 120px;
+        height: 120px;
+    }
+    .proaction i{
+        padding: 3px;
+        font-size: small;
+      }
+    .proaction{
+        margin-right: 10px;
+    }
+    .proinf{
+        gap: 10px !important;
+    }
+    .proinf h5, .proprice, .bp-tm{
+        font-size: 17px !important;
+        margin: 5px 0 !important;
+    }
+    .moreinfo{
+        padding: 5px;
+        font-size: small;        
+      }
 
 }
 
