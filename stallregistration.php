@@ -134,9 +134,10 @@
 
     } 
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="assets/css/styles.css?v=<?php echo time(); ?>">
 <style>
-    main {
+    .sr-tm {
         display: flex;
         height: calc(100vh - 65.61px); 
         overflow: hidden;
@@ -154,8 +155,9 @@
     .form-floating input, .form-floating textarea, .form-floating label::after, .logo, .add-schedule, .schedule-list{
         background-color: #F8F8F8 !important;
     }
+    
 </style>
-<main>
+<main class="sr-tm">
     <img src="assets/images/rightbg.jpg" class="fixed-image">
     <form action="" class="srform" method="POST" enctype="multipart/form-data">
         <div class="mb-4 border-bottom">
@@ -172,21 +174,21 @@
             </p>
         </div>
         <div class="d-flex justify-content-between align-items-center border rounded-2 py-2 px-3 mb-4" style="background-color: #F8F8F8;">
-            <div class="d-flex gap-4 align-items-center">
+            <div class="d-flex gap-4 align-items-center flex-wrap">
                 <img src="<?php echo $user['profile_img'] ?? 'assets/images/profile.jpg'; ?>" width="65" height="65" style="border-radius: 50%;">
                 <div>
                     <h4 class="fw-bold mb-1"><?php echo $user['full_name']; ?></h4>
-                    <div class="d-flex gap-2 text-muted align-items-center">
+                    <div class="d-flex gap-2 text-muted align-items-center flex-wrap">
                         <span><i class="fa-solid fa-envelope"></i> <?php echo $user['email']; ?></span>
                         <span class="dot"></span>
                         <span><i class="fa-solid fa-phone small"></i> +63<?php echo $user['phone']; ?></span>
                     </div>
                 </div>
             </div>
-            <i class="text-muted">Stall Owner</i>
+            <i class="text-muted dd-tm">Stall Owner</i>
         </div>
         
-        <div class="d-flex gap-3 align-items-center">
+        <div class="d-flex gap-3 align-items-center picdet-tm">
             <div class="logo px-4 py-5 text-center border flex-shrink-0" id="logoContainer" onclick="document.getElementById('stalllogo').click();" 
                 style="background-size: cover; background-position: center;">
                 <i class="fa-solid fa-arrow-up-from-bracket fs-3 p-2 mb-1"></i><br>
@@ -213,7 +215,7 @@
                 }
             </script>
             
-            <div class="flex-grow-1 ms-4">
+            <div class="flex-grow-1">
                 <div class="form-floating mb-3">
                     <input type="text" class="form-control" style="color: black;" id="businessname" name="businessname" placeholder="Business Name">
                     <label for="businessname">Business Name <span style="color: #CD5C08;">*</span></label>

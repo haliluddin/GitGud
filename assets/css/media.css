@@ -50,6 +50,9 @@
     .offcanvas{
         width: 55% !important;
     }
+    .srform {
+        padding: 20px 30px !important;
+    }
 }
 
 @media (max-width: 768px) {
@@ -104,6 +107,9 @@
         width: 100%;
         padding: 0 30px;
         margin-top: 10px;
+    }
+    .sr-tm .srform{
+        width: 100%;
     }
     .btns-group, .btn-group{
         padding: 20px 0 !important;
@@ -175,7 +181,7 @@
     }
 }
 @media (max-width: 426px) {
-    .prac{
+    .prac, .dd-tm{
         display: none !important;
     }
     .oh, .och, .prac-tm{
@@ -189,6 +195,9 @@
     }
     .allfs-tm {
         display: block !important;
+    }
+    .picdet-tm {
+        flex-wrap: wrap !important;
     }
     .allfs-tm .oc{
         gap: 5px;
@@ -284,6 +293,7 @@
     .offcanvas{
         width: 100% !important;
     }
+
 }
 
 @media (min-width: 992px) and (max-width: 1024px) {
