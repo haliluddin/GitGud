@@ -53,11 +53,27 @@
     .srform {
         padding: 20px 30px !important;
     }
+    .whole{
+        gap: 50px;
+        padding: 0 30px;
+    }
+    .whole .leftside{
+        width: 50%;
+    }
+    .whole .form{
+        width: 50%;
+    }
 }
-
 @media (max-width: 768px) {
-    .inupbtn, .img-tm, .second .secondinside img, .fixed-image, .parkhead, .stall-info, .stall-action, .prac-tm{
+    .inupbtn, .img-tm, .second .secondinside img, .fixed-image, .parkhead, .stall-info, .stall-action, .prac-tm, .whole .leftside{
         display: none !important;
+    }
+    .whole .form{
+        width: 60%;
+    }
+    .whole{
+        height: auto !important;
+        padding: 30px 0;
     }
     .lhuser, .parkhead-tm{
         display: block !important;
@@ -187,6 +203,12 @@
     }
 }
 @media (max-width: 426px) {
+    .whole{
+        padding: 20px;
+    }
+    .whole .form{
+        width: 100%;
+    }
     .prac, .dd-tm{
         display: none !important;
     }

@@ -129,6 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <title>Sign Up</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     main {
         background-image: url('assets/images/customer.jpg');
