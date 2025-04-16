@@ -212,12 +212,13 @@
     $currentStock = $rowStock ? $rowStock['quantity'] : 0;
     $stockValue = $currentStock * $product['base_price'];
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    main{
+    nav-main{
         padding: 20px 120px;
     }
 </style>
-<main>
+<main class="nav-main">
     <div class="d-flex justify-content-end">
         <button class="addpro mb-3 prev" onclick="window.location.href='managemenu.php';">
             <i class="fa-solid fa-chevron-left me-2"></i> Previous
@@ -254,12 +255,12 @@
                         $today >= $product['start_date'] && $today <= $product['end_date']) {
                         $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
                 ?>
-                        <div class="my-3">
+                        <div class="my-3 bp-tm">
                             <span class="proprice">₱<?= number_format($discountedPrice, 2); ?></span>
                             <span class="pricebefore small">₱<?= number_format($product['base_price'], 2); ?></span>
                         </div>
                 <?php } else { ?>
-                        <div class="my-3">
+                        <div class="my-3 bp-tm">
                             <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
                         </div>
                 <?php } ?>

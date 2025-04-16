@@ -225,7 +225,22 @@
     .moreinfo{
         padding: 5px;
         font-size: small;        
-      }
+    }
+    .stockaction{
+        display:  block !important;
+    }
+   #stockin-form, #stockout-form{
+        padding: 0 !important;
+   }
+   .stockin input[type="number"]{
+        width: 100px;
+    }
+    .stostatus{
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important; 
+        gap: 15px !important;
+        padding: 20px;
+    }
 
 }
 

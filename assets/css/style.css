@@ -1435,9 +1435,6 @@ left: -25px;
 .stockaction select{
   width: 100%;
 }
-.stockin input[type="submit"]{
-  background-color: ;
-}
 .stockaction table th{
   padding: 10px 0;
   border: 2px solid white;
