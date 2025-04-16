@@ -91,7 +91,11 @@ foreach ($cartGrouped as $stallName => $items) {
     }
 }
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+    .nav-main{
+        padding: 20px 120px;
+    }
     .disabled-stall-group {
         background-color: #fafafa !important;
     }
@@ -113,7 +117,7 @@ foreach ($cartGrouped as $stallName => $items) {
         color: #d3d3d3;
     }
 </style>
-<main style="padding: 20px 120px;">
+<main class="nav-main">
 
     <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3 carttop">
         <h4 class="fw-bold mb-0">My Cart</h4>
@@ -151,8 +155,8 @@ foreach ($cartGrouped as $stallName => $items) {
                             $variationsText = '<span class="small text-muted">Variation: ' . htmlspecialchars(implode(', ', $item['variation_names'])) . '</span><br>';
                         }
                     ?>
-                    <div class="d-flex border-bottom py-2 cart-item" data-stock="<?= htmlspecialchars($item['stock']) ?>">
-                        <div class="d-flex gap-3 align-items-center" style="width: 70%">
+                    <div class="d-flex border-bottom py-2 cart-item crt-tm" data-stock="<?= htmlspecialchars($item['stock']) ?>">
+                        <div class="d-flex gap-3 align-items-center crt-left" style="width: 70%">
                             <img src="<?= htmlspecialchars($item['product_image']) ?>" width="80px" height="80px" class="border rounded-2">
                             <div>
                                 <span class="fs-5"><?= htmlspecialchars($item['product_name']) ?></span><br>
@@ -162,7 +166,7 @@ foreach ($cartGrouped as $stallName => $items) {
                                 <?php endif; ?>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center justify-content-between" style="width: 30%" data-unit-price="<?= $item['unit_price'] ?>">
+                        <div class="d-flex align-items-center justify-content-between crt-right" style="width: 30%" data-unit-price="<?= $item['unit_price'] ?>">
                             <div class="d-flex align-items-center hlq">
                                 <i class="fa-solid fa-minus" onclick="updateCartQuantity(this, -1)"></i>
                                 <span class="ordquanum"><?= htmlspecialchars($item['quantity']) ?></span>
@@ -186,8 +190,8 @@ foreach ($cartGrouped as $stallName => $items) {
                     <?php endforeach; ?>
                 </div>
             <?php endforeach; ?>
-            <div class="d-flex justify-content-between align-items-start border py-3 px-4 rounded-2 bg-white mb-3">
-                <div style="width: 70%">
+            <div class="d-flex justify-content-between align-items-start border py-3 px-4 rounded-2 bg-white mb-3 order-tm">
+                <div style="width: 70%" class="order-left">
                     <div class="d-flex align-items-center mb-4">
                         <label class="form-label w-25 mb-0 fw-bold">Order Type</label>
                         <div class="cartot btn-group w-75" role="group">
@@ -209,7 +213,7 @@ foreach ($cartGrouped as $stallName => $items) {
                         <button type="submit" name="place_order" id="placeOrderButton" class="btn btn-primary rounded-5" style="width: 250px;">Place Order</button>
                     </div>
                 </div>
-                <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-4 order-right">
                     <p class="fw-bold fs-5 m-0">Total:</p>
                     <h2 class="fw-bold m-0" id="grandTotal" style="color: #CD5C08">₱0.00</h2>
                 </div>

@@ -8,14 +8,14 @@ require_once __DIR__ . '/classes/stall.class.php';
 $stallObj = new Stall();
 $notifications = $stallObj->getNotifications($user_id, $park_id);
 ?>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    main {
+    .nav-main {
         padding: 20px 120px;
     }
 </style>
 
-<main>
+<main class="nav-main">
     <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3 carttop">
         <h4 class="fw-bold mb-0">Notifications</h4>
         <div id="markAllReadBtnContainer">
@@ -30,7 +30,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
             <?php foreach($notifications as $noti): ?>
                 <?php if(strpos($noti['message'], 'Payment Confirmed') !== false): ?>
                     <!-- Payment Confirmed Notification -->
-                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3">
+                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3 not-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <img src="assets/images/gitgud.png" width="85" height="85" alt="Notification">
                             <div>
@@ -43,7 +43,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
                     </div>
                 <?php elseif(strpos($noti['message'], 'Pending Payment') !== false): ?>
                     <!-- Remind Payment Notification -->
-                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom not-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <img src="<?php echo htmlspecialchars($noti['logo']); ?>" width="85" height="85" alt="Notification">
                             <div>
@@ -56,7 +56,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
                     </div>
                 <?php elseif(strpos($noti['message'], 'Ready to pickup') !== false || strpos($noti['message'], 'Preparing Order') !== false): ?>
                     <!-- Ready to Pickup / Preparing Order Notification -->
-                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom not-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <img src="<?php echo htmlspecialchars($noti['logo']); ?>" width="85" height="85" alt="Notification">
                             <div>
@@ -77,7 +77,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
                     </div>
                 <?php else: ?>
                     <!-- Regular Notification -->
-                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom not-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <img src="assets/images/stall1.jpg" width="85" height="85" alt="Notification">
                             <div>

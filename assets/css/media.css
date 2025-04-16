@@ -111,7 +111,7 @@
     .sr-tm .srform{
         width: 100%;
     }
-    .btns-group, .btn-group{
+    .btns-group, .main-pr.btn-group{
         padding: 20px 0 !important;
     }
     .main-pp{
@@ -179,6 +179,12 @@
     .offcanvas{
         width: 60% !important;
     }
+    .crt-left{
+        width: 60% !important;
+    }
+    .crt-right{
+        width: 40% !important;
+    }
 }
 @media (max-width: 426px) {
     .prac, .dd-tm{
@@ -196,8 +202,19 @@
     .allfs-tm {
         display: block !important;
     }
-    .picdet-tm {
+    .picdet-tm, .crt-tm, .order-tm{
         flex-wrap: wrap !important;
+    }
+    .crt-left, .crt-right, .order-right, .order-left{
+        width: 100% !important;
+        margin-bottom: 10px;
+    }
+    .order-left {
+        order: 2;
+    }
+    .order-right {
+        order: 1;
+        margin-bottom: 20px;
     }
     .allfs-tm .oc{
         gap: 5px;
@@ -228,7 +245,7 @@
     .acc-tm div .input-group label{
         width: 100% !important;
     }
-    .nav-main form{
+    .nav-main .shit-form{
         padding: 20px !important;
     }
     .fw-tm{

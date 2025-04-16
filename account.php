@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 </style>
 <main class="nav-main">
-    <form id="accountForm" class="bg-white rounded-2 p-5" method="POST" enctype="multipart/form-data">
+    <form id="accountForm" class="bg-white rounded-2 p-5 shit-form" method="POST" enctype="multipart/form-data">
         <div class="dropdown position-relative">
             <i class="fa-solid fa-gear rename text-dark fs-5" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>
             <ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
