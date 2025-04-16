@@ -41,6 +41,12 @@
     .productcon{
         gap: 40px;
     }
+    .salfir-tm{
+        width: 70% !important;
+    }
+    .salsec-tm{
+        width: 30% !important;
+    }
 }
 
 @media (max-width: 768px) {
@@ -128,7 +134,7 @@
     .menumodal .modal-dialog, #moreinfoproduct .modal-dialog{
         max-width: 70%; 
     }
-    .acc-tm, .productcon{
+    .acc-tm, .productcon, .sal-tm{
         display: block !important;
     }
     .acc-tm div{
@@ -147,8 +153,11 @@
         align-items: center;
         gap: 20px;
     }
-    .pirem{
-        width: 100%;
+    .pirem, .sal-tm .salin-tm{
+        width: 100% !important;
+    }
+    .salin-tm:first-child{
+        margin-bottom: 20px;
     }
     .productimage{
         width: 170px;
@@ -210,9 +219,6 @@
     .fw-tm{
         display: block !important;
     }
-    .fw-tm div:first-child{
-        margin-bottom: 10px;
-    }
     .fw-tm div{
         gap: 8px !important;
     }
@@ -268,9 +274,7 @@
     }
    .nav-main.bull{
         padding: 0 !important;
-    }
-
-
+    } 
 }
 
 @media (min-width: 992px) and (max-width: 1024px) {

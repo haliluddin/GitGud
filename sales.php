@@ -95,14 +95,14 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
 } 
 ?>
 <style>
-    main {
+    .nav-main {
         padding: 20px 120px;
     }
     .section-content { display: none; }
     .section-content.active { display: block; }
 </style>
-<main>
-    <div class="nav-container d-flex gap-3 my-2">
+<main class="nav-main">
+    <div class="nav-container d-flex gap-3 my-2 flex-wrap">
         <?php foreach($timePeriods as $key => $period): ?>
             <a href="#<?php echo $key; ?>" class="nav-link" data-target="<?php echo $key; ?>">
                 <?php echo $period['label']; ?>
@@ -119,11 +119,11 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
     ?>
     <div id="<?php echo $key; ?>" class="section-content <?php echo $key === 'today' ? 'active' : ''; ?>">
         <!-- Report content remains unchanged -->
-        <div class="d-flex gap-3 mb-3">
-            <div class="bg-white border rounded-2 p-4 w-75">
+        <div class="d-flex gap-3 mb-3 sal-tm">
+            <div class="bg-white border rounded-2 p-4 w-75 salfir-tm salin-tm">
                 <div class="w-100 d-flex mb-4">
                     <div class="w-50">
-                        <div class="d-flex gap-2 align-items-center mb-2">
+                        <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
                             <h5 class="m-0 fw-bold">Sales <?php echo $period['label']; ?></h5>
                             <span class="small text-muted">(<?php echo $period['display']; ?>)</span>
                         </div>
@@ -162,7 +162,7 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
                     <!-- Pagination will be dynamically generated -->
                 </div>
             </div>
-            <div class="bg-white border p-4 w-25 rounded-2">
+            <div class="bg-white border p-4 w-25 rounded-2 salsec-tm salin-tm">
                 <h5 class="m-0 fw-bold mb-1">Live Ops Monitor</h5>
                 <span class="small text-muted">Ongoing issues for your food stall</span>
                 <div class="d-flex align-items-center border rounded-2 py-2 my-2">
@@ -199,12 +199,12 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
                 </div>
             </div>
         </div>
-        <div class="d-flex gap-3">
-            <div class="bg-white border rounded-2 p-4 w-50">
+        <div class="d-flex gap-3 sal-tm">
+            <div class="bg-white border rounded-2 p-4 w-50 salin-tm">
                 <h5 class="m-0 fw-bold mb-1">Operations Health</h5>
                 <span class="small text-muted">We found some ongoing issues for your food stall</span>
                 <div class="d-flex gap-3 my-3">
-                    <div class="p-3 d-flex align-items-end border w-50 rounded-2" style="background-color: #f4f4f4;">
+                    <div class="p-3 d-flex align-items-end border w-50 rounded-2 flex-wrap" style="background-color: #f4f4f4;">
                         <div class="w-50">
                             <h5 class="m-0 fw-bold">₱<?php echo $opsHealth['GCash']; ?></h5>
                             <span>GCash</span>
@@ -215,7 +215,7 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
                             <span>Cash</span>
                         </div>
                     </div>
-                    <div class="p-3 d-flex align-items-end border w-50 rounded-2" style="background-color: #f4f4f4;">
+                    <div class="p-3 d-flex align-items-end border w-50 rounded-2 flex-wrap" style="background-color: #f4f4f4;">
                         <div class="w-50">
                             <h5 class="m-0 fw-bold">₱<?php echo $opsHealth['Dine In']; ?></h5>
                             <span>Dine In</span>
@@ -240,7 +240,7 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
                     </div>
                 </div>
             </div>
-            <div class="bg-white border rounded-2 p-4 w-50">
+            <div class="bg-white border rounded-2 p-4 w-50 salin-tm">
                 <h5 class="m-0 fw-bold mb-1">Highest Selling Product</h5>
                 <span class="small text-muted">Top 5 products by orders and sales</span>
                 <table class="salestable w-100 mt-4">
