@@ -127,6 +127,7 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
                             <h5 class="m-0 fw-bold">Sales <?php echo $period['label']; ?></h5>
                             <span class="small text-muted">(<?php echo $period['display']; ?>)</span>
                         </div>
+                        <a href="download_report.php?period=<?php echo $key; ?>&stall_id=<?php echo $stall_id; ?>" class="small text-danger text-decoration-none" target="_blank">Download Report <i class="fa-regular fa-circle-down ms-2"></i></a>
                     </div>
                     <div class="w-25 text-end">
                         <h4 class="m-0 fw-bold"><?php echo $period['sales']['totalOrders']; ?></h4>
@@ -204,7 +205,7 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
                 <h5 class="m-0 fw-bold mb-1">Operations Health</h5>
                 <span class="small text-muted">We found some ongoing issues for your food stall</span>
                 <div class="d-flex gap-3 my-3">
-                    <div class="p-3 d-flex align-items-end border w-50 rounded-2 flex-wrap" style="background-color: #f4f4f4;">
+                    <div class="p-3 d-flex align-items-end border w-50 rounded-2" style="background-color: #f4f4f4;">
                         <div class="w-50">
                             <h5 class="m-0 fw-bold">₱<?php echo $opsHealth['GCash']; ?></h5>
                             <span>GCash</span>
@@ -215,7 +216,7 @@ if (isset($_GET['stall_id']) && $user['role'] === 'Admin') {
                             <span>Cash</span>
                         </div>
                     </div>
-                    <div class="p-3 d-flex align-items-end border w-50 rounded-2 flex-wrap" style="background-color: #f4f4f4;">
+                    <div class="p-3 d-flex align-items-end border w-50 rounded-2" style="background-color: #f4f4f4;">
                         <div class="w-50">
                             <h5 class="m-0 fw-bold">₱<?php echo $opsHealth['Dine In']; ?></h5>
                             <span>Dine In</span>
