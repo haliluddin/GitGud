@@ -133,6 +133,7 @@
         exit;
 
     } 
+    $categoriesList = $parkObj->getCategories();
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="assets/css/styles.css?v=<?php echo time(); ?>">
@@ -224,18 +225,11 @@
                 <div class="form-group m-0 select2Part select2multiple w-100 floating-group">
                     <label class="floating-label">Categories <span style="color: #CD5C08;">*</span></label>
                     <select name="categories[]" id="categories" class="form-control customSelectMultiple floating-control" multiple>
-                        <option value="BBQ">BBQ</option>
-                        <option value="Seafood">Seafood</option>
-                        <option value="Desserts">Desserts</option>
-                        <option value="Snacks">Snacks</option>
-                        <option value="Beverages">Beverages</option>
-                        <option value="Vegan">Vegan</option>
-                        <option value="Asian">Asian</option>
-                        <option value="Burgers">Burgers</option>
-                        <option value="Tacos">Tacos</option>
-                        <option value="Fusion">Fusion</option>
-                        <option value="Pasta">Pasta</option>
-                        <option value="Salads">Salads</option>
+                    <?php foreach ($categoriesList as $cat): ?>
+                        <option value="<?= htmlspecialchars($cat['id']) ?>">
+                        <?= htmlspecialchars($cat['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
                     </select>
                 </div>
                 <script src="assets/js/selectcategory.js"></script>

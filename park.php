@@ -55,6 +55,7 @@
     }
 
     $parkNextOpening = getNextOpening($parkOperatingHours);
+    $categories = $parkObj->getCategories();
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -85,61 +86,23 @@
         <div class="tpdiv position-relative">
             <i class="fa-solid fa-arrow-left scroll-arrow left-arrow" style="display: none;"></i>
             <div class="d-flex rightfilter gap-3">
-                <a href="#" class="text-decoration-none text-center category-link" data-category="BBQ">
-                    <img src="assets/images/BBQ.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">BBQ</span>
+            <?php foreach ($categories as $cat): ?>
+                <a href="#"
+                class="text-decoration-none text-center category-link"
+                data-category-id="<?= $cat['id'] ?>">
+                <img src="<?= htmlspecialchars($cat['image_url']) ?>"
+                    width="110" height="110"
+                    class="rounded-2">
+                <span class="text-dark d-block mt-1">
+                    <?= htmlspecialchars($cat['name']) ?>
+                </span>
                 </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Seafood">
-                    <img src="assets/images/Seafood.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Seafood</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Desserts">
-                    <img src="assets/images/Desserts.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Desserts</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Snacks">
-                    <img src="assets/images/Snacks.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Snacks</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Beverages">
-                    <img src="assets/images/Beverages.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Beverages</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Vegan">
-                    <img src="assets/images/Vegan.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Vegan</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Asian">
-                    <img src="assets/images/Asian.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Asian</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Burgers">
-                    <img src="assets/images/Burgers.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Burgers</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Tacos">
-                    <img src="assets/images/Tacos.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Tacos</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Fusion">
-                    <img src="assets/images/Fusion.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Fusion</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Pasta">
-                    <img src="assets/images/Pasta.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Pasta</span>
-                </a>
-                <a href="#"class="text-decoration-none text-center category-link" data-category="Salads">
-                    <img src="assets/images/Salads.jpg" width="110px" height="110px" class="rounded-2">
-                    <span class="text-dark d-block mt-1">Salads</span>
-                </a>
+            <?php endforeach; ?>
             </div>
-            <a href="stall.php" class="card-link text-decoration-none">
-            </a>
             <i class="fa-solid fa-arrow-right scroll-arrow right-arrow"></i>
         </div>
-
     </section>
+
 
     <div class="disabled" <?php if(isset($park['status']) && $park['status'] === 'Unavailable') { echo 'style="pointer-events: none; opacity: 0.5;"'; } ?>>
         <section id="searchResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none; ">
@@ -468,19 +431,22 @@
     document.querySelectorAll('.category-link').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            const category = this.dataset.category;
+            const categoryId = this.dataset.categoryId;
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "filter_stalls.php?park_id=<?= $park_id; ?>&category=" + encodeURIComponent(category), true);
+            xhr.open("GET",
+            `filter_stalls.php?park_id=<?= $park_id ?>&category_id=${categoryId}`,
+            true
+            );
             xhr.onreadystatechange = function(){
-                if(xhr.readyState === 4 && xhr.status === 200){
-                    // For example, insert into a dedicated section for filtered stalls:
-                    document.getElementById('filterResultsSection').innerHTML = xhr.responseText;
-                    document.getElementById('filterResultsSection').style.display = 'block';
-                }
+            if (xhr.readyState===4 && xhr.status===200) {
+                document.getElementById('filterResultsSection').innerHTML = xhr.responseText;
+                document.getElementById('filterResultsSection').style.display = 'block';
+            }
             };
             xhr.send();
         });
     });
+
 
 
 </script>

@@ -3,13 +3,16 @@ include_once __DIR__ . '/classes/db.class.php';
 include_once __DIR__ . '/classes/park.class.php';
 include_once __DIR__ . '/classes/encdec.class.php';
 
-if (isset($_GET['park_id']) && isset($_GET['category'])) {
-    $park_id  = intval($_GET['park_id']);
-    $category = trim($_GET['category']);
-    
+if (isset($_GET['park_id'], $_GET['category_id'])) {
+    $park_id    = intval($_GET['park_id']);
+    $categoryId = intval($_GET['category_id']);
+
     $parkObj = new Park();
-    
-    $results = $parkObj->filterStallsByCategory($park_id, $category);
+
+    $cat         = $parkObj->getCategoryById($categoryId);
+    $categoryName = $cat['name'] ?? 'Unknown';
+
+    $results = $parkObj->filterStallsByCategory($park_id, $categoryId);
     
     $popularStalls = $parkObj->getPopularStalls($park_id);
     $promoStalls   = $parkObj->getPromoStalls($park_id);
@@ -63,7 +66,8 @@ if (isset($_GET['park_id']) && isset($_GET['category'])) {
     $parkNextOpening = getNextOpening($parkOperatingHours);
     
     $numResults = count($results);
-    echo '<h3 id="filterHeader" class="mb-3">We found ' . $numResults . ' result' . ($numResults !== 1 ? 's' : '') . ' for "<strong>' . htmlspecialchars($category) . '</strong>"</h3>';
+    echo '<h3 id="filterHeader" class="mb-3">' . "We found {$numResults} result" . ($numResults !== 1 ? 's' : '') . ' for "<strong>' . htmlspecialchars($categoryName) . '</strong>"' . '</h3>';
+
     echo '<div id="filterResultsContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">';
     
     foreach ($results as $stall) {

@@ -470,4 +470,47 @@ class Admin {
             return false;
         }
     }
+
+    public function getCategories($search = '') {
+        $sql = "SELECT * FROM stored_categories";
+        if (!empty($search)) {
+            $sql .= " WHERE name LIKE :search";
+        }
+        $stmt = $this->db->connect()->prepare($sql);
+        if (!empty($search)) {
+            $stmt->bindValue(':search', "%$search%");
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    public function addCategory($name, $imageUrl) {
+        $sql = "INSERT INTO stored_categories (name, image_url)
+                VALUES (:name, :image_url)";
+        $stmt = $this->db->connect()->prepare($sql);
+        return $stmt->execute([
+            ':name'      => $name,
+            ':image_url' => $imageUrl
+        ]);
+    }
+
+    public function updateCategory($id, $name, $imageUrl) {
+        $sql = "UPDATE stored_categories
+                SET name = :name, image_url = :image_url
+                WHERE id = :id";
+        $stmt = $this->db->connect()->prepare($sql);
+        return $stmt->execute([
+            ':id'        => $id,
+            ':name'      => $name,
+            ':image_url' => $imageUrl
+        ]);
+    }
+
+    public function deleteCategory($id) {
+        $sql = "DELETE FROM stored_categories WHERE id = :id";
+        $stmt = $this->db->connect()->prepare($sql);
+        return $stmt->execute([':id' => $id]);
+    }
+
 }
