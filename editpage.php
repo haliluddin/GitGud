@@ -30,11 +30,15 @@
                 $businessemail = $record['email'];
                 $businessphonenumber = $record['phone'];
                 $website = $record['website'];
-                $categories = !empty($record['categories']) ? explode(", ", $record['categories']) : [];
+                $categories = !empty($record['category_ids'])
+                    ? explode(",", $record['category_ids'])
+                    : [];
                 $paymentMethods = !empty($record['payment_methods']) ? explode(", ", $record['payment_methods']) : [];
                 $operatingHours = !empty($record['operating_hours']) ? explode("; ", $record['operating_hours']) : [];
             } 
         }
+        $categoriesList = $parkObj->getCategories();
+
     } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $id = urldecode(decrypt($_GET['id']));
 
@@ -46,6 +50,8 @@
     
         $categories = isset($_POST['categories']) ? $_POST['categories'] : [];
         $paymentMethods = isset($_POST['payment_methods']) ? $_POST['payment_methods'] : [];
+
+        $categoriesList = $parkObj->getCategories();
     
         if (isset($_FILES['stalllogo']) && $_FILES['stalllogo']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = 'uploads/business/';
@@ -82,7 +88,9 @@
                 $businessemail = $record['email'];
                 $businessphonenumber = $record['phone'];
                 $website = $record['website'];
-                $categories = !empty($record['categories']) ? explode(", ", $record['categories']) : [];
+                $categories = !empty($record['category_ids'])
+                ? explode(",", $record['category_ids'])
+                : [];
                 $paymentMethods = !empty($record['payment_methods']) ? explode(", ", $record['payment_methods']) : [];
                 $operatingHours = !empty($record['operating_hours']) ? explode("; ", $record['operating_hours']) : [];
             } 
@@ -159,19 +167,16 @@
                 <div class="form-group m-0 select2Part select2multiple w-100 floating-group">
                     <label class="floating-label">Categories <span style="color: #CD5C08;">*</span></label>
                     <select name="categories[]" id="categories" class="form-control customSelectMultiple floating-control" multiple>
-                        <option value="BBQ" <?= in_array('BBQ', $categories) ? 'selected' : '' ?>>BBQ</option>
-                        <option value="Seafood" <?= in_array('Seafood', $categories) ? 'selected' : '' ?>>Seafood</option>
-                        <option value="Desserts" <?= in_array('Desserts', $categories) ? 'selected' : '' ?>>Desserts</option>
-                        <option value="Snacks" <?= in_array('Snacks', $categories) ? 'selected' : '' ?>>Snacks</option>
-                        <option value="Beverages" <?= in_array('Beverages', $categories) ? 'selected' : '' ?>>Beverages</option>
-                        <option value="Vegan" <?= in_array('Vegan', $categories) ? 'selected' : '' ?>>Vegan</option>
-                        <option value="Asian" <?= in_array('Asian', $categories) ? 'selected' : '' ?>>Asian</option>
-                        <option value="Burgers" <?= in_array('Burgers', $categories) ? 'selected' : '' ?>>Burgers</option>
-                        <option value="Tacos" <?= in_array('Tacos', $categories) ? 'selected' : '' ?>>Tacos</option>
-                        <option value="Fusion" <?= in_array('Fusion', $categories) ? 'selected' : '' ?>>Fusion</option>
-                        <option value="Pasta" <?= in_array('Pasta', $categories) ? 'selected' : '' ?>>Pasta</option>
-                        <option value="Salads" <?= in_array('Salads', $categories) ? 'selected' : '' ?>>Salads</option>
+                        <?php foreach($categoriesList as $cat): ?>
+                            <option
+                            value="<?= htmlspecialchars($cat['id']) ?>"
+                            <?= in_array($cat['id'], $categories) ? 'selected' : '' ?>
+                            >
+                            <?= htmlspecialchars($cat['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
+
                 </div>
 
                 <script src="assets/js/selectcategory.js"></script>

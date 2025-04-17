@@ -49,7 +49,6 @@ class Park {
     public function getPopularStalls($parkId) {
         $db = $this->db->connect();
         
-        // compute average orders per stall in this park
         $avgSql = "
             SELECT AVG(order_count) AS avg_orders FROM (
                 SELECT COUNT(*) AS order_count
@@ -62,7 +61,6 @@ class Park {
         $avgQ->execute([':park_id' => $parkId]);
         $avgOrders = $avgQ->fetchColumn() ?: 0;
 
-        // fetch stalls above that average
         $sql = "
             SELECT s.*,
                    GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') AS stall_categories,
@@ -263,24 +261,28 @@ class Park {
         $sql = "
             SELECT
                 stalls.*,
+                /* add this line to pull back the raw IDs */
+                GROUP_CONCAT(DISTINCT sc.category_id SEPARATOR ',') AS category_ids,
+                /* keep the human‑readable names */
                 GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') AS categories,
                 GROUP_CONCAT(DISTINCT stall_payment_methods.method SEPARATOR ', ') AS payment_methods,
-                GROUP_CONCAT(DISTINCT CONCAT(stall_operating_hours.days, ' ',
-                                           stall_operating_hours.open_time, ' - ',
-                                           stall_operating_hours.close_time)
-                             SEPARATOR '; ') AS operating_hours
+                GROUP_CONCAT(DISTINCT CONCAT(
+                    stall_operating_hours.days, ' ',
+                    stall_operating_hours.open_time, ' - ',
+                    stall_operating_hours.close_time
+                ) SEPARATOR '; ') AS operating_hours
             FROM stalls
-            LEFT JOIN stall_categories sc ON stalls.id = sc.stall_id
-            LEFT JOIN stored_categories c ON sc.category_id = c.id
-            LEFT JOIN stall_payment_methods ON stalls.id = stall_payment_methods.stall_id
-            LEFT JOIN stall_operating_hours ON stalls.id = stall_operating_hours.stall_id
+            LEFT JOIN stall_categories       sc  ON stalls.id = sc.stall_id
+            LEFT JOIN stored_categories      c   ON sc.category_id = c.id
+            LEFT JOIN stall_payment_methods      ON stalls.id = stall_payment_methods.stall_id
+            LEFT JOIN stall_operating_hours      ON stalls.id = stall_operating_hours.stall_id
             WHERE stalls.id = :recordID
-            GROUP BY stalls.id;
+            GROUP BY stalls.id
         ";
         $q = $this->db->connect()->prepare($sql);
         $q->bindParam(':recordID', $recordID);
         return $q->execute() ? $q->fetch(PDO::FETCH_ASSOC) : [];
-    }
+    }    
 
     public function editStall(
         $stall_id,
@@ -317,7 +319,6 @@ class Park {
             return false;
         }
 
-        // rebuild stall_categories
         $conn->prepare("DELETE FROM stall_categories WHERE stall_id = :stall_id")
              ->execute([':stall_id' => $stall_id]);
         if (!empty($categoryIds)) {
@@ -333,8 +334,38 @@ class Park {
             }
         }
 
-        // existing payment and hours logic unchanged...
-        // ...
+        $conn->prepare("DELETE FROM stall_payment_methods WHERE stall_id = :stall_id")
+             ->execute([':stall_id'=>$stall_id]);
+        if (!empty($payment_methods)) {
+            $stmt = $conn->prepare("
+                INSERT INTO stall_payment_methods (stall_id, method)
+                VALUES (:stall_id, :method)
+            ");
+            foreach ($payment_methods as $method) {
+                $stmt->execute([
+                    ':stall_id'=> $stall_id,
+                    ':method'  => $method
+                ]);
+            }
+        }
+
+        $conn->prepare("DELETE FROM stall_operating_hours WHERE stall_id = :stall_id")
+             ->execute([':stall_id'=>$stall_id]);
+        if (!empty($operatingHours)) {
+            $ohStmt = $conn->prepare("
+                INSERT INTO stall_operating_hours (stall_id, days, open_time, close_time)
+                VALUES (:stall_id, :days, :open_time, :close_time)
+            ");
+            foreach ($operatingHours as $sched) {
+                $days = implode(', ',$sched['days']);
+                $ohStmt->execute([
+                    ':stall_id'  => $stall_id,
+                    ':days'      => $days,
+                    ':open_time' => $sched['openTime'],
+                    ':close_time'=> $sched['closeTime']
+                ]);
+            }
+        }
 
         return true;
     }
@@ -472,7 +503,7 @@ class Park {
         ]);
         return $q->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
     public function getCategoryById(int $categoryId): array{
         $sql = "SELECT id, name FROM stored_categories WHERE id = :id";
         $stmt = $this->db->connect()->prepare($sql);
