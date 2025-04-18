@@ -185,7 +185,7 @@
                         </button>
                     <?php endif; ?>
                 </div>
-                <?php if ($user['role'] == 'Customer'): ?>
+                <?php if ($user && isset($user['role']) && $user['role'] === 'Customer'): ?>
                     <div class="dropdown" style="align-self: flex-start;">
                         <i class="fa-solid fa-ellipsis-vertical mores" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></i>
                         <div class="dropdown-menu py-0" aria-labelledby="dropdownMenuButton">

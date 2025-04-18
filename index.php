@@ -270,7 +270,7 @@ include_once 'footer.php';
                 <div class="mb-4" data-hours>
                 </div>
                 <?php if ($isLoggedIn && $user['role'] == 'Customer'): ?>
-                    <button class="border-0 py-2 px-3 rounded-5" data-bs-toggle="modal" data-bs-target="#report" data-reported_user=""> 
+                    <button class="border-0 py-2 px-3 rounded-5" data-bs-toggle="modal" data-bs-target="#report" data-reported_park="<?= htmlspecialchars($park['id']) ?>">
                         <i class="fa-regular fa-flag me-2 fs-5"></i>Report
                     </button>
                 <?php endif; ?>
