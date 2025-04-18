@@ -751,8 +751,6 @@
         </div>
     </div>
 
-    <!--<script src="assets/js/parkForm.js"></script>-->
-
     <script>
         const prevBtns = document.querySelectorAll(".btn-prev");
         const nextBtns = document.querySelectorAll(".btn-next");
