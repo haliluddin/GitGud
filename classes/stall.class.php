@@ -434,7 +434,7 @@ class Stall {
         JOIN order_items oi ON os.id = oi.order_stall_id
         JOIN products p ON oi.product_id = p.id
         WHERE os.stall_id = ?
-        ORDER BY o.created_at DESC, os.status";
+        ORDER BY o.created_at ASC, os.status";
 
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->execute([$stall_id]);

@@ -441,7 +441,7 @@ ob_end_flush();
                     });
                 }
             </script>
-            <div class="d-flex gap-3 flex-wrap">
+            <div class="d-flex gap-3">
                 <div class="input-group w-50 m-0 mb-4">
                     <label for="discount">Discount (Optional)</label>
                     <input type="number" name="discount" id="discount" placeholder="Enter discount" step="0.01" value="<?php echo htmlspecialchars($discount); ?>"/>

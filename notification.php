@@ -30,7 +30,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
             <?php foreach($notifications as $noti): ?>
                 <?php if(strpos($noti['message'], 'Payment Confirmed') !== false): ?>
                     <!-- Payment Confirmed Notification -->
-                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3 not-tm">
+                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom not-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <img src="assets/images/gitgud.png" width="85" height="85" alt="Notification">
                             <div>
@@ -99,21 +99,17 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
 </main>
 
 <script>
-    // Function to fetch notifications
     function fetchNotifications() {
         fetch('fetch_notifications.php')
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // Update the notifications container
                     document.getElementById('notifications-container').innerHTML = data.html;
                     
-                    // Update the "Mark all as read" button visibility
                     const markAllReadBtnContainer = document.getElementById('markAllReadBtnContainer');
                     if (data.count > 0) {
                         if (!document.getElementById('markAllReadBtn')) {
                             markAllReadBtnContainer.innerHTML = '<button id="markAllReadBtn">Mark all as read</button>';
-                            // Re-attach event listener to the new button
                             attachMarkAllReadListener();
                         }
                     } else {
@@ -126,7 +122,6 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
             .catch(error => console.error('Request failed:', error));
     }
 
-    // Function to attach event listener to Mark All Read button
     function attachMarkAllReadListener() {
         const markAllReadBtn = document.getElementById('markAllReadBtn');
         if (markAllReadBtn) {
@@ -139,7 +134,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        fetchNotifications(); // Refresh notifications after marking all as read
+                        fetchNotifications(); 
                     } else {
                         alert("Error: " + data.message);
                     }
@@ -149,10 +144,8 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
         }
     }
 
-    // Initial attachment of event listener
     attachMarkAllReadListener();
 
-    // Fetch notifications every 3 seconds
     setInterval(fetchNotifications, 3000);
 </script>
 

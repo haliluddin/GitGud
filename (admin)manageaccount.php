@@ -176,14 +176,31 @@ if (isset($_POST['report_update'])) {
 
 // ADD CATEGORY
 if (isset($_POST['add_category'])) {
-    $imgUrl = !empty($_FILES['cat_image']['name'])
-        ? 'uploads/categories/'.basename($_FILES['cat_image']['name'])
-        : null;
-    if ($imgUrl) move_uploaded_file($_FILES['cat_image']['tmp_name'], __DIR__.$imgUrl);
+    $imgUrl = null;
+
+    if (!empty($_FILES['cat_image']['name']) 
+        && $_FILES['cat_image']['error'] === UPLOAD_ERR_OK) 
+    {
+        $uploadDir = __DIR__ . '/uploads/categories/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $filename = basename($_FILES['cat_image']['name']);
+        $destPath = $uploadDir . $filename;
+
+        if (move_uploaded_file($_FILES['cat_image']['tmp_name'], $destPath)) {
+            $imgUrl = 'uploads/categories/' . $filename;
+        } else {
+            throw new \Exception("Failed to move uploaded file.");
+        }
+    }
+
     $adminObj->addCategory($_POST['cat_name'], $imgUrl);
-    header('Location: '.$_SERVER['PHP_SELF'].'#categories');
+    header('Location: ' . $_SERVER['PHP_SELF'] . '#categories');
     exit();
 }
+
 
 // EDIT CATEGORY
 if (isset($_POST['edit_category'])) {
@@ -591,19 +608,19 @@ $searchCategory = isset($_GET['search_category'])
                 <p>Select the eligibility criteria that were not met:</p>
                 <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="reasonName">
-                <label class="form-check-label" for="reasonName">Name</label>
+                <label class="form-check-label" for="reasonName">Business Name</label>
                 </div>
                 <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="reasonEmail">
-                <label class="form-check-label" for="reasonEmail">Email</label>
+                <label class="form-check-label" for="reasonEmail">Business Email</label>
                 </div>
                 <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="reasonPhone">
-                <label class="form-check-label" for="reasonPhone">Phone</label>
+                <label class="form-check-label" for="reasonPhone">Business Phone</label>
                 </div>
                 <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="reasonLogo">
-                <label class="form-check-label" for="reasonLogo">Logo</label>
+                <label class="form-check-label" for="reasonLogo">Business Logo</label>
                 </div>
                 <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="reasonHours">
@@ -619,7 +636,7 @@ $searchCategory = isset($_GET['search_category'])
                 </div>
                 <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="reasonPermit">
-                <label class="form-check-label" for="reasonPermit">Permit</label>
+                <label class="form-check-label" for="reasonPermit">Business Permit</label>
                 </div>
                 <div class="form-group mt-3">
                     <label for="customRejectionReason">Additional Rejection Details:</label>

@@ -256,6 +256,11 @@
             </div>
             
             <div id="stallsContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+            <?php if (empty($allStalls)): ?>
+                <div class="w-100 text-center py-3">
+                    <p class="text-muted">Sorry, there are no food stalls available right now.</p>
+                </div>
+            <?php else: ?>
                 <?php foreach ($allStalls as $stall) { 
                     if (!$parkIsOpen) {
                         $isOpen = false;
@@ -335,7 +340,7 @@
                         </a>
                     </div>
                 <?php } ?>
-
+            <?php endif; ?>
             </div>
         </section>
 

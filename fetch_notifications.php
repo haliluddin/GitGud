@@ -21,7 +21,7 @@ if (count($notifications) > 0) {
         if (strpos($noti['message'], 'Payment Confirmed') !== false) {
             // Payment Confirmed Notification
             ?>
-            <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3">
+            <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
                 <div class="d-flex gap-3 align-items-center">
                     <img src="assets/images/gitgud.png" width="85" height="85" alt="Notification">
                     <div>
@@ -97,7 +97,6 @@ if (count($notifications) > 0) {
 
 $html = ob_get_clean();
 
-// Return both the HTML and the notification count for the button display logic
 echo json_encode([
     'status' => 'success',
     'html' => $html,

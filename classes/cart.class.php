@@ -238,75 +238,151 @@ class Cart {
     
     public function placeOrder($user_id, $payment_method, $order_type, $cartGrouped) {
         $conn = $this->db->connect();
-        $total_order = 0;
-        $stallSubtotals = [];  
+    
+        $total_order    = 0;
+        $stallSubtotals = [];
+        $stallIds       = []; 
     
         foreach ($cartGrouped as $stallName => $items) {
+            $stall_id   = $items[0]['stall_id'];
+            $stallIds[] = $stall_id;
+    
             $stall_total = 0;
             foreach ($items as $item) {
                 $stall_total += $item['quantity'] * $item['unit_price'];
             }
-            $stall_id = $items[0]['stall_id'];
+    
             $stallSubtotals[$stall_id] = $stall_total;
-            $total_order += $stall_total;
+            $total_order             += $stall_total;
         }
+    
         if ($total_order <= 0) {
             throw new Exception("No items in your cart to order.");
         }
-        
+    
         $conn->beginTransaction();
         try {
             $order_id = $this->createOrder($user_id, $total_order, $payment_method, $order_type);
-            
-            // If payment method is GCash, set stall status to "Preparing"
-            $stall_status = (strtolower($payment_method) === 'gcash') ? 'Preparing' : 'Pending';
-            
-            foreach ($cartGrouped as $stallName => $items) {
-                $stall_id = $items[0]['stall_id'];
+    
+            $isGcash      = (strtolower($payment_method) === 'gcash');
+            $stall_status = $isGcash ? 'Preparing' : 'Pending';
+    
+            foreach ($stallIds as $stall_id) {
                 $subtotal = $stallSubtotals[$stall_id];
-                
-                // Determine queue number if status is "Preparing"
+    
                 $queue_number = null;
                 if ($stall_status === 'Preparing') {
-                    $stmtMax = $conn->prepare("SELECT MAX(queue_number) AS max_queue FROM order_stalls WHERE DATE(created_at) = CURDATE() AND queue_number IS NOT NULL");
+                    $stmtMax = $conn->prepare("
+                      SELECT MAX(queue_number) AS max_queue 
+                      FROM order_stalls 
+                      WHERE DATE(created_at) = CURDATE() 
+                        AND queue_number IS NOT NULL
+                    ");
                     $stmtMax->execute();
-                    $resMax = $stmtMax->fetch();
-                    $queue_number = $resMax && $resMax['max_queue'] ? intval($resMax['max_queue']) + 1 : 1;
+                    $resMax       = $stmtMax->fetch();
+                    $queue_number = $resMax['max_queue']
+                                  ? intval($resMax['max_queue']) + 1
+                                  : 1;
                 }
-                
-                $order_stall_id = $this->createOrderStall($order_id, $stall_id, $subtotal, $stall_status, $queue_number);
-        
-                foreach ($items as $item) {
-                    $item_subtotal = $item['quantity'] * $item['unit_price'];
-                    $variations = (!empty($item['variation_names'])) ? implode(", ", $item['variation_names']) : null;
-                    $this->createOrderItem($order_stall_id, $item['product_id'], $variations, $item['request'], $item['quantity'], $item['unit_price'], $item_subtotal);
-                        
-                    if (!empty($item['variation_option_ids'])) {
-                        foreach ($item['variation_option_ids'] as $varOptId) {
-                            $sqlStock = "UPDATE stocks 
-                                         SET quantity = quantity - ? 
-                                         WHERE product_id = ? 
-                                         AND variation_option_id = ?";
-                            $stmtStock = $conn->prepare($sqlStock);
-                            $stmtStock->execute([$item['quantity'], $item['product_id'], $varOptId]);
+    
+                $order_stall_id = $this->createOrderStall(
+                    $order_id,
+                    $stall_id,
+                    $subtotal,
+                    $stall_status,
+                    $queue_number
+                );
+    
+                if ($isGcash) {
+                    $msg = "Order ID " . str_pad($order_id, 4, '0', STR_PAD_LEFT)
+                         . ": Preparing Order";
+                    $stmtNoti = $conn->prepare("
+                      INSERT INTO notifications
+                        (user_id, order_id, stall_id, message)
+                      VALUES (?, ?, ?, ?)
+                    ");
+                    $stmtNoti->execute([
+                        $user_id,
+                        $order_id,
+                        $stall_id,
+                        $msg
+                    ]);
+                }
+    
+                foreach ($cartGrouped as $name => $items) {
+                    if ($items[0]['stall_id'] !== $stall_id) continue;
+                    foreach ($items as $item) {
+                        $item_subtotal = $item['quantity'] * $item['unit_price'];
+                        $variations    = !empty($item['variation_names'])
+                                      ? implode(", ", $item['variation_names'])
+                                      : null;
+    
+                        $this->createOrderItem(
+                            $order_stall_id,
+                            $item['product_id'],
+                            $variations,
+                            $item['request'],
+                            $item['quantity'],
+                            $item['unit_price'],
+                            $item_subtotal
+                        );
+    
+                        if (!empty($item['variation_option_ids'])) {
+                            foreach ($item['variation_option_ids'] as $varOptId) {
+                                $stmtStock = $conn->prepare("
+                                  UPDATE stocks 
+                                  SET quantity = quantity - ? 
+                                  WHERE product_id = ? 
+                                    AND variation_option_id = ?
+                                ");
+                                $stmtStock->execute([
+                                    $item['quantity'],
+                                    $item['product_id'],
+                                    $varOptId
+                                ]);
+                            }
+                        } else {
+                            $stmtStock = $conn->prepare("
+                              UPDATE stocks 
+                              SET quantity = quantity - ? 
+                              WHERE product_id = ? 
+                                AND variation_option_id IS NULL
+                            ");
+                            $stmtStock->execute([
+                                $item['quantity'],
+                                $item['product_id']
+                            ]);
                         }
-                    } else {
-                        $sqlStock = "UPDATE stocks 
-                                     SET quantity = quantity - ? 
-                                     WHERE product_id = ? 
-                                     AND variation_option_id IS NULL";
-                        $stmtStock = $conn->prepare($sqlStock);
-                        $stmtStock->execute([$item['quantity'], $item['product_id']]);
                     }
                 }
             }
+    
+            if ($isGcash) {
+                $firstStall = $stallIds[0];
+                $formatted  = str_pad($order_id, 4, '0', STR_PAD_LEFT);
+                $msg        = "Order ID {$formatted}: Payment Confirmed!";
+                $stmtNoti   = $conn->prepare("
+                  INSERT INTO notifications
+                    (user_id, order_id, stall_id, message)
+                  VALUES (?, ?, ?, ?)
+                ");
+                $stmtNoti->execute([
+                    $user_id,
+                    $order_id,
+                    $firstStall,
+                    $msg
+                ]);
+            }
+    
             $conn->commit();
             return $order_id;
+    
         } catch (Exception $e) {
             $conn->rollBack();
             throw $e;
         }
     }
+    
     
     public function deleteAllItems($user_id, $park_id) {
         $sql = "DELETE c FROM cart c 
