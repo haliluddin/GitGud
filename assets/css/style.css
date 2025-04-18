@@ -441,6 +441,9 @@ nav ul li a{text-decoration: none;}
     opacity: 1;
   }
 }
+.notification.read {
+  opacity: 0.5;
+}
 .btns-group {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

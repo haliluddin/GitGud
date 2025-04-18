@@ -18,10 +18,11 @@ ob_start();
 
 if (count($notifications) > 0) {
     foreach ($notifications as $noti) {
+        $readClass = ($noti['status'] === 'Read') ? ' read' : '';
         if (strpos($noti['message'], 'Payment Confirmed') !== false) {
             // Payment Confirmed Notification
             ?>
-            <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
+            <div class="notification d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom<?php echo $readClass; ?>">
                 <div class="d-flex gap-3 align-items-center">
                     <img src="assets/images/gitgud.png" width="85" height="85" alt="Notification">
                     <div>
@@ -36,7 +37,7 @@ if (count($notifications) > 0) {
         } elseif (strpos($noti['message'], 'Pending Payment') !== false) {
             // Remind Payment Notification
             ?>
-            <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
+            <div class="notification d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom<?php echo $readClass; ?>">
                 <div class="d-flex gap-3 align-items-center">
                     <img src="<?php echo htmlspecialchars($noti['logo']); ?>" width="85" height="85" alt="Notification">
                     <div>
@@ -51,7 +52,7 @@ if (count($notifications) > 0) {
         } elseif (strpos($noti['message'], 'Ready to pickup') !== false || strpos($noti['message'], 'Preparing Order') !== false) {
             // Ready to Pickup / Preparing Order Notification
             ?>
-            <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
+            <div class="notification d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom<?php echo $readClass; ?>">
                 <div class="d-flex gap-3 align-items-center">
                     <img src="<?php echo htmlspecialchars($noti['logo']); ?>" width="85" height="85" alt="Notification">
                     <div>
@@ -74,7 +75,7 @@ if (count($notifications) > 0) {
         } else {
             // Regular Notification
             ?>
-            <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom">
+            <div class="notification d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom<?php echo $readClass; ?>">
                 <div class="d-flex gap-3 align-items-center">
                     <img src="assets/images/stall1.jpg" width="85" height="85" alt="Notification">
                     <div>

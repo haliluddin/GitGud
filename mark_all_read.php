@@ -1,5 +1,10 @@
 <?php
+require_once __DIR__ . '/classes/db.class.php';
+require_once __DIR__ . '/classes/stall.class.php';
+
 header('Content-Type: application/json');
+
+$stallObj = new Stall();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['user_id'])) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
@@ -8,13 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['user_id'])) {
 
 $user_id = $_POST['user_id'];
 
-$dsn = "mysql:host=localhost;dbname=gitgud;charset=utf8";
-$pdo = new PDO($dsn, 'root', '', [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-]);
-
-$stmt = $pdo->prepare("UPDATE notifications SET status = 'Read' WHERE user_id = ?");
-$stmt->execute([$user_id]);
+$stallObj->markallread($user_id);
 
 echo json_encode(['status' => 'success', 'message' => 'Notifications marked as read']);

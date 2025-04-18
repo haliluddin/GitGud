@@ -18,19 +18,28 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
 <main class="nav-main">
     <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white mb-3 carttop">
         <h4 class="fw-bold mb-0">Notifications</h4>
-        <div id="markAllReadBtnContainer">
+        <div class="d-flex gap-4">
+
             <?php if(count($notifications) > 0): ?>
-                <button id="markAllReadBtn">Mark all as read</button>
+                <button id="deleteAllReadBtn">Delete all read</button>
             <?php endif; ?>
+
+            <div id="markAllReadBtnContainer">
+                <?php if(count($notifications) > 0): ?>
+                    <button id="markAllReadBtn">Mark all as read</button>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
     
     <div id="notifications-container">
         <?php if(count($notifications) > 0): ?>
-            <?php foreach($notifications as $noti): ?>
+            <?php foreach($notifications as $noti): 
+                $readClass = ($noti['status'] === 'Read') ? ' read' : '';
+            ?>
                 <?php if(strpos($noti['message'], 'Payment Confirmed') !== false): ?>
                     <!-- Payment Confirmed Notification -->
-                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom not-tm">
+                    <div class="notification d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom<?php echo $readClass; ?> not-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <img src="assets/images/gitgud.png" width="85" height="85" alt="Notification">
                             <div>
@@ -43,7 +52,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
                     </div>
                 <?php elseif(strpos($noti['message'], 'Pending Payment') !== false): ?>
                     <!-- Remind Payment Notification -->
-                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom not-tm">
+                    <div class="notification d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom<?php echo $readClass; ?> not-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <img src="<?php echo htmlspecialchars($noti['logo']); ?>" width="85" height="85" alt="Notification">
                             <div>
@@ -56,7 +65,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
                     </div>
                 <?php elseif(strpos($noti['message'], 'Ready to pickup') !== false || strpos($noti['message'], 'Preparing Order') !== false): ?>
                     <!-- Ready to Pickup / Preparing Order Notification -->
-                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom not-tm">
+                    <div class="notification d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom<?php echo $readClass; ?> not-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <img src="<?php echo htmlspecialchars($noti['logo']); ?>" width="85" height="85" alt="Notification">
                             <div>
@@ -77,7 +86,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
                     </div>
                 <?php else: ?>
                     <!-- Regular Notification -->
-                    <div class="d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom not-tm">
+                    <div class="notification d-flex justify-content-between align-items-center border py-3 px-4 rounded-2 bg-white border-bottom<?php echo $readClass; ?> not-tm">
                         <div class="d-flex gap-3 align-items-center">
                             <img src="assets/images/stall1.jpg" width="85" height="85" alt="Notification">
                             <div>
@@ -147,6 +156,30 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
     attachMarkAllReadListener();
 
     setInterval(fetchNotifications, 3000);
+
+    function attachDeleteAllReadListener() {
+        const btn = document.getElementById('deleteAllReadBtn');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+            fetch('delete_read.php', {
+            method: 'POST',
+            credentials: 'same-origin'
+            })
+            .then(res => res.json())
+            .then(data => {
+            if (data.status === 'success') {
+                fetchNotifications();  // reload the list so all Read items vanish
+            } else {
+                alert("Error: " + data.message);
+            }
+            })
+            .catch(err => console.error('Delete failed:', err));
+        });
+        }
+
+        // after attaching mark‐all listener, also:
+        attachDeleteAllReadListener();
+
 </script>
 
 <?php 

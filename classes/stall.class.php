@@ -736,6 +736,20 @@ class Stall {
         $stmt->execute([$stall_id, $start, $end]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function deleteallread($user_id){
+        $stmt = $this->db->connect()->prepare("
+            DELETE FROM notifications
+            WHERE user_id = ?
+            AND status = 'Read'
+        ");
+        $stmt->execute([$user_id]);
+    }
+
+    public function markallread($user_id){
+        $stmt = $this->db->connect()->prepare("UPDATE notifications SET status = 'Read' WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+    }
     
     
 }
