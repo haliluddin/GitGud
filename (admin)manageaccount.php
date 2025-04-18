@@ -1,6 +1,5 @@
 
 <?php
-session_start();
 include_once 'landingheader.php';
 include_once 'links.php';
 require_once __DIR__ . '/classes/admin.class.php';

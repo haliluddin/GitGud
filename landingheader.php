@@ -1,4 +1,5 @@
 <?php
+    session_start();
     require_once __DIR__ . '/classes/db.class.php';
 
     $userObj = new User();
@@ -36,7 +37,7 @@
                     </li>
                 <?php endif; ?>
                 <li>
-                    <a class="dropdown-item" href="account.php">
+                    <a class="dropdown-item" href="account.php?source=landing">
                         <i class="fa-solid fa-user me-2"></i> Account
                     </a>
                 </li>

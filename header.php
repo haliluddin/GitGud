@@ -32,7 +32,7 @@ if (isset($_SESSION['user'])) {
     }
 
     $nav_links = [
-        'account.php' => ['label' => 'Account', 'icon' => 'fa-solid fa-user'],
+        'account.php?source=main' => ['label' => 'Account', 'icon' => 'fa-solid fa-user'],
         'purchase.php' => ['label' => 'Purchase', 'icon' => 'fa-solid fa-shopping-bag'],
     ];
 

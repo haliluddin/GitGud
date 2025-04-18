@@ -1,5 +1,11 @@
 <?php
-include_once 'header.php';
+
+if (isset($_GET['source']) && $_GET['source'] === 'landing') {
+    include_once 'landingheader.php';
+} else {
+    include_once 'header.php';
+}
+
 include_once 'links.php';
 include_once 'nav.php';
 include_once 'modals.php';
