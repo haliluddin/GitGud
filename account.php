@@ -4,10 +4,10 @@ if (isset($_GET['source']) && $_GET['source'] === 'landing') {
     include_once 'landingheader.php';
 } else {
     include_once 'header.php';
+    include_once 'nav.php';
 }
 
 include_once 'links.php';
-include_once 'nav.php';
 include_once 'modals.php';
 
 if (!isset($_SESSION['user'])) {

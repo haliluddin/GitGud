@@ -168,7 +168,7 @@ $statusMapping = [
                             <span class="dot text-muted"></span>
                             <div class="d-flex gap-2 align-items-center">
                                 <span class="fw-bold"><?php echo htmlspecialchars($orderGroup['stall_name']); ?></span>
-                                <button class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php?stall_id=<?php echo $orderGroup['stall_id']; ?>';">View Stall</button>
+                                <button class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php?id=<?= encrypt($orderGroup['stall_id']); ?>';">View Stall</button>
                             </div>
                         </div>
                         <div class="d-flex gap-3 align-items-center">
@@ -357,6 +357,47 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => alert("Request failed: " + error));
     });
+
+    document.querySelectorAll('.order-received-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const orderStallId = this.getAttribute('data-order-stall-id');
+        const newStatus   = this.getAttribute('data-new-status');
+        const yesBtn      = document.getElementById('orderReceivedYesBtn');
+
+        yesBtn.setAttribute('data-order-id',    orderStallId);
+        yesBtn.setAttribute('data-new-status',  newStatus);
+    });
+    });
+
+    document.getElementById('orderReceivedYesBtn').addEventListener('click', function() {
+    const orderStallId = this.getAttribute('data-order-id');
+    const newStatus    = this.getAttribute('data-new-status');
+
+    if (!orderStallId || !newStatus) {
+        alert("Missing order information.");
+        return;
+    }
+
+    const postBody = 
+            'order_stall_id=' + encodeURIComponent(orderStallId) +
+            '&new_status='     + encodeURIComponent(newStatus);
+
+    fetch('update_order_status.php', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    postBody
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+        location.reload();
+        } else {
+        alert("Error: " + data.message);
+        }
+    })
+    .catch(err => alert("Request failed: " + err));
+    });
+
 
 });
 </script>
