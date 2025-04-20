@@ -57,9 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         if (isset($result['error'])) {
             echo json_encode(['error' => $result['error']]);
         } else {
+            // Store the checkout URL in session
+            $_SESSION['gcash_checkout_url'] = $result['checkout_url'];
             echo "<script>
-                    window.open('" . $result['checkout_url'] . "', '_blank');
                     document.addEventListener('DOMContentLoaded', function() {
+                        document.getElementById('orderIdDisplayCashless').innerText = '$order_id';
+                        document.getElementById('gcashCheckoutLink').href = '" . $result['checkout_url'] . "';
                         var cashlessModal = new bootstrap.Modal(document.getElementById('ifcashless'));
                         cashlessModal.show();
                     });
@@ -324,6 +327,7 @@ foreach ($cartGrouped as $stallName => $items) {
 </div>
 
 <!-- Cashless Payment Modal -->
+<!-- Cashless Payment Modal -->
 <div class="modal fade" id="ifcashless" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -334,8 +338,12 @@ foreach ($cartGrouped as $stallName => $items) {
                 <div class="text-center">
                     <i class="fa-regular fa-face-smile mb-3" style="color: #CD5C08; font-size: 80px"></i><br>
                     <span>Thank you for your order!</span>
-                    <h5 class="fw-bold mt-2 mb-4">Your Order ID is <span style="color: #CD5C08;"><?= htmlspecialchars($order_id ?? '0000'); ?></span></h5>
-                    <p class="mb-3">Your order at each stall is now in preparation queue. You will be notified when your items are ready for pickup.</p>
+                    <h5 class="fw-bold mt-2 mb-4">Your Order ID is <span id="orderIdDisplayCashless" style="color: #CD5C08;"></span></h5>
+                    <p class="mb-3">Please complete your payment via GCash to confirm your order.</p>
+                    <div class="mb-3">
+                        <a id="gcashCheckoutLink" href="#" target="_blank" class="btn btn-primary">Proceed to GCash Payment</a>
+                    </div>
+                    <p>Your order at each stall will be in preparation queue once payment is confirmed. You will be notified when your items are ready for pickup.</p>
                     <span>For more details about your order, go to Purchase.</span>
                 </div>
                 <div class="text-center mt-4">

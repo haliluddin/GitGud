@@ -1618,3 +1618,20 @@ padding: 20px;
   padding: 10px 120px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+#gcashCheckoutLink {
+  background-color: #0C7B4F;
+  border-color: #0C7B4F;
+  padding: 8px 20px;
+  border-radius: 5px;
+  color: white;
+  text-decoration: none;
+  display: inline-block;
+  margin: 10px 0;
+}
+
+#gcashCheckoutLink:hover {
+  background-color: #0a6a44;
+  border-color: #0a6a44;
+  color: white;
+}
