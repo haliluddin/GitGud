@@ -33,10 +33,10 @@
         }
     }
 ?>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reset Password</title>
 <style>
-    main {
+    .whole {
         height: calc(100vh - 65.61px); 
     }
     .error-message {
@@ -49,7 +49,7 @@
     }
 </style>
 
-<main class="d-flex justify-content-center align-items-center">
+<main class="whole d-flex justify-content-center align-items-center">
     <?php if (!$success): ?>
         <!-- Reset Password Form -->
         <form id="resetPasswordForm" class="form" method="POST">
@@ -84,9 +84,6 @@
     <?php endif; ?>
 </main>
 
-classList.remove('d-none');
-    }
-</script>
 <?php
     include_once './footer.php'; 
 ?>

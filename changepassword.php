@@ -48,10 +48,10 @@
         }
     }
 ?>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Change Password</title>
 <style>
-    main {
+    .whole {
         height: calc(100vh - 65.61px);
     }
     .error-message {
@@ -64,7 +64,7 @@
     }
 </style>
 
-<main class="d-flex justify-content-center align-items-center">
+<main class="whole d-flex justify-content-center align-items-center">
     <?php if ($success): ?>
         <div class="form text-center">
             <h4 class="fw-bold m-0">Password Changed</h4>
