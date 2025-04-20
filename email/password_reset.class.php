@@ -34,7 +34,10 @@ class PasswordReset {
         $encrypted_token = urlencode(encrypt($token));
         $encrypted_user_id = urlencode(encrypt($user_id));
         
-        $resetLink = "http://localhost/GitGud/changepassword.php?token={$encrypted_token}&id={$encrypted_user_id}";
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+        $host = $_SERVER['HTTP_HOST'];
+        $uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+        $resetLink = "{$protocol}{$host}{$uri}/changepassword.php?token={$encrypted_token}&id={$encrypted_user_id}";
 
         // Store the reset token in database using actual user_id
         $sql = "INSERT INTO password_resets (user_id, token) VALUES (:user_id, :token)
