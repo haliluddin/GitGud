@@ -1,0 +1,83 @@
+GitGud PMS - Your Friendly Food Park Management System
+
+Welcome to GitGud PMS! 
+
+This guide will walk you through our easy-to-use food park management system. Whether you're looking for a great place to eat or managing your own food park, we've got you covered.
+
+------------------------------------------
+FOR EVERYONE - FINDING GREAT FOOD PARKS
+------------------------------------------
+
+1. Finding Food Parks
+   • On the homepage, type the name of a food park in the search box at the top.
+   • As you type, matching food parks will appear in a dropdown.
+   • Simply click on any food park in the list to visit its page.
+
+2. Viewing All Food Parks
+   • Scroll down on the homepage to see all food parks in Zamboanga City.
+   • Each food park card shows:
+     - The food park's name and logo
+     - Location details
+     - Current status (Open, Closed, or Unavailable)
+   
+3. Filtering Food Parks
+   • Use the buttons above the food park listings:
+     - "Open" shows only currently open food parks
+     - "Closed" shows parks that are temporarily closed (with reopening times)
+     - "Unavailable" shows parks that are not currently operating
+   • Click a button again to show all food parks.
+
+4. Getting More Information
+   • Click "See more..." on any food park card to view:
+     - Business contact details (email & phone)
+     - Complete operating hours
+     - Option to report issues (if you're logged in)
+
+------------------------------------------
+FOR CUSTOMERS - ADDITIONAL FEATURES
+------------------------------------------
+
+5. Reporting Issues
+   • You must be logged in to report a problem with a food park.
+   • To report an issue:
+     - Click "See more..." on the food park card
+     - Click the "Report" button in the popup window
+     - Explain your concern clearly in the text box
+     - Click "Submit" to send your report
+
+------------------------------------------
+FOR ADMINISTRATORS
+------------------------------------------
+
+6. Managing Food Park Status
+   • As an admin, you can update a park's availability:
+     - Find the park card you want to update
+     - Click the status dropdown button at the bottom of the card
+     - Choose between "Available" or "Unavailable"
+     - The system automatically saves your selection
+
+------------------------------------------
+FOR PARK OWNERS
+------------------------------------------
+
+7. Managing Your Food Park
+   • After logging in as a Park Owner:
+     - Access your dashboard to see your park's performance
+     - View and respond to customer reports
+     - Add, edit, or remove stalls in your food park
+
+------------------------------------------
+FOR STALL OWNERS
+------------------------------------------
+
+8. Managing Your Stall
+   • After logging in as a Stall Owner:
+     - Update your menu items and prices
+     - View customer orders
+     - Track your sales performance
+
+------------------------------------------
+Need Help?
+If you have any questions, please contact our support team at support@gitgudpms.com.
+
+Enjoy your GitGud experience!

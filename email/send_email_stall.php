@@ -31,7 +31,10 @@ class StallInvitation {
 
         
         // Redirect to stallregistration.php with necessary parameters
-        $invitationLink = "http://localhost/GitGud/stallregistration.php?oe={$owner_email}&oi={$owner_id}&pi={$park_id}&token={$token}&id={$user_id}";
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+        $host = $_SERVER['HTTP_HOST'];
+        $uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+        $invitationLink = "{$protocol}{$host}{$uri}/stallregistration.php?oe={$owner_email}&oi={$owner_id}&pi={$park_id}&token={$token}&id={$user_id}";
         
         $mail = new PHPMailer(true);
         try {
