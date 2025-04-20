@@ -168,7 +168,7 @@ $statusMapping = [
                             <span class="dot text-muted"></span>
                             <div class="d-flex gap-2 align-items-center">
                                 <span class="fw-bold"><?php echo htmlspecialchars($orderGroup['stall_name']); ?></span>
-                                <button class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php?stall_id=<?php echo $orderGroup['stall_id']; ?>';">View Stall</button>
+                                <button class="viewstall border bg-white small px-2" onclick="window.location.href='stall.php?id=<?= encrypt($orderGroup['stall_id']); ?>';">View Stall</button>
                             </div>
                         </div>
                         <div class="d-flex gap-3 align-items-center">
