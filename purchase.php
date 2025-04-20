@@ -358,6 +358,47 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => alert("Request failed: " + error));
     });
 
+    document.querySelectorAll('.order-received-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const orderStallId = this.getAttribute('data-order-stall-id');
+        const newStatus   = this.getAttribute('data-new-status');
+        const yesBtn      = document.getElementById('orderReceivedYesBtn');
+
+        yesBtn.setAttribute('data-order-id',    orderStallId);
+        yesBtn.setAttribute('data-new-status',  newStatus);
+    });
+    });
+
+    document.getElementById('orderReceivedYesBtn').addEventListener('click', function() {
+    const orderStallId = this.getAttribute('data-order-id');
+    const newStatus    = this.getAttribute('data-new-status');
+
+    if (!orderStallId || !newStatus) {
+        alert("Missing order information.");
+        return;
+    }
+
+    const postBody = 
+            'order_stall_id=' + encodeURIComponent(orderStallId) +
+            '&new_status='     + encodeURIComponent(newStatus);
+
+    fetch('update_order_status.php', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    postBody
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+        location.reload();
+        } else {
+        alert("Error: " + data.message);
+        }
+    })
+    .catch(err => alert("Request failed: " + err));
+    });
+
+
 });
 </script>
 <script src="./assets/js/navigation.js?v=<?php echo time(); ?>"></script>
