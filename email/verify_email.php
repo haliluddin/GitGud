@@ -10,9 +10,10 @@
 
     require_once 'resend_token.php';
 ?>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="../assets/css/style.css?v=<?php echo time(); ?>">
 <style>
-    main{
+    .whole{
         height: calc(100vh - 65.61px); 
         display: flex;
         justify-content: center;
@@ -21,7 +22,7 @@
  
 </style>
 <main>
-    <div class="bg-white border p-5 w-50 rounded-2 text-center">
+    <div class="whole bg-white border p-5 w-50 rounded-2 text-center">
         <img src="../assets/images/email.jpg" width="150" height="150">
         <h2 class="my-4">Verify your email address</h2>
         <p>A verification email has been sent to your email <span style="color: #CD5C08;"><?= $email ?></span><br>Please check your email and click the link provided in the email to complete your account registration.</p>
