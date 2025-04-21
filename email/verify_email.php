@@ -22,20 +22,29 @@
     }
 </style>
 <main class="wholewhole">
-    <div class="bg-white border p-5 w-50 rounded-2 text-center">
-        <img src="../assets/images/email.jpg" width="150" height="150">
-        <h2 class="my-4">Verify your email address</h2>
-        <p>A verification email has been sent to your email <span style="color: #CD5C08;"><?= $email ?></span><br>Please check your email and click the link provided in the email to complete your account registration.</p>
-        <div class="w-75 mx-auto my-4">
-            <span class="small">If you do not receive the email within the next 5 minutes, use the button below to resend the verification email.</span>
+<div class="container d-flex justify-content-center align-items-start pt-4" style="min-height: calc(100vh - 100px);">
+    <div class="bg-white border p-3 p-md-4 w-100 w-sm-75 w-md-50 rounded-2 text-center">
+        <img src="../assets/images/email.jpg" width="120" height="120" class="img-fluid mb-3">
+        <h4 class="mb-3">Verify your email address</h4>
+        <p class="mb-3">
+            A verification email has been sent to your email 
+            <span style="color: #CD5C08;"><?= $email ?></span>.<br>
+            Please check your inbox and click the link to complete your account registration.
+        </p>
+        <div class="w-100 w-md-75 mx-auto mb-4">
+            <span class="small">
+                Didn’t get the email? Wait 5 minutes, then click below to resend.
+            </span>
         </div>
         <form method="POST">
             <input type="hidden" name="user_id" value="<?= $_SESSION['user']['id'] ?>" />
             <input type="hidden" name="first_name" value="<?= $user['first_name'] ?>" />
             <input type="hidden" name="email" value="<?= $email ?>" />
-            <input type="submit" class="btn btn-primary w-50 p-3 rounded-5 resever" value="Resend Verification Email" /> 
+            <input type="submit" class="btn btn-primary w-100 w-md-50 p-2 rounded-5 resever" value="Resend Email" /> 
         </form>
     </div>
+</div>
+
 
     <!-- Resend Modal 
     <div class="modal fade" id="resend" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
