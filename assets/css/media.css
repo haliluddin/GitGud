@@ -74,7 +74,7 @@
     .whole .form{
         width: 60%;
     }
-    .whole{
+    .whole, .wholewhole{
         height: auto !important;
         padding: 30px 0;
     }
@@ -219,13 +219,22 @@
     .footer-about {
         width: auto;    
     }
+    .wholewhole div{
+        width: 70% !important;
+    }
 }
 @media (max-width: 426px) {
-    .whole{
+    .whole, .wholewhole{
         padding: 20px;
     }
     .whole .form{
         width: 100%;
+    }
+    .wholewhole div{
+        width: 100% !important;
+    }
+    .resever{
+        width: 100% !important;
     }
     .prac, .dd-tm{
         display: none !important;
