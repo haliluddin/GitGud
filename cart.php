@@ -57,14 +57,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         if (isset($result['error'])) {
             echo json_encode(['error' => $result['error']]);
         } else {
-            // Store the checkout URL in session
-            $_SESSION['gcash_checkout_url'] = $result['checkout_url'];
             echo "<script>
                     document.addEventListener('DOMContentLoaded', function() {
-                        document.getElementById('orderIdDisplayCashless').innerText = '$order_id';
-                        document.getElementById('gcashCheckoutLink').href = '" . $result['checkout_url'] . "';
-                        var cashlessModal = new bootstrap.Modal(document.getElementById('ifcashless'));
-                        cashlessModal.show();
+                        // Set the payment ID and checkout URL as data attributes
+                        document.getElementById('gcashModal').setAttribute('data-payment-id', '" . $result['payment_id'] . "');
+                        document.getElementById('gcashCheckoutBtn').setAttribute('data-checkout-url', '" . $result['checkout_url'] . "');
+                        document.getElementById('orderIdGcash').innerText = '$order_id';
+                        // Show the GCash processing modal
+                        var gcashModal = new bootstrap.Modal(document.getElementById('gcashModal'));
+                        gcashModal.show();
                     });
                   </script>";
         }
@@ -327,7 +328,6 @@ foreach ($cartGrouped as $stallName => $items) {
 </div>
 
 <!-- Cashless Payment Modal -->
-<!-- Cashless Payment Modal -->
 <div class="modal fade" id="ifcashless" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -338,12 +338,8 @@ foreach ($cartGrouped as $stallName => $items) {
                 <div class="text-center">
                     <i class="fa-regular fa-face-smile mb-3" style="color: #CD5C08; font-size: 80px"></i><br>
                     <span>Thank you for your order!</span>
-                    <h5 class="fw-bold mt-2 mb-4">Your Order ID is <span id="orderIdDisplayCashless" style="color: #CD5C08;"></span></h5>
-                    <p class="mb-3">Please complete your payment via GCash to confirm your order.</p>
-                    <div class="mb-3">
-                        <a id="gcashCheckoutLink" href="#" target="_blank" class="btn btn-primary">Proceed to GCash Payment</a>
-                    </div>
-                    <p>Your order at each stall will be in preparation queue once payment is confirmed. You will be notified when your items are ready for pickup.</p>
+                    <h5 class="fw-bold mt-2 mb-4">Your Order ID is <span style="color: #CD5C08;"><?= htmlspecialchars($order_id ?? '0000'); ?></span></h5>
+                    <p class="mb-3">Your order at each stall is now in preparation queue. You will be notified when your items are ready for pickup.</p>
                     <span>For more details about your order, go to Purchase.</span>
                 </div>
                 <div class="text-center mt-4">
@@ -351,6 +347,27 @@ foreach ($cartGrouped as $stallName => $items) {
                     <button type="button" class="btn btn-primary" onclick="window.location.href='purchase.php';">Purchase</button>
                 </div>
                 <br>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GCash Processing Modal -->
+<div class="modal fade" id="gcashModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="gcashModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="d-flex justify-content-center mb-4">
+                    <div class="spinner-border" style="color: #CD5C08; width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <h5 class="text-center mb-4">GCash Payment Processing</h5>
+                <p class="text-center" id="paymentStatus">Waiting for payment...</p>
+                <p class="text-center">Your Order ID: <strong id="orderIdGcash"></strong></p>
+                <div class="d-flex justify-content-center mb-3">
+                    <button id="gcashCheckoutBtn" class="btn btn-primary" onclick="openGcashCheckout()">Open GCash Checkout</button>
+                </div>
             </div>
         </div>
     </div>
@@ -480,6 +497,48 @@ foreach ($cartGrouped as $stallName => $items) {
             }
         });
     });
+
+    function openGcashCheckout() {
+        const checkoutUrl = document.getElementById('gcashCheckoutBtn').getAttribute('data-checkout-url');
+        if (checkoutUrl) {
+            window.open(checkoutUrl, '_blank');
+            startPaymentStatusCheck();
+        }
+    }
+
+    function startPaymentStatusCheck() {
+        const paymentId = document.getElementById('gcashModal').getAttribute('data-payment-id');
+        if (!paymentId) return;
+        
+        checkGcashPaymentStatus(paymentId);
+    }
+
+    function checkGcashPaymentStatus(paymentId) {
+        fetch(`check_payment_status.php?payment_id=${paymentId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "paid") {
+                    // Payment successful - close GCash modal and show success modal
+                    const gcashModal = bootstrap.Modal.getInstance(document.getElementById('gcashModal'));
+                    gcashModal.hide();
+                    
+                    // Show the cashless success modal
+                    const cashlessModal = new bootstrap.Modal(document.getElementById('ifcashless'));
+                    cashlessModal.show();
+                } else if (data.status === "unpaid") {
+                    // Still waiting for payment - check again in 5 seconds
+                    document.getElementById('paymentStatus').innerText = "Waiting for payment...";
+                    setTimeout(() => checkGcashPaymentStatus(paymentId), 5000);
+                } else {
+                    // Error or other status
+                    document.getElementById('paymentStatus').innerText = "Error checking payment status. Please refresh.";
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById('paymentStatus').innerText = "Error checking payment status. Please refresh.";
+            });
+    }
 </script>
 
 <?php 
