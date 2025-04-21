@@ -13,16 +13,80 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="../assets/css/style.css?v=<?php echo time(); ?>">
 <style>
-    .whole{
+    main {
         height: calc(100vh - 65.61px); 
         display: flex;
         justify-content: center;
         align-items: center;
+        padding: 20px;
     }
- 
+    
+    .verification-container {
+        width: 90%;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .verification-container img {
+        width: 100%;
+        max-width: 150px;
+        height: auto;
+    }
+    
+    @media (max-width: 768px) {
+        .verification-container {
+            width: 95%;
+            padding: 20px;
+        }
+        
+        .verification-container h2 {
+            font-size: 1.5rem;
+        }
+        
+        .verification-container p {
+            font-size: 0.9rem;
+        }
+        
+        .verification-container .btn {
+            width: 70% !important;
+            padding: 0.75rem !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .verification-container {
+            width: 100%;
+            padding: 10px;
+        }
+        
+        .verification-container img {
+            max-width: 80px;
+        }
+        
+        .verification-container h2 {
+            font-size: 1.1rem;
+            margin: 0.3rem 0;
+        }
+        
+        .verification-container p {
+            font-size: 0.75rem;
+            line-height: 1.3;
+        }
+        
+        .verification-container .btn {
+            width: 100% !important;
+            padding: 0.4rem !important;
+            font-size: 0.8rem;
+        }
+        
+        .verification-container .w-75 {
+            width: 100% !important;
+            margin: 0.5rem auto;
+        }
+    }
 </style>
 <main>
-    <div class="whole bg-white border p-5 w-50 rounded-2 text-center">
+    <div class="bg-white border p-5 rounded-2 text-center verification-container">
         <img src="../assets/images/email.jpg" width="150" height="150">
         <h2 class="my-4">Verify your email address</h2>
         <p>A verification email has been sent to your email <span style="color: #CD5C08;"><?= $email ?></span><br>Please check your email and click the link provided in the email to complete your account registration.</p>
