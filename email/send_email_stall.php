@@ -34,8 +34,9 @@ class StallInvitation {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
         $host = $_SERVER['HTTP_HOST'];
         $uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-        $invitationLink = "{$protocol}{$host}{$uri}/stallregistration.php?oe={$owner_email}&oi={$owner_id}&pi={$park_id}&token={$token}&id={$user_id}";
-        
+        $path = dirname($uri) . '/stallregistration.php';
+        $invitationLink = "{$protocol}{$host}{$path}?oe={$owner_email}&oi={$owner_id}&pi={$park_id}&token={$token}&id={$user_id}";
+
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
@@ -155,7 +156,7 @@ class StallInvitation {
             if ($difference < $cd) {
                 return ['cd' => $cd - $difference, 'message' => 'cooldown'];
             } else if ($invitation['is_used'] == 0) {
-                $expiration = date('Y-m-d H:i:s', strtotime('+7 days')); // Longer expiration for stall invitations
+                $expiration = date('Y-m-d H:i:s', strtotime('+7 days'));
 
                 $sql = "UPDATE stall_invitations SET 
                         invitation_token = :token, 
