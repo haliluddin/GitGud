@@ -345,7 +345,7 @@
                                         <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?= htmlspecialchars($product['name']); ?>">
                                         <button class="addtocart position-absolute fw-bold d-flex justify-content-center align-items-center">+</button>
                                         <div class="card-body">
-                                            <p class="card-text text-muted m-0"><?= htmlspecialchars($cat['name']); ?></p>
+                                            <p class="card-text text-muted m-0"> <?= htmlspecialchars($product['category_name']); ?></p>
                                             <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                             <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                             <?php
@@ -435,7 +435,7 @@
                                         <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?= htmlspecialchars($product['name']); ?>">
                                         <button class="addtocart position-absolute fw-bold d-flex justify-content-center align-items-center">+</button>
                                         <div class="card-body">
-                                            <p class="card-text text-muted m-0"><?= htmlspecialchars($cat['name']); ?></p>
+                                            <p class="card-text text-muted m-0"> <?= htmlspecialchars($product['category_name']); ?></p>
                                             <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                             <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                             <?php
@@ -525,7 +525,7 @@
                                         <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?= htmlspecialchars($product['name']); ?>">
                                         <button class="addtocart position-absolute fw-bold d-flex justify-content-center align-items-center">+</button>
                                         <div class="card-body">
-                                            <p class="card-text text-muted m-0"><?= htmlspecialchars($cat['name']); ?></p>
+                                            <p class="card-text text-muted m-0"> <?= htmlspecialchars($product['category_name']); ?></p>
                                             <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                             <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                             <?php
@@ -625,7 +625,7 @@
                                                     <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?= htmlspecialchars($product['name']); ?>">
                                                     <button class="addtocart position-absolute fw-bold d-flex justify-content-center align-items-center">+</button>
                                                     <div class="card-body">
-                                                        <p class="card-text text-muted m-0"><?= htmlspecialchars($cat['name']); ?></p>
+                                                        <p class="card-text text-muted m-0"> <?= htmlspecialchars($product['category_name']); ?></p>
                                                         <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                                         <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                                         <?php
@@ -696,7 +696,7 @@
                                         <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top custom-img rounded-0" alt="<?= htmlspecialchars($product['name']); ?>">
                                         <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
                                         <div class="card-body">
-                                            <p class="card-text text-muted m-0"><?= htmlspecialchars($cat['name']); ?></p>
+                                            <p class="card-text text-muted m-0"> <?= htmlspecialchars($product['category_name']); ?></p>
                                             <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
                                             <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
                                             <?php
