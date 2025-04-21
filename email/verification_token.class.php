@@ -21,7 +21,7 @@ class Verification {
         $this->db = new Database();
     }
 
-    function sendEmail($user_id, $email, $first_name, $token) {
+    function sendEmail($user_id, $email, $first_name, $token, $resend = false) {
         $token = urlencode(encrypt($token));
         $user_id = urlencode(encrypt($user_id));
         
@@ -29,7 +29,13 @@ class Verification {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
         $host = $_SERVER['HTTP_HOST'];
         $uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-        $verificationLink = "{$protocol}{$host}{$uri}/email/verify.php?token={$token}&id={$user_id}";
+        $verificationLink = "{$protocol}{$host}{$uri}";
+
+        if ($resend) {
+            $verificationLink .= "/verify.php?token={$token}&id={$user_id}";
+        } else {
+            $verificationLink .= "/email/verify.php?token={$token}&id={$user_id}";
+        }
         
         $mail = new PHPMailer(true);
         try {
@@ -126,7 +132,7 @@ class Verification {
         }
     }
 
-    function sendVerificationEmail($user_id, $email, $first_name) {
+    function sendVerificationEmail($user_id, $email, $first_name, $resend = false) {
         $sql = "SELECT * FROM verification WHERE user_id = :user_id";
         $query = $this->db->connect()->prepare($sql);
         $query->execute(array(':user_id' => $user_id));
@@ -159,7 +165,7 @@ class Verification {
                     ':last_sent' => time()
                 ));
 
-                return $this->sendEmail($user_id, $email, $first_name, $token);
+                return $this->sendEmail($user_id, $email, $first_name, $token, $resend);
             } else {
                 return ['message' => 'verified'];
             }

@@ -16,7 +16,7 @@
             $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
     
             if ($user_id && $first_name && $email) {
-                $result = $verificationObj->sendVerificationEmail($user_id, $email, $first_name);
+                $result = $verificationObj->sendVerificationEmail($user_id, $email, $first_name, true);
                 
                 if ($result === true) {
                     echo "<script>alert('Verification email has been resent successfully!');</script>";

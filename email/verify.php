@@ -26,5 +26,5 @@
         exit();
     } 
     else {
-        echo "No token provided.";
+        echo 'Invalid request. Please try again.';
     }
