@@ -3,9 +3,6 @@
 
     require_once __DIR__ . '/../email/verification_token.class.php';
     require_once __DIR__ . '/../classes/encdec.class.php';
-    require_once __DIR__ . '/../classes/db.class.php';
-
-    $userObj = new User();
 
     $verificationObj = new Verification();
 
