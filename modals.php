@@ -1022,6 +1022,7 @@
                     <p class="small m-0 my-3">Your password must be at least 8 characters.</p>
 
                     <form id="changePasswordForm" action="classes/change_password.php" method="POST">
+                        <input type="hidden" name="source" value="<?php echo htmlspecialchars($_GET['source'] ?? ''); ?>">
                         <div class="form-floating mb-3">
                             <input type="password" class="form-control" name="currentpassword" placeholder="Current Password" required>
                             <label for="currentpassword">Current Password</label>
