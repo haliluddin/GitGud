@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['emails']) && is_array
                     $response['results'][] = [
                         'email' => $email,
                         'status' => 'warning',
-                        'message' => 'Cooldown period, please wait ' . floor($result['cd'] / 60) . ' minutes'
+                        'message' => 'Cooldown period, please wait ' . floor($result['cd'] / 60) . ' minutes and ' . ($result['cd'] % 60) . ' seconds'
                     ];
                 } else if ($result['message'] === 'already_registered') {
                     $response['results'][] = [
