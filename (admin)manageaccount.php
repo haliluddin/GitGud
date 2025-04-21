@@ -9,12 +9,14 @@ require_once './email/verification_token.class.php';
 
 $userObj = new User();
 $adminObj = new Admin();
-$isLoggedIn = false;
 if (isset($_SESSION['user'])) {
-    if ($userObj->isVerified($_SESSION['user']['id']) == 1) {
-        $isLoggedIn = true;
-    } else {
+    if ($userObj->isVerified($_SESSION['user']['id']) != 1) {
         header('Location: email/verify_email.php');
+        exit();
+    }
+
+    if ($user['role'] != 'Admin') {
+        header('Location: index.php');
         exit();
     }
 }
