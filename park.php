@@ -25,17 +25,29 @@
 
     $parkIsOpen = false;
     foreach ($parkOperatingHours as $hours) {
+        // if days are embedded, split them off
         if (strpos($hours, '<br>') !== false) {
-            list($days, $timeRange) = explode('<br>', $hours);
-            $daysArray = array_map('trim', explode(',', $days));
-            if (in_array($currentDay, $daysArray)) {
-                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                $openTime24 = date('H:i', strtotime($openTime));
-                $closeTime24 = date('H:i', strtotime($closeTime));
-                if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                    $parkIsOpen = true;
-                    break;
-                }
+            list(, $timeRange) = explode('<br>', $hours, 2);
+        } else {
+            $timeRange = $hours;
+        }
+    
+        // now split open/close
+        list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+    
+        $openTime24  = date('H:i', strtotime($openTime));
+        $closeTime24 = date('H:i', strtotime($closeTime));
+    
+        // overnight?
+        if ($closeTime24 <= $openTime24) {
+            if ($currentTime >= $openTime24 || $currentTime <= $closeTime24) {
+                $parkIsOpen = true;
+                break;
+            }
+        } else {
+            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                $parkIsOpen = true;
+                break;
             }
         }
     }
@@ -269,19 +281,45 @@
                         if (!empty($stall['stall_operating_hours'])) {
                             $operatingHours = explode('; ', $stall['stall_operating_hours']);
                             $isOpen = false;
+                        
                             foreach ($operatingHours as $hours) {
-                                list($days, $timeRange) = explode('<br>', $hours);
-                                $daysArray = array_map('trim', explode(',', $days));
-                                if (in_array($currentDay, $daysArray)) {
-                                    list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                                    $openTime24 = date('H:i', strtotime($openTime));
-                                    $closeTime24 = date('H:i', strtotime($closeTime));
-                                    if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                                // 1) split days vs times if present
+                                if (strpos($hours, '<br>') !== false) {
+                                    list($dayString, $timeRange) = explode('<br>', $hours, 2);
+                                    // Build an array of day-names: ["Monday","Tuesday",…]
+                                    $allowedDays = array_map('trim', explode(',', $dayString));
+                                    // if today’s not in that list, skip
+                                    if (!in_array($currentDay, $allowedDays, true)) {
+                                        continue;
+                                    }
+                                } else {
+                                    // no day restriction → applies every day
+                                    $timeRange = $hours;
+                                }
+                        
+                                // 2) split open/close times
+                                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
+                                $open24  = date('H:i', strtotime($openTime));
+                                $close24 = date('H:i', strtotime($closeTime));
+                        
+                                // 3) same logic for overnight vs same‑day
+                                if ($close24 <= $open24) {
+                                    // overnight window (e.g. 18:00–02:00)
+                                    if ($currentTime >= $open24 || $currentTime <= $close24) {
+                                        $isOpen = true;
+                                        break;
+                                    }
+                                } else {
+                                    // same‑day window (e.g. 09:00–17:00)
+                                    if ($currentTime >= $open24 && $currentTime <= $close24) {
                                         $isOpen = true;
                                         break;
                                     }
                                 }
                             }
+                        } else {
+                            // no hours = closed
+                            $isOpen = false;
                         }
                     }
                     

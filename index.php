@@ -149,14 +149,25 @@
                     $daysArray = array_map('trim', explode(',', $days));
                     if (in_array($currentDay, $daysArray)) {
                         list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                        $openTime24 = date('H:i', strtotime($openTime));
+                        $openTime24  = date('H:i', strtotime($openTime));
                         $closeTime24 = date('H:i', strtotime($closeTime));
-                        if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                            $isOpen = true;
-                            break;
+
+                        if ($openTime24 <= $closeTime24) {
+                            // Normal same‑day range
+                            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
+                                $isOpen = true;
+                                break;
+                            }
+                        } else {
+                            // Overnight range (e.g. 12:00 PM – 12:00 AM)
+                            if ($currentTime >= $openTime24 || $currentTime <= $closeTime24) {
+                                $isOpen = true;
+                                break;
+                            }
                         }
                     }
                 }
+
                 if (isset($park['status']) && $park['status'] === 'Unavailable') {
                     $status = 'unavailable';
                 } else {
