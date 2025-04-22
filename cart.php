@@ -207,8 +207,8 @@ foreach ($cartGrouped as $stallName => $items) {
                         <label class="form-label w-25 mb-0 fw-bold">Payment Method</label>
                         <select class="form-select w-75" id="paymentMethod" name="payment_method" onchange="validatePaymentMethods()" required>
                             <option value="" disabled selected>Select</option>
-                            <option value="Cash">Cash</option>
-                            <option value="GCash">GCash</option>
+                            <option value="Cash" id="cashOption">Cash</option>
+                            <option value="GCash" id="gcashOption">GCash</option>
                         </select>
                     </div>
                     <input type="hidden" id="order_type" name="order_type" value="Dine In">
@@ -419,7 +419,23 @@ foreach ($cartGrouped as $stallName => $items) {
             }
         });
         document.getElementById('grandTotal').innerText = '₱' + grandTotal.toFixed(2);
+        validateGcash(grandTotal);
     }
+
+    function validateGcash(newValue) {
+        const grandTotal = document.getElementById('grandTotal');
+        grandTotal.textContent = `₱${newValue.toFixed(2)}`;
+        
+        let gcashOption = document.getElementById('gcashOption');
+        let cashOption = document.getElementById('cashOption');
+        if (newValue < 100) {
+            gcashOption.disabled = true;
+            cashOption.selected = true;
+        } else {
+            gcashOption.disabled = false;
+        }
+    }
+
 
     function deleteCartItem(productId, request) {
         var xhr = new XMLHttpRequest();
