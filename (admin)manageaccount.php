@@ -35,8 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $middle_name = htmlspecialchars(trim($_POST['edit_middle_name']));
         $last_name = htmlspecialchars(trim($_POST['edit_last_name']));
         $birth_date = $_POST['edit_birth_date'];
-        $sex = $_POST['edit_sex'];
-        $update = $userObj->updateUser($user_id, $first_name, $middle_name, $last_name, $birth_date, $sex);
+        $sex = $_POST['edit_sex']; 
+        $role = htmlspecialchars(trim($_POST['edit_role']));
+        $update = $userObj->updateUser($user_id, $first_name, $middle_name, $last_name, $birth_date, $sex, $role);
         if ($update) {
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();
@@ -326,7 +327,7 @@ $searchCategory = isset($_GET['search_category'])
                             echo '<div class="dropdown position-relative">';
                             echo '<i class="fa-solid fa-ellipsis small rename py-1 px-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>';
                             echo '<ul class="dropdown-menu dropdown-menu-center p-0" style="box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">';
-                            echo '<li><a class="dropdown-item edit-user" href="#" data-bs-toggle="modal" data-bs-target="#edituser" data-user-id="' . $user['id'] . '" data-first-name="' . htmlspecialchars($user['first_name']) . '" data-middle-name="' . htmlspecialchars($user['middle_name']) . '" data-last-name="' . htmlspecialchars($user['last_name']) . '" data-email="' . htmlspecialchars($user['email']) . '" data-phone="' . htmlspecialchars($user['phone']) . '" data-birth-date="' . $user['birth_date'] . '" data-sex="' . htmlspecialchars($user['sex']) . '">Edit</a></li>';
+                            echo '<li><a class="dropdown-item edit-user" href="#" data-bs-toggle="modal" data-bs-target="#edituser" data-user-id="' . $user['id'] . '" data-first-name="' . htmlspecialchars($user['first_name']) . '" data-middle-name="' . htmlspecialchars($user['middle_name']) . '" data-last-name="' . htmlspecialchars($user['last_name']) . '" data-email="' . htmlspecialchars($user['email']) . '" data-phone="' . htmlspecialchars($user['phone']) . '" data-birth-date="' . $user['birth_date'] . '" data-sex="' . htmlspecialchars($user['sex']) . '" data-role="' . htmlspecialchars($user['role']) . '">Edit</a></li>';
                             echo '<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteuser" data-user-id="' . $user['id'] . '">Delete</a></li>';
                             
                             if (isset($statusMap[$user['id']]) && $statusMap[$user['id']]['status'] == 'Deactivated') {
@@ -792,6 +793,17 @@ $searchCategory = isset($_GET['search_category'])
                                 <option value="female">Female</option>
                             </select>
                         </div>
+                        <div class="mb-4">
+                            <label for="editRole" class="form-label">Role</label>
+                            <select name="edit_role" id="editRole" class="form-control" required>
+                                <option value="">Select role</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Customer">Customer</option>
+                                <option value="Park Owner">Park Owner</option>
+                                <option value="Stall Owner">Stall Owner</option>
+                            </select>
+                        </div>
+
                         <button type="submit" name="update_user" class="btn btn-primary w-100">Update</button>
                     </div>
                 </form>
@@ -1072,6 +1084,7 @@ $searchCategory = isset($_GET['search_category'])
         var phone = button.data('phone');
         var birthDate = button.data('birth-date');
         var sex = button.data('sex');
+        var role = button.data('role');
         $('#editUserId').val(userId);
         $('#editFirstName').val(firstName);
         $('#editMiddleName').val(middleName);
@@ -1080,6 +1093,7 @@ $searchCategory = isset($_GET['search_category'])
         $('#editPhone').val(phone);
         $('#editBirthDate').val(birthDate);
         $('#editSex').val(sex);
+        $('#editRole').val(role);
     });
     $('#deleteuser').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
