@@ -3,10 +3,11 @@
     include_once 'links.php'; 
     include_once 'secondheader.php';
     require_once './classes/db.class.php';
+    require_once __DIR__ . '/classes/encdec.class.php';
     $userObj = new User();
 
     if (isset($_GET['user_id'])) {
-        $owner_id = $_GET['user_id'];
+        $owner_id = decrypt(urldecode($_GET['user_id']));
     } elseif (isset($_SESSION['user']['id'])) {
         $owner_id = $_SESSION['user']['id'];
     } else {

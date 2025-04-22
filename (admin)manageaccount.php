@@ -5,6 +5,7 @@ include_once 'links.php';
 require_once __DIR__ . '/classes/admin.class.php';
 require_once __DIR__ . '/classes/db.class.php';
 require_once __DIR__ . '/classes/user.class.php';
+require_once __DIR__ . '/classes/encdec.class.php';
 require_once './email/verification_token.class.php';
 
 $userObj = new User();
@@ -338,7 +339,7 @@ $searchCategory = isset($_GET['search_category'])
                             
                                 echo '<li><a class="dropdown-item activity-log" href="#" data-bs-toggle="modal" data-bs-target="#activitylog" data-user-id="' . $user['id'] . '">Activity</a></li>';
                             if ($user['role'] == 'Customer') {
-                                echo '<li><a class="dropdown-item" href="parkregistration.php?user_id=' . $user['id'] . '">Create Park</a></li>';
+                                echo '<li><a class="dropdown-item" href="parkregistration.php?user_id=' . urlencode(encrypt($user['id'])) . '">Create Park</a></li>';
                             }                        
                             echo '</ul>';
                             echo '</div>';
