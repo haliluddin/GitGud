@@ -766,8 +766,8 @@ $searchCategory = isset($_GET['search_category'])
                             <input type="text" name="edit_first_name" id="editFirstName" class="form-control" required>
                         </div>
                         <div class="mb-2">
-                            <label for="editMiddleName" class="form-label">Middle Name</label>
-                            <input type="text" name="edit_middle_name" id="editMiddleName" class="form-control" required>
+                            <label for="editMiddleName" class="form-label">Middle Name (Optional)</label>
+                            <input type="text" name="edit_middle_name" id="editMiddleName" class="form-control">
                         </div>
                         <div class="mb-2">
                             <label for="editLastName" class="form-label">Last Name</label>
