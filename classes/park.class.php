@@ -629,8 +629,18 @@ class Park {
     }
 
     public function deleteParkFirstOpening($park_id) {
-        $stmt = $this->db->connect()->prepare("DELETE FROM park_first_opening WHERE park_id = ?");
-        return $stmt->execute([$park_id]);
+        try {
+            $stmt1 = $this->db->connect()->prepare("DELETE FROM park_first_opening WHERE park_id = ?");
+            $stmt1->execute([$park_id]);
+            
+            $stmt2 = $this->db->connect()->prepare("UPDATE business SET status = 'Available' WHERE id = ?");
+            $stmt2->execute([$park_id]);
+
+            return true;
+            
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 
     public function isStallOwnerOfPark($userId, $parkId) {

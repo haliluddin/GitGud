@@ -67,6 +67,42 @@ if (isset($_POST['report_update'])) {
     header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($park_id) . "#reports");
     exit();
 }
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grand_opening'], $_POST['park_id'])) {
+    if ($_POST['grand_opening'] == 1) {
+        $success = $parkObj->deleteParkFirstOpening($_POST['park_id']);
+        
+        if ($success) {
+            $redirectUrl = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'dashboard.php';
+            echo '
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                Swal.fire({
+                    title: "Grand Opening Complete!",
+                    html: `<div class="text-center">
+                        <i class="fa-solid fa-calendar-check text-success fa-3x mb-3"></i>
+                        <p class="fs-5">Your food park is now officially open to the public!</p>
+                        <div class="alert alert-success text-start mt-3">
+                            <i class="fa-solid fa-lightbulb me-2"></i>
+                            Visitors can now visit your park and stalls in the app.
+                        </div>
+                    </div>`,
+                    confirmButtonText: "Perfect!",
+                    confirmButtonColor: "#28a745",
+                    allowOutsideClick: false,
+                    willClose: () => {
+                        window.location.href = "' . $redirectUrl . '";
+                    }
+                });
+            });
+            </script>';
+        } else {
+            $opening_err = "Failed to complete the opening process. Please try again.";
+        }
+    }
+}
+
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -180,11 +216,12 @@ if (isset($_POST['report_update'])) {
                 <button class="variation-btn addrem m-2" data-bs-toggle="modal" data-bs-target="#operatinghours">Operating Hours</button>
                 
                 <?php
-                    $isParkFirstTime = $parkObj->isParkFirstTime($park_id);
-                    if ($isParkFirstTime == 1) { ?>
-                        <button class="variation-btn addrem m-2" style="background-color: #28a745; color: white;">Open Park First Time</but>
-                    <?php } ?>
-                        <button class="variation-btn addrem" style="background-color: #dc3545; color: white;" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button></div>
+                $isParkFirstTime = $parkObj->isParkFirstTime($park_id);
+                if ($isParkFirstTime == 0) { ?>
+                    <button class="variation-btn addrem m-2" style="background-color: #28a745; color: white;" data-bs-toggle="modal" data-bs-target="#grandOpeningModal">Open Park First Time</button>
+                <?php } ?>
+                
+                <button class="variation-btn addrem" style="background-color: #dc3545; color: white;" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button></div>
             <h5 class="fw-bold m-0">Reports</h5>
             <span class="small text-muted">Resolve or reject customer's report on your stalls</span>
             <?php 
@@ -451,6 +488,55 @@ if (isset($_POST['report_update'])) {
                             </div>
                         </div>
                         <?php if(isset($delete_err)) { echo '<p class="text-danger">'.$delete_err.'</p>'; } ?>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="grandOpeningModal" tabindex="-1" aria-labelledby="grandOpeningLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" id="grandOpeningForm">
+                <input type="hidden" name="grand_opening" value="1">
+                <input type="hidden" name="park_id" value="<?= $park_id ?>">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="fw-bold mb-4"><i class="fa-solid fa-calendar-check text-success"></i> Grand Opening</h4>
+                            <div class="mb-4">
+                                <span>You are about to officially open this food park for the first time.</span><br>
+                                <strong>This will activate the park and make it available to the public.</strong>
+                            </div>
+                            
+                            <div class="alert alert-success border-start border-5 border-success">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-circle-check me-3 fs-4"></i>
+                                    <div>
+                                        <h5 class="alert-heading mb-2">Ready for Grand Opening?</h5>
+                                        <p class="mb-1">Before opening, please confirm:</p>
+                                        <ul class="mb-0 ps-3">
+                                            <li>All stalls are properly set up</li>
+                                            <li>Stall products/menus are complete</li>
+                                            <li>Operating hours are configured</li>
+                                            <li>Park information is accurate</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-center gap-2 py-3">
+                                <button type="button" class="btn btn-secondary flex-grow-1" data-bs-dismiss="modal">
+                                    Not Yet
+                                </button>
+                                <button type="submit" class="btn btn-success flex-grow-1">
+                                    <i class="fa-solid fa-flag me-2"></i>Open Park Now
+                                </button>
+                            </div>
+                        </div>
+                        <?php if(isset($opening_err)) { echo '<p class="text-danger mt-2">'.$opening_err.'</p>'; } ?>
                     </div>
                 </div>
             </form>

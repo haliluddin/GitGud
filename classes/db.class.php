@@ -383,7 +383,8 @@ class User {
                 ));
             }
 
-            $sql = "INSERT INTO park_first_opening (park_id)";
+            $sql = "INSERT INTO park_first_opening (park_id) 
+                    VALUES (:park_id);";
             $query = $conn->prepare($sql);
             $query->execute(array(
                 ':park_id' => $business_id
