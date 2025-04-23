@@ -181,7 +181,7 @@ if (isset($_POST['report_update'])) {
                 
                 <?php
                     $isParkFirstTime = $parkObj->isParkFirstTime($park_id);
-                    if ($isParkFirstTime == 1) {?>
+                    if ($isParkFirstTime == 1) { ?>
                         <button class="variation-btn addrem m-2" style="background-color: #28a745; color: white;">Open Park First Time</but>
                     <?php } ?>
                         <button class="variation-btn addrem" style="background-color: #dc3545; color: white;" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button></div>

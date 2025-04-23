@@ -26,7 +26,6 @@ class Park {
         $query->execute([':currentDate' => $currentDate]);
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
-    
 
     public function getPark($park_id) {
         $sql = "
@@ -627,5 +626,16 @@ class Park {
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->execute([':park_id' => $park_id]);
         return $stmt->fetchColumn() == 0;
+    }
+
+    public function deleteParkFirstOpening($park_id) {
+        $stmt = $this->db->connect()->prepare("DELETE FROM park_first_opening WHERE park_id = ?");
+        return $stmt->execute([$park_id]);
+    }
+
+    public function isStallOwnerOfPark($userId, $parkId) {
+        $stmt = $this->db->connect()->prepare("SELECT COUNT(*) FROM stalls WHERE user_id = ? AND park_id = ?");
+        $stmt->execute([$userId, $parkId]);
+        return $stmt->fetchColumn() > 0;
     }
 }

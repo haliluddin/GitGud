@@ -90,7 +90,7 @@ if (isset($park_id))
         <a href="index.php"><img src="assets/images/logo.png" width="150" class="mh-logo"></a>
         <div class="d-flex gap-2 align-items-center parkhead" onclick="window.location.href='park.php'">
             <i class="fa-solid fa-location-crosshairs"></i>
-            <h6 class="m-0"><?= htmlspecialchars($park_name) ?></h6>
+            <h6 class="m-0"><?= $park_name ?></h6>
         </div>
         <div class="d-flex gap-3 align-items-center nav">
             <?php if ($user): ?>
@@ -122,7 +122,7 @@ if (isset($park_id))
     <div class="parkhead-tm" onclick="window.location.href='park.php'">
         <div class="d-flex gap-1 align-items-center justify-content-center mt-3">
             <i class="fa-solid fa-location-crosshairs"></i>
-            <h6 class="m-0"><?= htmlspecialchars($park_name) ?></h6>
+            <h6 class="m-0"><?= $park_name ?></string: h6>
         </div>
     </div>
     

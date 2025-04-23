@@ -175,9 +175,24 @@
                 }
                 ?>
                 <div class="col park-card border rounded p-0 mx-2" data-status="<?= $status; ?>">
-                    <?php if ($status !== 'unavailable') { ?>
-                        <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
-                    <?php } ?>
+                    <?php
+                        $canEnter = false;
+                        if ($user['role'] === 'Admin') {
+                            $canEnter = true;
+                        } elseif (isset($user['id']) && $user['id'] == $park['user_id']) {
+                            $canEnter = true;
+                        } elseif (isset($user['id']) && $parkObj->isStallOwnerOfPark($user['id'], $park['id'])) {
+                            $canEnter = true;
+                        } elseif ($status !== 'unavailable') {
+                            $canEnter = true;
+                        }
+
+                        if ($canEnter) {
+                        ?>
+                            <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
+                        <?php
+                        }
+                    ?>
                         <div class="card border-0" style="position: relative;">
                             <?php 
                             if ($status === 'closed') { 
