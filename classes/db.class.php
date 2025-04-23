@@ -382,7 +382,13 @@ class User {
                     ':close_time' => $closeTime
                 ));
             }
-    
+
+            $sql = "INSERT INTO park_first_opening (park_id)";
+            $query = $conn->prepare($sql);
+            $query->execute(array(
+                ':park_id' => $business_id
+            ));
+
             // Update the user's role to 'Park Owner' if not already set
             $sql = "UPDATE users SET role = 'Park Owner' WHERE id = :user_id;";
             $query = $conn->prepare($sql);

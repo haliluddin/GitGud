@@ -62,18 +62,39 @@ class Admin {
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    function updateBusinessStatus($id, $status, $rejection_reason = null) {
+    public function updateBusinessStatus($id, $status, $rejection_reason = null, $setStatus = 0) {
+        // Start building the SQL query
+        $sql = "UPDATE business SET business_status = :status";
+        
+        // Add rejection reason if status is 'Rejected'
         if ($status == 'Rejected') {
-           $sql = "UPDATE business SET business_status = :status, rejection_reason = :rejection_reason WHERE id = :id";
-        } else {
-           $sql = "UPDATE business SET business_status = :status WHERE id = :id";
+            $sql .= ", rejection_reason = :rejection_reason";
         }
+        
+        // Add status update if setStatus is provided
+        if ($setStatus != 0) {
+            $sql .= ", status = :setStatus";
+        }
+        
+        // Add WHERE clause (fixed missing space before WHERE)
+        $sql .= " WHERE id = :id";
+        
+        // Prepare the query
         $query = $this->db->connect()->prepare($sql);
+        
+        // Bind parameters
         $query->bindParam(':status', $status);
         $query->bindParam(':id', $id);
+        
         if ($status == 'Rejected') {
             $query->bindParam(':rejection_reason', $rejection_reason);
         }
+        
+        if ($setStatus != 0) {
+            $query->bindParam(':setStatus', $setStatus);
+        }
+        
+        // Execute and return result
         return $query->execute();
     }
 

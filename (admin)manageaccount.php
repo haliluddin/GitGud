@@ -403,7 +403,7 @@ $searchCategory = isset($_GET['search_category'])
                             }
                             echo '<tr>';
                             echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['owner_name']) . '</td>';
-                            echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['business_name']) . '</td>';
+                            echo '<td class="fw-normal small py-3 px-4">' . $business['business_name'] . '</td>';
                             echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['region_province_city']) . ', ' . htmlspecialchars($business['barangay']) . ', ' . htmlspecialchars($business['street_building_house']) . '</td>';
                             echo '<td class="fw-normal small py-3 px-4">
                                 <i class="fa-solid fa-chevron-down rename small" 
@@ -1180,7 +1180,7 @@ $('.delete-category-btn').on('click', function() {
     <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
 
     <!-- ACTIVATE AND DEACTIVATE USER -->
-    <script src="assets/js/activate.js?v=<?php echo time(); ?>"></script>
+    <!-- <script src="assets/js/activate.js?v=<?php echo time(); ?>"></script> -->
     
     <!-- Update Application Modal -->
     <div class="modal fade" id="updateApplicationModal" tabindex="-1" aria-labelledby="updateApplicationModalLabel" aria-hidden="true">

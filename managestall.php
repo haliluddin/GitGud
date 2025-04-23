@@ -178,8 +178,13 @@ if (isset($_POST['report_update'])) {
                     <span><i class="fa-solid fa-phone small"></i> +63<?= $park['business_phone'] ?></span>
                 </div>
                 <button class="variation-btn addrem m-2" data-bs-toggle="modal" data-bs-target="#operatinghours">Operating Hours</button>
-                <button class="variation-btn addrem" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button>
-            </div>
+                
+                <?php
+                    $isParkFirstTime = $parkObj->isParkFirstTime($park_id);
+                    if ($isParkFirstTime == 1) {?>
+                        <button class="variation-btn addrem m-2" style="background-color: #28a745; color: white;">Open Park First Time</but>
+                    <?php } ?>
+                        <button class="variation-btn addrem" style="background-color: #dc3545; color: white;" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button></div>
             <h5 class="fw-bold m-0">Reports</h5>
             <span class="small text-muted">Resolve or reject customer's report on your stalls</span>
             <?php 

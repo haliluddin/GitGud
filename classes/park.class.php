@@ -622,4 +622,10 @@ class Park {
         }
     }
     
+    public function isParkFirstTime($park_id) {
+        $sql = "SELECT COUNT(*) FROM park_first_opening WHERE park_id = :park_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([':park_id' => $park_id]);
+        return $stmt->fetchColumn() == 0;
+    }
 }
