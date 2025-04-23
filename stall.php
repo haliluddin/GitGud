@@ -140,8 +140,8 @@
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
-                    <h5 class="my-2 fw-bold fs-2"><?= htmlspecialchars($stall['name']); ?></h5>
-                    <p class="text-muted m-0"><?= htmlspecialchars($stall['description']); ?></p>
+                    <h5 class="my-2 fw-bold fs-2"><?= $stall['name']; ?></h5>
+                    <p class="text-muted m-0"><?= $stall['description']; ?></p>
                     <div class="stall-info">
                         <div class="d-flex gap-2 align-items-center my-2">
                             <?php if (!$parkIsOpen): ?>

@@ -25,26 +25,33 @@
 
     $parkIsOpen = false;
     foreach ($parkOperatingHours as $hours) {
-        // if days are embedded, split them off
+        $days = [];
+        $timeRange = $hours;
+
+        // Split days and time if present
         if (strpos($hours, '<br>') !== false) {
-            list(, $timeRange) = explode('<br>', $hours, 2);
-        } else {
-            $timeRange = $hours;
+            list($daysPart, $timeRange) = explode('<br>', $hours, 2);
+            $days = array_map('trim', explode(',', $daysPart));
         }
-    
-        // now split open/close
+
+        // Check if the current day is in the allowed days (or if no days specified)
+        if (!empty($days) && !in_array($currentDay, $days)) {
+            continue; // Skip this entry if today isn't listed
+        }
+
+        // Proceed with time check
         list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-    
         $openTime24  = date('H:i', strtotime($openTime));
         $closeTime24 = date('H:i', strtotime($closeTime));
-    
-        // overnight?
+
         if ($closeTime24 <= $openTime24) {
+            // Overnight window
             if ($currentTime >= $openTime24 || $currentTime <= $closeTime24) {
                 $parkIsOpen = true;
                 break;
             }
         } else {
+            // Same-day window
             if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
                 $parkIsOpen = true;
                 break;
@@ -52,21 +59,61 @@
         }
     }
 
-    function getNextOpening($operatingHoursArray) {
-        if (!empty($operatingHoursArray)) {
-            $first = $operatingHoursArray[0];
-            if (strpos($first, '<br>') !== false) {
-                list($days, $timeRange) = explode('<br>', $first);
-                $daysArray = array_map('trim', explode(',', $days));
-                $day = !empty($daysArray) ? $daysArray[0] : 'Unknown';
-                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                return $day . ' ' . date('g:i A', strtotime($openTime));
+    function getNextMutualOpening($stallHours, $parkHours, $currentDay, $currentTime) {
+        $daysOfWeek = [
+            'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+        ];
+        $currentDayIndex = array_search($currentDay, $daysOfWeek);
+        for ($i = 0; $i < 7; $i++) {
+            $checkDayIndex = ($currentDayIndex + $i) % 7;
+            $checkDay = $daysOfWeek[$checkDayIndex];
+
+            // Find next park opening window for this day
+            foreach ($parkHours as $parkEntry) {
+                if (strpos($parkEntry, '<br>') !== false) {
+                    list($parkDays, $parkTimeRange) = explode('<br>', $parkEntry);
+                    $parkDaysArray = array_map('trim', explode(',', $parkDays));
+                    if (!in_array($checkDay, $parkDaysArray, true)) continue;
+                } else {
+                    $parkTimeRange = $parkEntry;
+                }
+                list($parkOpen, $parkClose) = array_map('trim', explode(' - ', $parkTimeRange));
+                $parkOpen24 = date('H:i', strtotime($parkOpen));
+                $parkClose24 = date('H:i', strtotime($parkClose));
+
+                // Find next stall opening window for this day
+                foreach ($stallHours as $stallEntry) {
+                    if (strpos($stallEntry, '<br>') !== false) {
+                        list($stallDays, $stallTimeRange) = explode('<br>', $stallEntry);
+                        $stallDaysArray = array_map('trim', explode(',', $stallDays));
+                        if (!in_array($checkDay, $stallDaysArray, true)) continue;
+                    } else {
+                        $stallTimeRange = $stallEntry;
+                    }
+                    list($stallOpen, $stallClose) = array_map('trim', explode(' - ', $stallTimeRange));
+                    $stallOpen24 = date('H:i', strtotime($stallOpen));
+                    $stallClose24 = date('H:i', strtotime($stallClose));
+
+                    // Find the overlap between park and stall
+                    $open = max($parkOpen24, $stallOpen24);
+                    $close = min($parkClose24, $stallClose24);
+                    if ($close <= $open) continue; // No overlap
+
+                    // If today, make sure opening is after current time
+                    if ($i === 0 && $open <= $currentTime) continue;
+
+                    $date = date('Y-m-d', strtotime(
+                        '+' . $i . ' days', strtotime(date('Y-m-d'))
+                    ));
+                    $openDT = date('g:i A', strtotime($open));
+                    return $checkDay . ' ' . $openDT;
+                }
             }
         }
-        return "N/A";
+        return 'N/A';
     }
 
-    $parkNextOpening = getNextOpening($parkOperatingHours);
+    $parkNextOpening = getNextMutualOpening([], $parkOperatingHours, $currentDay, $currentTime);
     $categories = $parkObj->getCategories();
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -338,7 +385,12 @@
                                     </div>
                                 <?php } elseif ($status === 'closed') { 
                                     // Display closed message (for the park or the stall)
-                                    $closedMessage = !$parkIsOpen ? $parkNextOpening : getNextOpening(explode('; ', $stall['stall_operating_hours']));
+                                    $closedMessage = getNextMutualOpening(
+    explode('; ', $stall['stall_operating_hours']),
+    $parkOperatingHours,
+    $currentDay,
+    $currentTime
+);
                                 ?>
                                     <div class="closed text-center">
                                         <div>
