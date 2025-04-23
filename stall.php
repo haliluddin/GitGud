@@ -988,24 +988,7 @@
                                         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                                         xhr.onreadystatechange = function () {
                                             if (xhr.readyState === 4 && xhr.status === 200) {
-                                                try {
-                                                    // Parse the JSON response
-                                                    let response = JSON.parse(xhr.responseText);
-                                                    
-                                                    if (response.status === 'guest') {
-                                                        // Save to local storage
-                                                        let cart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
-                                                        cart.push(response.cart_item);
-                                                        localStorage.setItem('guest_cart', JSON.stringify(cart));
-                                                        
-                                                        alert('Item saved to local cart. Please login to persist your cart.');
-                                                    } else if (response.status === 'success') {
-                                                        alert('Item added to your cart!');
-                                                    }
-                                                } catch (e) {
-                                                    console.error("Error parsing response:", e);
-                                                    alert('An error occurred while processing your request.');
-                                                }
+                                                alert(xhr.responseText);
                                             }
                                         };
                                         xhr.send(params);

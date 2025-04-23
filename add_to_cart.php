@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/classes/stall.class.php';
 require_once __DIR__ . '/classes/db.class.php';
 
-$stallObj = new Stall();
+$stallObj  = new Stall();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user']['id'] ?? null;
@@ -14,22 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $request = $_POST['request'] ?? '';
 
     if (!$user_id) {
-        // Prepare cart item data for local storage
-        $cartItem = [
-            'product_id' => $product_id,
-            'variation_options' => $variation_options,
-            'quantity' => $quantity,
-            'base_price' => $base_price,
-            'request' => $request
-        ];
-        
-        // Return JSON response for frontend to handle local storage
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'guest',
-            'message' => 'Item saved to local storage. Login to persist cart.',
-            'cart_item' => $cartItem
-        ]);
+        echo "User not logged in.";
         exit;
     }
 
@@ -78,5 +63,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
     }
 
-    echo json_encode(['status' => 'success', 'message' => 'Added to cart successfully!']);
+    echo "Added to cart successfully!";
 }
