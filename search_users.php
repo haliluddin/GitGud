@@ -10,6 +10,7 @@ $searchTerm = isset($_POST['search']) ? trim($_POST['search']) : '';
 $users = $adminObj->getUsers($searchTerm);
 
 $output = '';
+$totalAccounts = count($users);
 
 if ($users) {
     foreach ($users as $user) {
@@ -42,3 +43,4 @@ if ($users) {
 }
 
 echo $output;
+echo '<script>document.getElementById("totalAccounts").textContent = ' . $totalAccounts . ';</script>';

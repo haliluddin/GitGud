@@ -271,6 +271,8 @@ $searchCategory = isset($_GET['search_category'])
         <div class="d-flex align-items-center text-muted small gap-4 mt-2 mb-3">
             <form action="#" method="get" class="searchmenu rounded-2">
                 <input type="text" name="search" placeholder="Search account" style="width: 230px;" value="<?= htmlspecialchars($searchTerm) ?>">
+                <span class="ms-2">Total Accounts:</span>
+                <span class="ms-2" id='totalAccounts'></span>
                 <button type="submit" class="m-0 ms-2"><i class="fas fa-search fa-lg small"></i></button>
             </form>
         </div>
@@ -292,7 +294,9 @@ $searchCategory = isset($_GET['search_category'])
                 <tbody id="userTableBody">
                     <?php
                     $users = $adminObj->getUsers($searchTerm);
+                    $totalAccounts = count($users);
                     $getStatusRecords = $adminObj->getDeactivationRecords();
+                    echo "<script>document.getElementById('totalAccounts').textContent = $totalAccounts;</script>";
 
                     $statusMap = [];
                     foreach ($getStatusRecords as $record) {
