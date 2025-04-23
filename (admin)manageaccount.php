@@ -1170,6 +1170,8 @@ $('.delete-category-btn').on('click', function() {
     </script>
     <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/adminresponse.js?v=<?php echo time(); ?>"></script>
+<script src="assets/js/delete_user_ajax.js?v=<?php echo time(); ?>"></script>
+<script src="assets/js/deactivate_user_ajax.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/pagination.js?v=<?php echo time(); ?>"></script>
     <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
 
