@@ -153,7 +153,7 @@
                         };
                         reader.readAsDataURL(file);
                     } else {
-                        alert('File is too large or not supported. Please select a JPG, JPEG, or PNG image under 5MB.');
+                        Swal.fire({icon: 'error', title: 'Image Error', text: 'File is too large or not supported. Please select a JPG, JPEG, or PNG image under 5MB.', confirmButtonColor: '#CD5C08'});
                     }
                 }
             </script>
@@ -337,13 +337,13 @@
                     const days = Array.from(document.querySelectorAll('input[name="days"]:checked'))
                         .map(checkbox => checkbox.value);
                     if (days.length === 0) {
-                        alert("Please select at least one day.");
+                        Swal.fire({icon: 'warning', title: 'Missing Day', text: 'Please select at least one day.', confirmButtonColor: '#CD5C08'});
                         return;
                     }
                     for (let entry of operatingHoursData) {
                         for (let day of days) {
                             if (entry.days.includes(day)) {
-                                alert(`The day "${day}" has already been added.`);
+                                Swal.fire({icon: 'warning', title: 'Duplicate Day', text: `The day "${day}" has already been added.`, confirmButtonColor: '#CD5C08'});
                                 return;
                             }
                         }

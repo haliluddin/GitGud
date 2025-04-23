@@ -101,16 +101,16 @@
                     url: 'add_category.php',
                     data: { category: category },
                     success: function(response) {
-                        alert(response);
+                        Swal.fire({icon: 'info', title: 'Response', text: response, confirmButtonColor: '#CD5C08'});
                         $('#addcategory').modal('hide');
                         $('#category').val('');
                     },
                     error: function() {
-                        alert('Error adding category.');
+                        Swal.fire({icon: 'error', title: 'Add Category Error', text: 'Error adding category.', confirmButtonColor: '#CD5C08'});
                     }
                 });
             } else {
-                alert('Please enter a category name.');
+                Swal.fire({icon: 'warning', title: 'Missing Category', text: 'Please enter a category name.', confirmButtonColor: '#CD5C08'});
             }
         });
     });

@@ -48,7 +48,7 @@ if ($applications) {
         $output .= '</tr>';
     }
 } else {
-    $output .= '<tr><td colspan="7" class="text-center py-5">No result found</td></tr>';
+    $output .= "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'info', title: 'No Results', text: 'No result found.', confirmButtonColor: '#CD5C08'});</script>";
 }
 
 echo $output;

@@ -347,7 +347,7 @@
     <?php if (isset($success)): ?>
         <div class="alert alert-success"><?= htmlspecialchars($success); ?></div>
     <?php elseif (isset($error)): ?>
-        <div class="alert alert-danger"><?= htmlspecialchars($error); ?></div>
+        <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'error', title: 'Stock Error', text: '<?= htmlspecialchars($error); ?>', confirmButtonColor: '#CD5C08'});</script>
     <?php endif; ?>
     <div class="stockaction d-flex bg-white border rounded-2 mb-5">
         <div class="flex-grow-1 stockleft">

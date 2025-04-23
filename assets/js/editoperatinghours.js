@@ -11,7 +11,7 @@ function addOperatingHours() {
                     .join(', ');
 
     if (days === '') {
-        alert("Please select at least one day.");
+        Swal.fire({icon: 'warning', title: 'Missing Day', text: 'Please select at least one day.', confirmButtonColor: '#CD5C08'});
         return;
     }
 

@@ -82,12 +82,12 @@
             $reported_stall = $_POST['reported_stall'];
             $reason       = $_POST['reason'];
             if ($userObj->reportFoodStall($reported_by, $reported_stall, $reason)) {
-                echo "<script>alert('Report submitted successfully.');</script>";
+                echo "<script>Swal.fire({icon: 'success', title: 'Report Sent!', text: 'Your report was submitted.', confirmButtonColor: '#CD5C08'});</script>";
             } else {
-                echo "<script>alert('Error submitting report.');</script>";
+                echo "<script>Swal.fire({icon: 'error', title: 'Submission Failed', text: 'There was an error submitting your report. Please try again.', confirmButtonColor: '#CD5C08'});</script>";
             }
         } else {
-            echo "<script>alert('You must be logged in to report.');</script>";
+            echo "<script>Swal.fire({icon: 'warning', title: 'Login Required', text: 'Please log in to submit a report.', confirmButtonColor: '#CD5C08'});</script>";
         }
     }
 ?>
@@ -988,7 +988,7 @@
                                         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                                         xhr.onreadystatechange = function () {
                                             if (xhr.readyState === 4 && xhr.status === 200) {
-                                                alert(xhr.responseText);
+                                                Swal.fire(xhr.responseText);
                                             }
                                         };
                                         xhr.send(params);

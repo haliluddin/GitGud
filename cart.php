@@ -373,6 +373,7 @@ foreach ($cartGrouped as $stallName => $items) {
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function updateCartQuantity(button, change) {
         const quantitySpan = button.parentElement.querySelector('.ordquanum');
@@ -452,8 +453,9 @@ foreach ($cartGrouped as $stallName => $items) {
                         }
                     }
                     updateGrandTotal();
+                    Swal.fire({icon: 'success', title: 'Removed', text: 'Item removed from your cart.', confirmButtonColor: '#CD5C08'});
                 } else {
-                    alert('Failed to delete item.');
+                    Swal.fire({icon: 'error', title: 'Remove Failed', text: 'Couldn\'t remove the item. Please try again.', confirmButtonColor: '#CD5C08'});
                 }
             }
         };

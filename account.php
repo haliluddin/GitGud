@@ -69,10 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $fileSize = $_FILES['profile_img']['size'];
             $fileType = strtolower(pathinfo($_FILES['profile_img']['name'], PATHINFO_EXTENSION));
             if ($fileSize > $maxFileSize) {
-                echo '<script>alert("File size exceeds 5MB limit.");</script>';
+                echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'error', title: 'File Too Large', text: 'Please upload a file smaller than 5MB.', confirmButtonColor: '#CD5C08'});</script>";
                 $hasErrors = true;
             } elseif (!in_array($fileType, $allowedTypes)) {
-                echo '<script>alert("Invalid file type. Only JPG and PNG are allowed.");</script>';
+                echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'error', title: 'Invalid File Type', text: 'Only JPG and PNG files are allowed.', confirmButtonColor: '#CD5C08'});</script>";
                 $hasErrors = true;
             } else {
                 if (!is_dir($uploadDir)) {
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (move_uploaded_file($fileTmpPath, $destPath)) {
                     $profile_img = $destPath;
                 } else {
-                    echo '<script>alert("Failed to move uploaded file.");</script>';
+                    echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'error', title: 'Upload Failed', text: 'We couldn\'t move your new profile image. Please try again.', confirmButtonColor: '#CD5C08'});</script>";
                     $hasErrors = true;
                 }
             }
@@ -98,15 +98,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $userObj->profile_img = $profile_img;
         $update = $userObj->editUser($_SESSION['user']['id'], $current_password);
         if ($update === true) {
-            echo '<script>alert("Account updated successfully.");</script>';
+            echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'success', title: 'Profile Updated!', text: 'Your account details have been updated.', confirmButtonColor: '#CD5C08'});</script>";
             $user = $userObj->getUser($_SESSION['user']['id']);
         } elseif ($update === 'phone') {
             $phoneErr = 'Phone update failed. The new phone may be already in use.';
         } else {
-            echo '<script>alert("Failed to update account. Please check your password.");</script>';
+            echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'error', title: 'Update Failed', text: 'Couldn\'t update your account. Please check your password and try again.', confirmButtonColor: '#CD5C08'});</script>";
         }
     } else {
-        echo '<script>alert("Please fix the errors on the form.");</script>';
+        echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'warning', title: 'Form Errors', text: 'Please fix the highlighted errors before submitting.', confirmButtonColor: '#CD5C08'});</script>";
     }
 }
 ?>
@@ -250,12 +250,12 @@ document.getElementById('profile_img').addEventListener('change', function(e) {
         const allowedTypes = ['image/jpeg', 'image/png'];
         const maxSize = 5 * 1024 * 1024;
         if (!allowedTypes.includes(file.type)) {
-            alert("Invalid file type. Only JPG and PNG are allowed.");
+            Swal.fire({icon: 'error', title: 'Invalid File Type', text: 'Only JPG and PNG files are allowed.', confirmButtonColor: '#CD5C08'});
             fileInput.value = '';
             return;
         }
         if (file.size > maxSize) {
-            alert("File size exceeds 5MB limit.");
+            Swal.fire({icon: 'error', title: 'File Too Large', text: 'Please upload a file smaller than 5MB.', confirmButtonColor: '#CD5C08'});
             fileInput.value = '';
             return;
         }

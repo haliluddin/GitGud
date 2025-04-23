@@ -14,14 +14,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_id'])) {
     
     if ($result) {
         // Success
-        echo "<script>
-            alert('Report status updated successfully!');
+        echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+            <script>
+            Swal.fire({icon: 'success', title: 'Status Updated', text: 'The report status was updated.', confirmButtonColor: '#CD5C08'});
             window.location.href = '(admin)manageaccount.php#reports';
         </script>";
     } else {
         // Error
-        echo "<script>
-            alert('Failed to update report status. Please try again.');
+        echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+            <script>
+            Swal.fire({icon: 'error', title: 'Update Failed', text: 'Couldn\'t update the report. Please try again.', confirmButtonColor: '#CD5C08'});
             window.location.href = '(admin)manageaccount.php#reports';
         </script>";
     }

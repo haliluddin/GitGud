@@ -38,13 +38,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'])) {
     if ($result) {
         // Success
         echo "<script>
-            alert('Application status updated successfully!');
+            Swal.fire({icon: 'success', title: 'Success!', text: 'Application status updated!', confirmButtonColor: '#CD5C08'});
             window.location.href = '(admin)manageaccount.php#applications';
         </script>";
     } else {
         // Error
         echo "<script>
-            alert('Failed to update application status. Please try again.');
+            Swal.fire({icon: 'error', title: 'Oops!', text: 'Couldn\'t update the application. Try again.', confirmButtonColor: '#CD5C08'});
             window.location.href = '(admin)manageaccount.php#applications';
         </script>";
     }

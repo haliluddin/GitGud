@@ -19,19 +19,19 @@
                 $result = $verificationObj->sendVerificationEmail($user_id, $email, $first_name, true);
                 
                 if ($result === true) {
-                    echo "<script>alert('Verification email has been resent successfully!');</script>";
+                    echo "<script>Swal.fire({icon: 'success', title: 'Email Sent', text: 'Verification email resent to your inbox!', confirmButtonColor: '#CD5C08'});</script>";
                 } elseif (isset($result['message']) && $result['message'] === "verified") {
-                    echo "<script>alert('Email is already verified.');</script>";
+                    echo "<script>Swal.fire({icon: 'info', title: 'Already Verified', text: 'Your email is already verified.', confirmButtonColor: '#CD5C08'});</script>";
                 } elseif (isset($result['message']) && $result['message'] === "cooldown") {
                     $minutes = floor($result['cd'] / 60);
                     $seconds = $result['cd'] % 60;
-                    echo "<script>alert('Please wait for {$minutes} minutes and {$seconds} seconds before resending the verification email.');</script>";
+                    echo "<script>Swal.fire({icon: 'warning', title: 'Please Wait', text: 'Try again in {$minutes} minutes and {$seconds} seconds.', confirmButtonColor: '#CD5C08'});</script>";
                 } else {
                     echo "ERROR: " . $result;
-                    echo "<script>alert('Failed to resend verification email. Please try again.');</script>";
+                    echo "<script>Swal.fire({icon: 'error', title: 'Resend Failed', text: 'Could not resend the verification email. Try again.', confirmButtonColor: '#CD5C08'});</script>";
                 }
             } else {
-                echo "<script>alert('Invalid request. All fields are required.');</script>";
+                echo "<script>Swal.fire({icon: 'error', title: 'Invalid Request', text: 'Please fill in all required fields.', confirmButtonColor: '#CD5C08'});</script>";
             }
             break;
     

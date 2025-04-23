@@ -157,7 +157,7 @@ if (isset($_POST['report_update'])) {
                     const file = event.target.files[0];
                     if (file) {
                         if (file.size > 5 * 1024 * 1024) {
-                            alert('File is too large. Please select an image under 5MB.');
+                            Swal.fire({icon: 'error', title: 'Image Too Large', text: 'Please select an image under 5MB.', confirmButtonColor: '#CD5C08'});
                             return;
                         }
                         const reader = new FileReader();
@@ -367,13 +367,13 @@ if (isset($_POST['report_update'])) {
                                     const days = Array.from(document.querySelectorAll('input[name="days"]:checked'))
                                         .map(checkbox => checkbox.value);
                                     if (days.length === 0) {
-                                        alert("Please select at least one day.");
+                                        Swal.fire({icon: 'warning', title: 'Missing Day', text: 'Please select at least one day.', confirmButtonColor: '#CD5C08'});
                                         return;
                                     }
                                     for (let entry of operatingHoursData) {
                                         for (let day of days) {
                                             if (entry.days.includes(day)) {
-                                                alert('The day "' + day + '" has already been added.');
+                                                Swal.fire({icon: 'warning', title: 'Duplicate Day', text: 'The day "' + day + '" has already been added.', confirmButtonColor: '#CD5C08'});
                                                 return;
                                             }
                                         }
@@ -698,11 +698,11 @@ if (isset($_POST['report_update'])) {
         try {
             let operatingHours = JSON.parse(operatingHoursInput);
             if (!Array.isArray(operatingHours) || operatingHours.length === 0) {
-                alert("Please add at least one operating hour schedule.");
+                Swal.fire({icon: 'warning', title: 'Missing Schedule', text: 'Please add at least one operating hour schedule.', confirmButtonColor: '#CD5C08'});
                 return false;
             }
         } catch (e) {
-            alert("Invalid operating hours data. Please try again.");
+            Swal.fire({icon: 'error', title: 'Invalid Data', text: 'Invalid operating hours data. Please try again.', confirmButtonColor: '#CD5C08'});
             return false;
         }
         return true;

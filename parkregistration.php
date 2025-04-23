@@ -402,7 +402,7 @@
                             .map(checkbox => checkbox.value);
 
                         if (days.length === 0) {
-                            alert("Please select at least one day.");
+                            Swal.fire({icon: 'info', title: 'Select a Day', text: 'Pick at least one day to continue.', confirmButtonColor: '#CD5C08'});
                             return;
                         }
 
@@ -410,7 +410,7 @@
                         for (let entry of operatingHoursData) {
                             for (let day of days) {
                                 if (entry.days.includes(day)) {
-                                    alert(`The day "${day}" has already been added.`);
+                                    Swal.fire({icon: 'info', title: 'Duplicate Day', text: `The day "${day}" is already added.`, confirmButtonColor: '#CD5C08'});
                                     return;
                                 }
                             }
@@ -726,7 +726,7 @@
                 const checkbox = document.getElementById("flexCheckDefault");
                 if (!checkbox.checked) {
                     e.preventDefault(); // Prevent form submission
-                    alert("Please confirm the Terms and Conditions by checking the box.");
+                    Swal.fire({icon: 'warning', title: 'Terms Not Confirmed', text: 'Please confirm the Terms and Conditions by checking the box.', confirmButtonColor: '#CD5C08'});
                 }
             });
         </script>`

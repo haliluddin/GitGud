@@ -7,7 +7,7 @@ header('Content-Type: application/json');
 $stallObj = new Stall();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['user_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request']); // API response, no alert needed
     exit;
 }
 

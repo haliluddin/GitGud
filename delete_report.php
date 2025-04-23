@@ -14,13 +14,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_id'])) {
     if ($result) {
         // Success
         echo "<script>
-            alert('Report deleted successfully!');
+            Swal.fire({icon: 'success', title: 'Deleted!', text: 'Report deleted successfully.', confirmButtonColor: '#CD5C08'});
             window.location.href = '(admin)manageaccount.php#reports';
         </script>";
     } else {
         // Error
         echo "<script>
-            alert('Failed to delete report. Please try again.');
+            Swal.fire({icon: 'error', title: 'Delete Failed', text: 'Couldn\'t delete the report. Please try again.', confirmButtonColor: '#CD5C08'});
             window.location.href = '(admin)manageaccount.php#reports';
         </script>";
     }

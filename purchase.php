@@ -329,12 +329,12 @@ document.addEventListener('DOMContentLoaded', function() {
         var cancelReason = selectedRadio ? selectedRadio.value : '';
         
         if (!orderStallId || !newStatus) {
-            alert("Missing order information.");
+            Swal.fire({icon: 'warning', title: 'Missing Info', text: 'Please complete the order details.', confirmButtonColor: '#CD5C08'});
             return;
         }
         
         if (newStatus === 'Canceled' && cancelReason === '') {
-            alert("Please select a cancellation reason.");
+            Swal.fire({icon: 'info', title: 'Select Reason', text: 'Please select a cancellation reason before proceeding.', confirmButtonColor: '#CD5C08'});
             return;
         }
         
@@ -352,10 +352,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.status === 'success') {
                 location.reload();
             } else {
-                alert("Error: " + data.message);
+                Swal.fire({icon: 'error', title: 'Order Error', text: data.message || 'Something went wrong with your order.', confirmButtonColor: '#CD5C08'});
             }
         })
-        .catch(error => alert("Request failed: " + error));
+        .catch(error => Swal.fire({icon: 'error', title: 'Network Error', text: 'Request failed: ' + error, confirmButtonColor: '#CD5C08'}));
     });
 
     document.querySelectorAll('.order-received-btn').forEach(btn => {
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const newStatus    = this.getAttribute('data-new-status');
 
     if (!orderStallId || !newStatus) {
-        alert("Missing order information.");
+        Swal.fire({icon: 'warning', title: 'Missing Info', text: 'Please complete the order details.', confirmButtonColor: '#CD5C08'});
         return;
     }
 
@@ -392,10 +392,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.status === 'success') {
         location.reload();
         } else {
-        alert("Error: " + data.message);
+        Swal.fire({icon: 'error', title: 'Order Error', text: data.message || 'Something went wrong with your order.', confirmButtonColor: '#CD5C08'});
         }
     })
-    .catch(err => alert("Request failed: " + err));
+    .catch(err => Swal.fire({icon: 'error', title: 'Network Error', text: 'Request failed: ' + err, confirmButtonColor: '#CD5C08'}));
     });
 
 

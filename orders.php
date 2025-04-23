@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var orderStallId = this.getAttribute('data-order-stall-id');
             var action = this.getAttribute('data-action'); // should be "remind_payment"
             if (!orderStallId || !action) {
-                alert("Missing order information.");
+                Swal.fire({icon: 'warning', title: 'Missing Info', text: 'Order information is incomplete. Please try again.', confirmButtonColor: '#CD5C08'});
                 return;
             }
             fetch('update_order_status.php', {
@@ -401,10 +401,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.status === 'success') {
                     location.reload();
                 } else {
-                    alert("Error: " + data.message);
+                    Swal.fire({icon: 'error', title: 'Order Error', text: 'Error: ' + data.message, confirmButtonColor: '#CD5C08'});
                 }
             })
-            .catch(error => alert("Request failed: " + error));
+            .catch(error => Swal.fire({icon: 'error', title: 'Request Failed', text: 'Request failed: ' + error, confirmButtonColor: '#CD5C08'}));
         });
     });
     
@@ -414,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var orderStallId = this.getAttribute('data-order-stall-id');
             var action = this.getAttribute('data-action'); // should be "notify_customer"
             if (!orderStallId || !action) {
-                alert("Missing order information.");
+                Swal.fire({icon: 'warning', title: 'Missing Info', text: 'Order information is incomplete. Please try again.', confirmButtonColor: '#CD5C08'});
                 return;
             }
             fetch('update_order_status.php', {
@@ -427,10 +427,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.status === 'success') {
                     location.reload();
                 } else {
-                    alert("Error: " + data.message);
+                    Swal.fire({icon: 'error', title: 'Order Error', text: 'Error: ' + data.message, confirmButtonColor: '#CD5C08'});
                 }
             })
-            .catch(error => alert("Request failed: " + error));
+            .catch(error => Swal.fire({icon: 'error', title: 'Request Failed', text: 'Request failed: ' + error, confirmButtonColor: '#CD5C08'}));
         });
     });
 
@@ -442,12 +442,12 @@ document.addEventListener('DOMContentLoaded', function() {
         var cancelReason = selectedRadio ? selectedRadio.value : '';
         
         if (!orderStallId || !newStatus) {
-            alert("Missing order information.");
+            Swal.fire({icon: 'warning', title: 'Missing Info', text: 'Order information is incomplete. Please try again.', confirmButtonColor: '#CD5C08'});
             return;
         }
         
         if (newStatus === 'Canceled' && cancelReason === '') {
-            alert("Please select a cancellation reason.");
+            Swal.fire({icon: 'error', title: 'Please Select a Reason', text: 'Please select a cancellation reason.', confirmButtonColor: '#CD5C08'});
             return;
         }
         
@@ -465,10 +465,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.status === 'success') {
                 location.reload();
             } else {
-                alert("Error: " + data.message);
+                Swal.fire({icon: 'error', title: 'Order Error', text: 'Error: ' + data.message, confirmButtonColor: '#CD5C08'});
             }
         })
-        .catch(error => alert("Request failed: " + error));
+        .catch(error => Swal.fire({icon: 'error', title: 'Request Failed', text: 'Request failed: ' + error, confirmButtonColor: '#CD5C08'}));
     });
 
     function bindAction(buttonSelector, modalYesBtnId) {
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var orderStallId = this.getAttribute('data-order-id');
             var newStatus = this.getAttribute('data-new-status');
             if (!orderStallId || !newStatus) {
-                alert("Missing order information.");
+                Swal.fire({icon: 'warning', title: 'Missing Info', text: 'Order information is incomplete. Please try again.', confirmButtonColor: '#CD5C08'});
                 return;
             }
             fetch('update_order_status.php', {
@@ -504,10 +504,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.status === 'success') {
                     location.reload();
                 } else {
-                    alert("Error: " + data.message);
+                    Swal.fire({icon: 'error', title: 'Order Error', text: 'Error: ' + data.message, confirmButtonColor: '#CD5C08'});
                 }
             })
-            .catch(error => alert("Request failed: " + error));
+            .catch(error => Swal.fire({icon: 'error', title: 'Request Failed', text: 'Request failed: ' + error, confirmButtonColor: '#CD5C08'}));
         });
     }
     

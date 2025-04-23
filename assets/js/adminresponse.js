@@ -29,14 +29,14 @@ $(document).ready(function () {
                     statusCell.html('<span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Accepted</span>');
                     var row = statusCell.closest('tr');
                     row.find('.approve-btn, .deny-btn').prop('disabled', true);
-                    alert(response.message);
+                    Swal.fire({icon: 'success', title: 'Action Complete', text: response.message, confirmButtonColor: '#CD5C08'});
                     location.reload();
                 } else {
-                    alert('Error: ' + response.message);
+                    Swal.fire({icon: 'error', title: 'Error', text: 'Error: ' + response.message, confirmButtonColor: '#CD5C08'});
                 }
             },
             error: function () {
-                alert('Error processing request.');
+                Swal.fire({icon: 'error', title: 'Request Error', text: 'Error processing request.', confirmButtonColor: '#CD5C08'});
             }
         });
         $('#approvalConfirmModal').modal('hide');
@@ -76,13 +76,13 @@ $(document).ready(function () {
                     statusCell.html('<span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span>');
                     var row = statusCell.closest('tr');
                     row.find('.approve-btn, .deny-btn').prop('disabled', true);
-                    alert(response.message);
+                    Swal.fire({icon: 'success', title: 'Action Complete', text: response.message, confirmButtonColor: '#CD5C08'});
                 } else {
-                    alert('Error: ' + response.message);
+                    Swal.fire({icon: 'error', title: 'Error', text: 'Error: ' + response.message, confirmButtonColor: '#CD5C08'});
                 }
             },
             error: function () {
-                alert('Error processing request.');
+                Swal.fire({icon: 'error', title: 'Request Error', text: 'Error processing request.', confirmButtonColor: '#CD5C08'});
             }
         });
         $('#rejectReasonModal').modal('hide');

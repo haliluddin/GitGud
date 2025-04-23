@@ -14,13 +14,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'])) {
     if ($result) {
         // Success
         echo "<script>
-            alert('Application deleted successfully!');
+            Swal.fire({icon: 'success', title: 'Deleted!', text: 'Application deleted successfully.', confirmButtonColor: '#CD5C08'});
             window.location.href = '(admin)manageaccount.php#applications';
         </script>";
     } else {
         // Error
         echo "<script>
-            alert('Failed to delete application. Please try again.');
+            Swal.fire({icon: 'error', title: 'Delete Failed', text: 'Couldn\'t delete the application. Please try again.', confirmButtonColor: '#CD5C08'});
             window.location.href = '(admin)manageaccount.php#applications';
         </script>";
     }

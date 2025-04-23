@@ -65,18 +65,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         header('Location: ./email/verify_email.php');
                         exit();
                     } else {
-                        echo "ERROR: " . $verification;
-                        echo '<script>alert("Failed to send verification email")</script>';
+                        echo '<script>Swal.fire({icon: "error", title: "Email Error", text: "Could not send the verification email. Please try again.", confirmButtonColor: "#CD5C08"});</script>';
                     }
                 } else {
-                    echo '<script>alert("Failed to sign up")</script>';
+                    echo '<script>Swal.fire({icon: "error", title: "Signup Error", text: "Signup failed. Please try again.", confirmButtonColor: "#CD5C08"});</script>';
                 }
             } else if ($add == 'email') {
-                echo '<script>alert("Email is already taken")</script>';
+                echo '<script>Swal.fire({icon: "info", title: "Email Taken", text: "This email is already in use. Try another one.", confirmButtonColor: "#CD5C08"});</script>';
             } else if ($add == 'phone') {
-                echo '<script>alert("Phone number is already taken")</script>';
+                echo '<script>Swal.fire({icon: "info", title: "Phone Taken", text: "This phone number is already in use.", confirmButtonColor: "#CD5C08"});</script>';
             } else {
-                echo '<script>alert("Failed to sign up")</script>';
+                echo '<script>Swal.fire({icon: "error", title: "Signup Error", text: "Signup failed. Please try again.", confirmButtonColor: "#CD5C08"});</script>';
             }
         }
     } else {

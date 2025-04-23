@@ -231,12 +231,12 @@ ob_end_flush();
                                 placeholderContent.style.display = 'none';
                                 document.getElementById('tempImagePath').value = data.filePath;
                             } else {
-                                alert(data.error);
+                                Swal.fire({icon: 'error', title: 'Upload Error', text: data.error, confirmButtonColor: '#CD5C08'});
                             }
                         })
                         .catch(error => { console.error('Error:', error); });
                     } else {
-                        alert('File is too large or not supported. Please select a JPG, JPEG, or PNG image under 500KB.');
+                        Swal.fire({icon: 'error', title: 'Image Too Large', text: 'Please select a JPG, JPEG, or PNG image under 500KB.', confirmButtonColor: '#CD5C08'});
                     }
                 }
             </script>
@@ -369,7 +369,7 @@ ob_end_flush();
                                 imageContainer.querySelector('.overlay').style.display = 'none';
                                 document.getElementById(`variation_image_base64_${variationFormId}_${rowId}`).value = data.filePath;
                             } else {
-                                alert(data.error);
+                                Swal.fire({icon: 'error', title: 'Upload Error', text: data.error, confirmButtonColor: '#CD5C08'});
                             }
                         })
                         .catch(error => { console.error('Error:', error); });

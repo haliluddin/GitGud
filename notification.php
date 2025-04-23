@@ -145,10 +145,10 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
                     if (data.status === 'success') {
                         fetchNotifications(); 
                     } else {
-                        alert("Error: " + data.message);
+                        Swal.fire({icon: 'error', title: 'Notification Error', text: 'Error: ' + data.message, confirmButtonColor: '#CD5C08'});
                     }
                 })
-                .catch(error => alert("Request failed: " + error));
+                .catch(error => Swal.fire({icon: 'error', title: 'Request Failed', text: 'Request failed: ' + error, confirmButtonColor: '#CD5C08'}));
             });
         }
     }
@@ -170,7 +170,7 @@ $notifications = $stallObj->getNotifications($user_id, $park_id);
             if (data.status === 'success') {
                 fetchNotifications();  // reload the list so all Read items vanish
             } else {
-                alert("Error: " + data.message);
+                Swal.fire({icon: 'error', title: 'Notification Error', text: 'Error: ' + data.message, confirmButtonColor: '#CD5C08'});
             }
             })
             .catch(err => console.error('Delete failed:', err));

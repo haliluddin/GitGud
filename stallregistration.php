@@ -39,7 +39,7 @@
 
         } catch (Exception $e) {
             echo "<script>
-                alert('Error processing invitation link. Please try again or contact support.');
+                Swal.fire({icon: 'error', title: 'Link Error', text: 'There was a problem with your invitation link. Please try again or contact support.', confirmButtonColor: '#CD5C08'});
                 window.location.href = 'index.php';
             </script>";
             exit;
@@ -67,28 +67,28 @@
                     $user = $userObj->getUser($user_id);
                 } else {
                     echo "<script>
-                        alert('This invitation has already been used. You cannot register the same stall twice.');
+                        Swal.fire({icon: 'info', title: 'Already Used', text: 'This invitation was already used. You can’t register the same stall twice.', confirmButtonColor: '#CD5C08'});
                         window.location.href = 'index.php';
                     </script>";
                     exit;
                 }
             } else {
                 echo "<script>
-                    alert('This invitation link has expired. Please contact the food park owner for a new invitation.');
+                    Swal.fire({icon: 'warning', title: 'Expired Link', text: 'This invitation link has expired. Please ask the food park owner for a new one.', confirmButtonColor: '#CD5C08'});
                     window.location.href = 'index.php';
                 </script>";
                 exit;
             }
         } else {
             echo "<script>
-                alert('Invalid invitation link. Please contact the food park owner for a new invitation.');
+                Swal.fire({icon: 'error', title: 'Invalid Link', text: 'This invitation link is invalid. Please request a new one from the food park owner.', confirmButtonColor: '#CD5C08'});
                 window.location.href = 'index.php';
             </script>";
             exit;
         }
     } else {
         echo "<script>
-            alert('Invalid invitation link. Missing required parameters.');
+            Swal.fire({icon: 'error', title: 'Missing Info', text: 'Some required details are missing from the invitation link.', confirmButtonColor: '#CD5C08'});
             window.location.href = 'index.php';
         </script>";
         exit;
@@ -126,7 +126,7 @@
         $stall = $parkObj->addStall($user_id, $park_id, $businessname, $description, $businessemail, $businessphonenumber, $website, $stalllogo, $operatingHours, $categories, $payment_methods);
 
         echo "<script>
-            alert('Stall has been successfully added to your food park. The stall owner can now be part of the service.');
+            Swal.fire({icon: 'success', title: 'Stall Added!', text: 'The stall is now part of your food park. Welcome!', confirmButtonColor: '#CD5C08'});
             window.location.href = 'managestall.php';
             setTimeout(() => { window.close(); }, 1000);
         </script>";
@@ -211,7 +211,7 @@
                         };
                         reader.readAsDataURL(file);
                     } else {
-                        alert('File is too large or not supported. Please select a JPG, JPEG, or PNG image under 5MB.');
+                        Swal.fire({icon: 'warning', title: 'File Too Large', text: 'Please select a JPG, JPEG, or PNG image under 5MB.', confirmButtonColor: '#CD5C08'});
                     }
                 }
             </script>
@@ -346,7 +346,7 @@
                         .map(checkbox => checkbox.value);
 
                     if (days.length === 0) {
-                        alert("Please select at least one day.");
+                        Swal.fire({icon: 'info', title: 'Select a Day', text: 'Please pick at least one day.', confirmButtonColor: '#CD5C08'});
                         return;
                     }
 
@@ -354,7 +354,7 @@
                     for (let entry of operatingHoursData) {
                         for (let day of days) {
                             if (entry.days.includes(day)) {
-                                alert(`The day "${day}" has already been added.`);
+                                Swal.fire({icon: 'info', title: 'Duplicate Day', text: `The day "${day}" was already added.`, confirmButtonColor: '#CD5C08'});
                                 return;
                             }
                         }

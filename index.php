@@ -30,12 +30,12 @@
             $reported_park = $_POST['reported_park']; 
             $reason       = $_POST['reason'];
             if ($userObj->reportFoodPark($reported_by, $reported_park, $reason)) {
-                echo "<script>alert('Report submitted successfully.');</script>";
+                echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'success', title: 'Report Sent!', text: 'Report submitted successfully.', confirmButtonColor: '#CD5C08'});</script>";
             } else {
-                echo "<script>alert('Error submitting report.');</script>";
+                echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'error', title: 'Submission Failed', text: 'Error submitting report.', confirmButtonColor: '#CD5C08'});</script>";
             }
         } else {
-            echo "<script>alert('You must be logged in to report.');</script>";
+            echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script><script>Swal.fire({icon: 'warning', title: 'Login Required', text: 'You must be logged in to report.', confirmButtonColor: '#CD5C08'});</script>";
         }
     }
 
