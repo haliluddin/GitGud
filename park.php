@@ -64,6 +64,7 @@
             'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
         ];
         $currentDayIndex = array_search($currentDay, $daysOfWeek);
+        $now = strtotime($currentTime);
         for ($i = 0; $i < 7; $i++) {
             $checkDayIndex = ($currentDayIndex + $i) % 7;
             $checkDay = $daysOfWeek[$checkDayIndex];
@@ -97,16 +98,24 @@
                     // Find the overlap between park and stall
                     $open = max($parkOpen24, $stallOpen24);
                     $close = min($parkClose24, $stallClose24);
-                    if ($close <= $open) continue; // No overlap
+                    // Convert to timestamps for robust comparison
+                    $dateStr = date('Y-m-d', strtotime("+{$i} days"));
+                    $openTs = strtotime("$dateStr $open");
+                    $closeTs = strtotime("$dateStr $close");
 
-                    // If today, make sure opening is after current time
-                    if ($i === 0 && $open <= $currentTime) continue;
+                    // Handle overnight close (close time less than open time)
+                    if ($close <= $open) {
+                        $closeTs = strtotime("+1 day", $closeTs);
+                    }
 
-                    $date = date('Y-m-d', strtotime(
-                        '+' . $i . ' days', strtotime(date('Y-m-d'))
-                    ));
-                    $openDT = date('g:i A', strtotime($open));
-                    return $checkDay . ' ' . $openDT;
+                    // If today, opening must be after current time
+                    if ($i === 0 && $openTs <= strtotime(date('Y-m-d') . ' ' . $currentTime)) {
+                        continue;
+                    }
+                    // If overlap is valid
+                    if ($closeTs > $openTs) {
+                        return $checkDay . ' ' . date('g:i A', $openTs);
+                    }
                 }
             }
         }
