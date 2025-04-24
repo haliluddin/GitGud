@@ -29,6 +29,33 @@ foreach ($ordersData as $order) {
     $groupedOrders[$status][$osid]['items'][] = $order;
 }
 
+// right after you fetch $ordersData and group it...
+foreach ($groupedOrders['Completed'] as $osid => &$orderGroup) {
+    foreach ($orderGroup['items'] as &$item) {
+        // fetch existing rating if any
+        $rating = $stallObj->getRatingDetails(
+            $user_id,
+            $osid,
+            intval($item['product_id']),
+            $item['variations'] ?? null
+        );
+        if ($rating) {
+            $item['rated']          = true;
+            $item['rating_value']   = (int)$rating['rating_value'];
+            $item['comment']        = $rating['comment'];            // may be null
+            $item['created_at']     = $rating['created_at'];
+            $item['seller_response']= $rating['seller_response'];     // may be null
+            $item['response_at']    = $rating['response_at'];         // may be null
+            $item['helpful_count']  = (int)$rating['helpful_count'];
+        } else {
+            $item['rated'] = false;
+        }
+    }
+    unset($item);
+}
+unset($orderGroup);
+
+
 $statusMapping = [
     'Pending'   => 'topay',      
     'Preparing' => 'preparing',
@@ -40,6 +67,25 @@ $statusMapping = [
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     .nav-main { padding: 20px 120px; }
+
+    .ratemodal .modal-header, .ratemodal .modal-footer{
+        position: sticky;
+        z-index: 1020;
+        background-color: white;
+    }
+    .ratemodal .modal-header{
+        top: 0;
+    }
+    .ratemodal .modal-footer{
+        bottom: 0;
+    }
+    .ratemodal {
+        max-height: 80vh; 
+        overflow-y: auto;
+    }
+    #productrate .modal-dialog {
+        max-width: 50vw;
+    }
 </style>
 <script> const userId = <?php echo $user['user_session']; ?>; </script>
 <main class="nav-main">
@@ -127,7 +173,7 @@ $statusMapping = [
                                     <span class="dot text-muted"></span>
                                 <?php endif; ?>
                                 <?php if($status == 'Completed'): ?>
-                                    <button class="preparing rounded-2">Completed</button>                             
+                                    <button class="cancelorder rounded-2 rate-order-btn" data-bs-toggle="modal" data-bs-target="#productrate" data-order-stall-id="<?= $osid ?>" data-items='<?= htmlspecialchars(json_encode($orderGroup['items']), ENT_QUOTES) ?>'>Rate</button>
                                     <span class="dot text-muted"></span>
                                 <?php endif; ?>
                                 <?php if($status == 'Canceled'): ?>
@@ -219,7 +265,7 @@ $statusMapping = [
                                 <span class="dot text-muted"></span>
                             <?php endif; ?>
                             <?php if($status == 'Completed'): ?>
-                                <button class="preparing rounded-2">Completed</button>                             
+                                <button class="cancelorder rounded-2 rate-order-btn" data-bs-toggle="modal" data-bs-target="#productrate" data-order-stall-id="<?= $osid ?>" data-items='<?= htmlspecialchars(json_encode($orderGroup['items']), ENT_QUOTES) ?>'>Rate</button>
                                 <span class="dot text-muted"></span>
                             <?php endif; ?>
                             <?php if($status == 'Canceled'): ?>
@@ -306,100 +352,344 @@ $statusMapping = [
             </div>
         </div>
     </div>
+
+    <!-- Product Rate Modal -->
+    <div class="modal fade" id="productrate" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content ratemodal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Rate Products</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="background-color: #F4F4F4;">
+                    <div class="items-container"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <br><br><br><br>
 </main>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Bind cancel order button(s) on purchase.php
-    document.querySelectorAll('.cancelorder-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var orderStallId = this.getAttribute('data-order-stall-id');
-            var modalYesBtn = document.getElementById('cancelOrderYesBtn');
-            modalYesBtn.setAttribute('data-order-id', orderStallId);
-            modalYesBtn.setAttribute('data-new-status', 'Canceled');
+    document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.cancelorder-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+        const yesBtn = document.getElementById('cancelOrderYesBtn');
+        yesBtn.dataset.orderId   = btn.dataset.orderStallId;
+        yesBtn.dataset.newStatus = 'Canceled';
         });
     });
 
     document.getElementById('cancelOrderYesBtn').addEventListener('click', function() {
-        var orderStallId = this.getAttribute('data-order-id');
-        var newStatus = this.getAttribute('data-new-status');
-        
-        var selectedRadio = document.querySelector('input[name="cancelReason"]:checked');
-        var cancelReason = selectedRadio ? selectedRadio.value : '';
-        
+        const orderStallId = this.dataset.orderId;
+        const newStatus    = this.dataset.newStatus;
+        const selected     = document.querySelector('input[name="cancelReason"]:checked');
+        const cancelReason = selected ? selected.value : '';
         if (!orderStallId || !newStatus) {
-            Swal.fire({icon: 'warning', title: 'Missing Info', text: 'Please complete the order details.', confirmButtonColor: '#CD5C08'});
-            return;
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Missing Info',
+            text: 'Please complete the order details.',
+            confirmButtonColor: '#CD5C08'
+        });
         }
-        
-        if (newStatus === 'Canceled' && cancelReason === '') {
-            Swal.fire({icon: 'info', title: 'Select Reason', text: 'Please select a cancellation reason before proceeding.', confirmButtonColor: '#CD5C08'});
-            return;
+        if (newStatus === 'Canceled' && !cancelReason) {
+        return Swal.fire({
+            icon: 'info',
+            title: 'Select Reason',
+            text: 'Please select a cancellation reason before proceeding.',
+            confirmButtonColor: '#CD5C08'
+        });
         }
-        
-        var postBody = 'order_stall_id=' + encodeURIComponent(orderStallId) +
-                    '&new_status=' + encodeURIComponent(newStatus) +
-                    (cancelReason ? '&cancel_reason=' + encodeURIComponent(cancelReason) : '');
-        
         fetch('update_order_status.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: postBody
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            order_stall_id: orderStallId,
+            new_status:     newStatus,
+            cancel_reason:  cancelReason
+        }).toString()
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
-            if (data.status === 'success') {
-                location.reload();
-            } else {
-                Swal.fire({icon: 'error', title: 'Order Error', text: data.message || 'Something went wrong with your order.', confirmButtonColor: '#CD5C08'});
-            }
+        if (data.status === 'success') location.reload();
+        else Swal.fire({
+            icon: 'error',
+            title: 'Order Error',
+            text: data.message || 'Something went wrong.',
+            confirmButtonColor: '#CD5C08'
+        });
         })
-        .catch(error => Swal.fire({icon: 'error', title: 'Network Error', text: 'Request failed: ' + error, confirmButtonColor: '#CD5C08'}));
+        .catch(err => Swal.fire({
+        icon: 'error',
+        title: 'Network Error',
+        text: 'Request failed: ' + err,
+        confirmButtonColor: '#CD5C08'
+        }));
     });
 
     document.querySelectorAll('.order-received-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const orderStallId = this.getAttribute('data-order-stall-id');
-        const newStatus   = this.getAttribute('data-new-status');
-        const yesBtn      = document.getElementById('orderReceivedYesBtn');
-
-        yesBtn.setAttribute('data-order-id',    orderStallId);
-        yesBtn.setAttribute('data-new-status',  newStatus);
-    });
+        btn.addEventListener('click', () => {
+        const yesBtn = document.getElementById('orderReceivedYesBtn');
+        yesBtn.dataset.orderId   = btn.dataset.orderStallId;
+        yesBtn.dataset.newStatus = btn.dataset.newStatus;
+        });
     });
 
     document.getElementById('orderReceivedYesBtn').addEventListener('click', function() {
-    const orderStallId = this.getAttribute('data-order-id');
-    const newStatus    = this.getAttribute('data-new-status');
-
-    if (!orderStallId || !newStatus) {
-        Swal.fire({icon: 'warning', title: 'Missing Info', text: 'Please complete the order details.', confirmButtonColor: '#CD5C08'});
-        return;
-    }
-
-    const postBody = 
-            'order_stall_id=' + encodeURIComponent(orderStallId) +
-            '&new_status='     + encodeURIComponent(newStatus);
-
-    fetch('update_order_status.php', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body:    postBody
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === 'success') {
-        location.reload();
-        } else {
-        Swal.fire({icon: 'error', title: 'Order Error', text: data.message || 'Something went wrong with your order.', confirmButtonColor: '#CD5C08'});
+        const orderStallId = this.dataset.orderId;
+        const newStatus    = this.dataset.newStatus;
+        if (!orderStallId || !newStatus) {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Missing Info',
+            text: 'Please complete the order details.',
+            confirmButtonColor: '#CD5C08'
+        });
         }
-    })
-    .catch(err => Swal.fire({icon: 'error', title: 'Network Error', text: 'Request failed: ' + err, confirmButtonColor: '#CD5C08'}));
+        fetch('update_order_status.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            order_stall_id: orderStallId,
+            new_status:     newStatus
+        }).toString()
+        })
+        .then(r => r.json())
+        .then(data => {
+        if (data.status === 'success') location.reload();
+        else Swal.fire({
+            icon: 'error',
+            title: 'Order Error',
+            text: data.message || 'Something went wrong.',
+            confirmButtonColor: '#CD5C08'
+        });
+        })
+        .catch(err => Swal.fire({
+        icon: 'error',
+        title: 'Network Error',
+        text: 'Request failed: ' + err,
+        confirmButtonColor: '#CD5C08'
+        }));
+    });
     });
 
+    const productRateModalEl = document.getElementById('productrate');
+    productRateModalEl.addEventListener('show.bs.modal', function(event) {
+        const triggerButton = event.relatedTarget;
+        const osid          = triggerButton.dataset.orderStallId;
+        let   items         = JSON.parse(triggerButton.dataset.items);
+        const container     = productRateModalEl.querySelector('.items-container');
+        const footer        = productRateModalEl.querySelector('.modal-footer');
 
-});
+        productRateModalEl.querySelectorAll('[data-dismiss]').forEach(el => {
+            el.setAttribute('data-bs-dismiss','modal');
+            el.removeAttribute('data-dismiss');
+        });
+
+        container.innerHTML = '';
+        const ratingValues = {};
+
+        function ratedHTML(item) {
+            return `
+            <div>
+                <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div
+                    data-coreui-read-only="true"
+                    data-coreui-toggle="rating"
+                    data-coreui-value="${item.rating_value}"
+                    ></div>
+                    <span class="text-muted small">${item.created_at}</span>
+                </div>
+                <span style="color: #CD5C08">Product Rated</span>
+                </div>
+                ${item.comment ? `<p class="my-3">${item.comment}</p>` : ''}
+                ${item.seller_response
+                ? `<p class="p-2 rounded-2 my-3" style="background-color: #f4f4f4">
+                    Stall Response: ${item.seller_response}
+                    </p>`
+                : ''}
+            </div>
+            <div class="d-flex gap-3 align-items-center border rounded-2 mt-3">
+                <img src="${item.product_image}" width="55" height="55" class="border rounded-start">
+                <div>
+                <span>${item.product_name}</span><br>
+                ${item.variations
+                    ? `<span class="small text-muted">Variation: ${item.variations}</span>`
+                    : ''}
+                </div>
+            </div>
+            <div class="small text-end mt-2">
+                <i class="fa-regular fa-thumbs-up"></i>
+                <span>Helpful <span>${item.helpful_count || 0}</span></span>
+            </div>
+            `;
+        }
+
+        items.forEach((item, idx) => {
+            const block = document.createElement('div');
+            block.className   = 'p-3 border rounded-2 bg-white mb-3';
+            block.dataset.idx = idx;
+
+            if (item.rated) {
+            block.innerHTML = ratedHTML(item);
+            block.querySelectorAll('[data-coreui-toggle="rating"]')
+                .forEach(el => coreui.Rating.getOrCreateInstance(el));
+            } else {
+            block.innerHTML = `
+                <div class="d-flex gap-3 align-items-center border-bottom pb-3 mb-3">
+                <img src="${item.product_image}" width="50" height="50" class="border rounded-2">
+                <div>
+                    <span>${item.product_name}</span><br>
+                    ${item.variations
+                    ? `<span class="small text-muted">Variation: ${item.variations}</span><br>`
+                    : ''}
+                </div>
+                </div>
+                <div>
+                <div class="d-flex align-items-center gap-3">
+                    <div
+                    id="rating-${idx}"
+                    data-coreui-toggle="rating"
+                    data-coreui-value="0"
+                    data-coreui-size="lg"
+                    data-coreui-allow-clear="true"
+                    ></div>
+                    <button class="rounded-1 small px-2 bg-dark text-white border-0"
+                            type="button"
+                            id="reset-${idx}">
+                    reset
+                    </button>
+                </div>
+                <div class="form-floating mt-3 d-none" id="comment-container-${idx}">
+                    <textarea class="form-control"
+                            placeholder="Leave a comment here"
+                            id="comment-${idx}"></textarea>
+                    <label for="comment-${idx}">Comments</label>
+                </div>
+                </div>
+            `;
+            const ratingEl   = block.querySelector(`#rating-${idx}`);
+            const ratingInst = coreui.Rating.getOrCreateInstance(ratingEl);
+            const commentCt  = block.querySelector(`#comment-container-${idx}`);
+            ratingEl.addEventListener('change.coreui.rating', e => {
+                if (e.value) {
+                ratingValues[idx] = e.value;
+                commentCt.classList.remove('d-none');
+                } else {
+                delete ratingValues[idx];
+                commentCt.classList.add('d-none');
+                block.querySelector(`#comment-${idx}`).value = '';
+                }
+            });
+            block.querySelector(`#reset-${idx}`).addEventListener('click', () => {
+                ratingInst.reset();
+                delete ratingValues[idx];
+                commentCt.classList.add('d-none');
+            });
+            }
+
+            container.appendChild(block);
+        });
+
+        const oldBtn = footer.querySelector('.btn-primary');
+        const newBtn = oldBtn.cloneNode(true);
+        oldBtn.replaceWith(newBtn);
+
+        function toggleSubmit() {
+            newBtn.classList.toggle('d-none', items.every(i => i.rated));
+        }
+        toggleSubmit();
+
+        newBtn.addEventListener('click', () => {
+            const toSave = Object.keys(ratingValues).map(i => {
+            const idx       = +i;
+            const commentEl = document.getElementById(`comment-${idx}`);
+            return {
+                idx,
+                product_id:   items[idx].product_id,
+                variations:   items[idx].variations || null,
+                rating_value: ratingValues[idx],
+                comment:      commentEl ? commentEl.value.trim() : null
+            };
+            });
+
+            if (!toSave.length) {
+            return Swal.fire({
+                icon: 'info',
+                title: 'No Ratings',
+                text: 'You have not provided any ratings to submit.',
+                confirmButtonColor: '#CD5C08'
+            });
+            }
+
+            fetch('rate_products.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                order_stall_id: osid,
+                ratings:        JSON.stringify(toSave)
+            }).toString()
+            })
+            .then(r => r.json())
+            .then(json => {
+            if (json.status === 'success') {
+                // success message
+                Swal.fire({
+                icon: 'success',
+                title: 'Thank You!',
+                text: 'Your ratings have been saved.',
+                confirmButtonColor: '#6A9C89'
+                });
+
+                toSave.forEach(r => {
+                const itm = items[r.idx];
+                itm.rated        = true;
+                itm.rating_value = r.rating_value;
+                itm.comment      = r.comment;
+                itm.created_at   = new Date().toISOString().slice(0,19).replace('T',' ');
+                itm.helpful_count = itm.helpful_count || 0;
+
+                const blk = container.querySelector(`[data-idx="${r.idx}"]`);
+                blk.innerHTML = ratedHTML(itm);
+                blk.querySelectorAll('[data-coreui-toggle="rating"]')
+                    .forEach(el => coreui.Rating.getOrCreateInstance(el));
+
+                delete ratingValues[r.idx];
+                });
+
+                triggerButton.dataset.items = JSON.stringify(items);
+                triggerButton.setAttribute('data-items', triggerButton.dataset.items);
+
+                toggleSubmit();
+            } else {
+                Swal.fire({
+                icon: 'error',
+                title: 'Save Failed',
+                text: json.message || 'Unable to save your ratings.',
+                confirmButtonColor: '#CD5C08'
+                });
+            }
+            })
+            .catch(err => {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Network Error',
+                text: 'Failed to save ratings: ' + err,
+                confirmButtonColor: '#CD5C08'
+            });
+            });
+        });
+    });
 </script>
+
 <script src="./assets/js/navigation.js?v=<?php echo time(); ?>"></script>
 <?php include_once './footer.php'; ?>

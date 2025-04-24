@@ -751,5 +751,64 @@ class Stall {
         $stmt->execute([$user_id]);
     }
     
+    public function saveRatings(int $user_id, int $order_stall_id, array $ratings): bool {
+        $pdo = $this->db->connect();
+        $sql = "INSERT INTO ratings
+                 (user_id, order_stall_id, product_id, variations, rating_value, comment)
+                VALUES
+                 (:user_id, :order_stall_id, :product_id, :variations, :rating_value, :comment)";
+        $stmt = $pdo->prepare($sql);
+    
+        foreach ($ratings as $r) {
+            $stmt->execute([
+                'user_id'         => $user_id,
+                'order_stall_id'  => $order_stall_id,
+                'product_id'      => $r['product_id'],
+                'variations'      => $r['variations'] ?? null,
+                'rating_value'    => $r['rating_value'],
+                'comment'         => $r['comment'] ?? null,
+            ]);
+        }
+    
+        return true;
+    }
+
+    public function getRatingDetails(int $user_id, int $order_stall_id, int $product_id, ?string $variations): ?array {
+        $pdo = $this->db->connect();
+    
+        $sql = "
+          SELECT 
+            r.rating_value,
+            r.comment,
+            r.created_at,
+            r.seller_response,
+            r.response_at,
+            COUNT(rh.id) AS helpful_count
+          FROM ratings r
+          LEFT JOIN rating_helpful rh ON rh.rating_id = r.id
+          WHERE 
+            r.user_id = :user_id
+            AND r.order_stall_id = :osid
+            AND r.product_id = :pid
+            AND (
+              (r.variations = :vars) 
+              OR (r.variations IS NULL AND :vars IS NULL)
+            )
+          GROUP BY r.id
+          LIMIT 1
+        ";
+    
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+          'user_id' => $user_id,
+          'osid'    => $order_stall_id,
+          'pid'     => $product_id,
+          'vars'    => $variations
+        ]);
+    
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     
 }
