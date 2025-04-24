@@ -988,7 +988,7 @@
                                         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                                         xhr.onreadystatechange = function () {
                                             if (xhr.readyState === 4 && xhr.status === 200) {
-                                                Swal.fire(xhr.responseText);
+                                                Swal.fire({icon: 'success', title: 'Added to Cart', text: xhr.responseText, confirmButtonColor: '#CD5C08'});
                                             }
                                         };
                                         xhr.send(params);

@@ -26,7 +26,6 @@ class Park {
         $query->execute([':currentDate' => $currentDate]);
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
-    
 
     public function getPark($park_id) {
         $sql = "
@@ -622,4 +621,31 @@ class Park {
         }
     }
     
+    public function isParkFirstTime($park_id) {
+        $sql = "SELECT COUNT(*) FROM park_first_opening WHERE park_id = :park_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([':park_id' => $park_id]);
+        return $stmt->fetchColumn() == 0;
+    }
+
+    public function deleteParkFirstOpening($park_id) {
+        try {
+            $stmt1 = $this->db->connect()->prepare("DELETE FROM park_first_opening WHERE park_id = ?");
+            $stmt1->execute([$park_id]);
+            
+            $stmt2 = $this->db->connect()->prepare("UPDATE business SET status = 'Available' WHERE id = ?");
+            $stmt2->execute([$park_id]);
+
+            return true;
+            
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function isStallOwnerOfPark($userId, $parkId) {
+        $stmt = $this->db->connect()->prepare("SELECT COUNT(*) FROM stalls WHERE user_id = ? AND park_id = ?");
+        $stmt->execute([$userId, $parkId]);
+        return $stmt->fetchColumn() > 0;
+    }
 }

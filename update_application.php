@@ -33,19 +33,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'])) {
     }
     
     // Update application status in database
-    $result = $adminObj->updateBusinessStatus($application_id, $status, $rejection_reason);
+    $result = $adminObj->updateBusinessStatus($application_id, $status, $rejection_reason, 'Unavailable');
     
+    echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
     if ($result) {
         // Success
-        echo "<script>
-            Swal.fire({icon: 'success', title: 'Success!', text: 'Application status updated!', confirmButtonColor: '#CD5C08'});
-            window.location.href = '(admin)manageaccount.php#applications';
+        echo "
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Application status updated!',
+                    confirmButtonColor: '#CD5C08'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '(admin)manageaccount.php#applications';
+                    }
+                });
+            });
         </script>";
     } else {
         // Error
-        echo "<script>
-            Swal.fire({icon: 'error', title: 'Oops!', text: 'Couldn\'t update the application. Try again.', confirmButtonColor: '#CD5C08'});
-            window.location.href = '(admin)manageaccount.php#applications';
+        echo "
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops!',
+                    text: 'Couldn\\'t update the application. Try again.',
+                    confirmButtonColor: '#CD5C08',
+                    timer: 5000,
+                    timerProgressBar: true,
+                    willClose: () => {
+                        window.location.href = '(admin)manageaccount.php#applications';
+                    }
+                });
+            });
         </script>";
     }
 } else {

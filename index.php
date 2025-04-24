@@ -65,10 +65,10 @@
     });
 
     if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
-        $parkId = $_POST['parkId'];
+        $parkId = decrypt(urldecode($_POST['parkId']));
         $newStatus = $_POST['status'];
         $parkObj->updateParkStatus($parkId, $newStatus);
-        header("Location: " . $_SERVER['PHP_SELF'] . "?park_id=" . urlencode($parkId));
+        header("Location: index.php");
         exit();
     }
 ?>
@@ -175,7 +175,24 @@
                 }
                 ?>
                 <div class="col park-card border rounded p-0 mx-2" data-status="<?= $status; ?>">
-                    <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
+                    <?php
+                        $canEnter = false;
+                        if ($user['role'] === 'Admin') {
+                            $canEnter = true;
+                        } elseif (isset($user['id']) && $user['id'] == $park['user_id']) {
+                            $canEnter = true;
+                        } elseif (isset($user['id']) && $parkObj->isStallOwnerOfPark($user['id'], $park['id'])) {
+                            $canEnter = true;
+                        } elseif ($status !== 'unavailable') {
+                            $canEnter = true;
+                        }
+
+                        if ($canEnter) {
+                        ?>
+                            <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
+                        <?php
+                        }
+                    ?>
                         <div class="card border-0" style="position: relative;">
                             <?php 
                             if ($status === 'closed') { 
@@ -224,7 +241,7 @@
                             <div class="dropdown-menu py-0" aria-labelledby="dropdownMenuButton<?= $park['id'] ?>">
                                 <form method="POST" action="">
                                     <input type="hidden" name="action" value="update_status">
-                                    <input type="hidden" name="parkId" value="<?= $park['id'] ?>">
+                                    <input type="hidden" name="parkId" value="<?= urlencode(encrypt($park['id'])) ?>">
                                     <input type="hidden" name="status" value="Available">
                                     <button type="submit" class="dropdown-item d-flex align-items-center">
                                         <i class="fa-solid fa-circle text-success me-2" style="font-size: 9px;"></i>
@@ -233,7 +250,7 @@
                                 </form>
                                 <form method="POST" action="">
                                     <input type="hidden" name="action" value="update_status">
-                                    <input type="hidden" name="parkId" value="<?= $park['id'] ?>">
+                                    <input type="hidden" name="parkId" value="<?= urlencode(encrypt($park['id'])) ?>">
                                     <input type="hidden" name="status" value="Unavailable">
                                     <button type="submit" class="dropdown-item d-flex align-items-center">
                                         <i class="fa-solid fa-circle text-danger me-2" style="font-size: 9px;"></i>

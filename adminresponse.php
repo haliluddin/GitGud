@@ -17,8 +17,9 @@ $action = $data['action'];
 try {
     $admin = new Admin();
 
-    if ($action === 'approve') {
-        $admin->updateBusinessStatus($business_id, 'Approved');
+        if ($action === 'approve') {
+            $setStatus = 'Unavailable';
+            $admin->updateBusinessStatus($business_id, 'Approved', null, $setStatus);
         echo json_encode(['success' => true, 'message' => 'Business approved']);
     } elseif ($action === 'deny') {
         $rejection_reason = isset($data['rejection_reason']) ? $data['rejection_reason'] : '';

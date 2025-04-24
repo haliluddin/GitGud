@@ -62,11 +62,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $base_price
         ]);
     }
-
-    ?>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-    <script>
-        Swal.fire({icon: 'success', title: 'Added to Cart', text: 'The product was added to your cart.', confirmButtonColor: '#CD5C08'});
-    </script>
-    <?php
+    echo "Product added to cart successfully.";
 }
