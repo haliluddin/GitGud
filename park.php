@@ -172,7 +172,7 @@
     </section>
 
 
-    <div class="disabled" <?php if(isset($park['status']) && $park['status'] === 'Unavailable') { echo 'style="pointer-events: none; opacity: 0.5;"'; } ?>>
+    <div class="disabled" <?php if(isset($park['status']) && $park['status'] === 'Unavailable') { echo 'style="pointer-events: none;"'; } ?>>
         <section id="searchResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none; ">
             <h3 id="searchHeader" class="mb-3"></h3>
             <div id="searchResultsContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3"></div>
@@ -314,19 +314,47 @@
 
         <section class="bg-white border rounded-2 px-5 py-4 m-0">
             <div class="mb-3 d-flex justify-content-between align-items-center allfs-tm">
-                <h3 class="m-0 p-0">All Food Stalls</h3>
-                <div class="oc"> 
-                    <button id="openBtn" class="btn btn-outline-secondary">Open</button>
-                    <button id="closedBtn" class="btn btn-outline-secondary">Closed</button>
-                    <button id="unavailableBtn" class="btn btn-outline-secondary">Unavailable</button>
-                </div>
-
+                <?php
+                    if (!empty($allStalls)) { ?>
+                        <h3 class="m-0 p-0">All Food Stalls</h3>
+                        <div class="oc"> 
+                            <button id="openBtn" class="btn btn-outline-secondary">Open</button>
+                            <button id="closedBtn" class="btn btn-outline-secondary">Closed</button>
+                            <button id="unavailableBtn" class="btn btn-outline-secondary">Unavailable</button>
+                        </div>
+                <?php } 
+                ?>
             </div>
             
             <div id="stallsContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
             <?php if (empty($allStalls)): ?>
-                <div class="w-100 text-center py-3">
-                    <p class="text-muted">Sorry, there are no food stalls available right now.</p>
+                <div class="w-100 text-center py-4 bg-light rounded-3 border border-2 border-primary">
+                    <div class="d-flex justify-content-center mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#0d6efd" class="bi bi-clipboard2-check" viewBox="0 0 16 16">
+                            <path d="M9.5 0a.5.5 0 0 1 .5.5.5.5 0 0 0 .5.5.5.5 0 0 1 .5.5V2a.5.5 0 0 1-.5.5h-5A.5.5 0 0 1 5 2v-.5a.5.5 0 0 1 .5-.5.5.5 0 0 0 .5-.5.5.5 0 0 1 .5-.5z"/>
+                            <path d="M3 2.5a.5.5 0 0 1 .5-.5H4a.5.5 0 0 0 0-1h-.5A1.5 1.5 0 0 0 2 2.5v12A1.5 1.5 0 0 0 3.5 16h9a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 12.5 1H12a.5.5 0 0 0 0 1h.5a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5z"/>
+                            <path d="M10.854 7.854a.5.5 0 0 0-.708-.708L7.5 9.793 6.354 8.646a.5.5 0 1 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0z"/>
+                        </svg>
+                    </div>
+                    <h5 class="text-primary mb-3 fw-bold">Before Opening Checklist</h5>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2 d-flex justify-content-center align-items-start">
+                            <span class="badge bg-primary me-2 mt-1">✓</span>
+                            <span>All stalls are properly set up</span>
+                        </li>
+                        <li class="mb-2 d-flex justify-content-center align-items-start">
+                            <span class="badge bg-primary me-2 mt-1">✓</span>
+                            <span>Stall products/menus are complete</span>
+                        </li>
+                        <li class="mb-2 d-flex justify-content-center align-items-start">
+                            <span class="badge bg-primary me-2 mt-1">✓</span>
+                            <span>Operating hours are configured</span>
+                        </li>
+                        <li class="d-flex justify-content-center align-items-start">
+                            <span class="badge bg-primary me-2 mt-1">✓</span>
+                            <span>Park information is accurate</span>
+                        </li>
+                    </ul>
                 </div>
             <?php else: ?>
                 <?php foreach ($allStalls as $stall) { 
