@@ -4,13 +4,14 @@ include_once 'links.php';
 include_once 'modals.php';
 include_once 'nav.php';
 require_once __DIR__ . '/classes/stall.class.php';
+require_once __DIR__ . '/classes/encdec.class.php';
 
 date_default_timezone_set('Asia/Manila');
 
 $stallObj    = new Stall();
 
 if ($user['role'] === 'Admin' && isset($_GET['stall_id'])) {
-    $stall_id = intval($_GET['stall_id']);
+    $stall_id = intval(decrypt(urldecode($_GET['stall_id'])));
 } else {
     $stall_id = $stallObj->getStallId(
         $_SESSION['user']['id'],
