@@ -810,5 +810,19 @@ class Stall {
         return $row ?: null;
     }
 
+    public function isOwner(int $stall_id, int $user_id): bool {
+        $sql = "SELECT COUNT(*) FROM stalls WHERE id=:sid AND user_id=:uid";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['sid'=>$stall_id,'uid'=>$user_id]);
+        return (bool)$stmt->fetchColumn();
+    }
+    
+    public function saveSellerResponse(int $review_id, string $response): void {
+        $sql = "UPDATE ratings SET seller_response=:resp, response_at=NOW() WHERE id=:rid";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['resp'=>$response,'rid'=>$review_id]);
+    }
+    
+
     
 }

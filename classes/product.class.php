@@ -440,5 +440,145 @@ class Product {
             return false;
         }
     }
-        
+
+    public function getAverageRating(int $product_id): float {
+        $sql = "SELECT AVG(rating_value) AS avg_rating
+                  FROM ratings
+                 WHERE product_id = :pid";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['pid' => $product_id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row && $row['avg_rating'] !== null
+             ? round((float)$row['avg_rating'], 1)
+             : 0.0;
+    }
+
+    public function getRatingCount(int $product_id): int {
+        $sql = "SELECT COUNT(*) AS cnt
+                  FROM ratings
+                 WHERE product_id = :pid";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['pid' => $product_id]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getRatingBreakdown(int $product_id): array {
+        $sql = "SELECT rating_value, COUNT(*) AS cnt
+                  FROM ratings
+                 WHERE product_id = :pid
+              GROUP BY rating_value";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['pid' => $product_id]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $break = [5=>0,4=>0,3=>0,2=>0,1=>0];
+        foreach ($rows as $r) {
+            $rv = (int)$r['rating_value'];
+            if (isset($break[$rv])) {
+                $break[$rv] = (int)$r['cnt'];
+            }
+        }
+        return $break;
+    }
+
+    public function getReviews(int $product_id, string $orderBy = 'helpful', int $limit = 100): array {
+        switch ($orderBy) {
+            case 'newest':
+                $orderSql = "r.created_at DESC";
+                break;
+            case 'highest':
+                $orderSql = "r.rating_value DESC";
+                break;
+            case 'lowest':
+                $orderSql = "r.rating_value ASC";
+                break;
+            case 'helpful':
+            default:
+                $orderSql = "COUNT(rh.id) DESC, r.created_at DESC";
+                break;
+        }
+
+        $sql = "SELECT 
+                    u.first_name,
+                    r.id,
+                    r.rating_value,
+                    r.seller_response,
+                    r.comment,
+                    r.created_at,
+                    COUNT(rh.id) AS helpful_count
+                FROM ratings r
+                JOIN users u ON u.id = r.user_id
+                LEFT JOIN rating_helpful rh ON rh.rating_id = r.id
+               WHERE r.product_id = :pid
+            GROUP BY r.id
+            ORDER BY {$orderSql}
+               LIMIT :lim";
+
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue('pid', $product_id, PDO::PARAM_INT);
+        $stmt->bindValue('lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getTopReviews(int $product_id, int $limit = 10): array {
+        return $this->getReviews($product_id, 'helpful', $limit);
+    }
+
+    public function getNewestReviews(int $product_id, int $limit = 10): array {
+        return $this->getReviews($product_id, 'newest', $limit);
+    }
+
+    public function getHighestRatingReviews(int $product_id, int $limit = 10): array {
+        return $this->getReviews($product_id, 'highest', $limit);
+    }
+
+    public function getLowestRatingReviews(int $product_id, int $limit = 10): array {
+        return $this->getReviews($product_id, 'lowest', $limit);
+    }
+
+    public function getProductRatingStats(int $product_id): array {
+        $avg       = $this->getAverageRating($product_id);
+        $count     = $this->getRatingCount($product_id);
+        $breakdown = $this->getRatingBreakdown($product_id);
+        return [
+            'avg_rating'    => $avg,
+            'total_ratings' => $count,
+            'breakdown'     => $breakdown,
+        ];
+    }
+
+    public function getProductRatingBreakdown(int $product_id): array {
+        return $this->getRatingBreakdown($product_id);
+    }
+
+    public function getProductReviews(int $product_id, string $orderBy = 'helpful', int $limit = 100): array {
+        return $this->getReviews($product_id, $orderBy, $limit);
+    }
+
+    public function hasUserMarkedHelpful(int $reviewId, int $userId): bool {
+        $sql = "SELECT 1 FROM rating_helpful WHERE rating_id = ? AND user_id = ?";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$reviewId, $userId]);
+        return (bool)$stmt->fetchColumn();
+      }
+      
+      public function addHelpfulMark(int $reviewId, int $userId): bool {
+        $sql = "INSERT INTO rating_helpful (rating_id, user_id) VALUES (?, ?)";
+        return (bool)$this->db->connect()->prepare($sql)->execute([$reviewId, $userId]);
+      }
+      
+      public function removeHelpfulMark(int $reviewId, int $userId): bool {
+        $sql = "DELETE FROM rating_helpful WHERE rating_id = ? AND user_id = ?";
+        return (bool)$this->db->connect()->prepare($sql)->execute([$reviewId, $userId]);
+      }
+      
+    public function getHelpfulCount(int $reviewId): int {
+        $sql  = "SELECT COUNT(*) FROM rating_helpful WHERE rating_id = ?";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$reviewId]);
+        return (int) $stmt->fetchColumn();
+    }
+
 }

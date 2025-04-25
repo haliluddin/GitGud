@@ -85,6 +85,13 @@ if (isset($_GET['stall_id']) && isset($_GET['search'])) {
                                     <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
                                 </div>
                             <?php endif; ?>
+                            <?php $stats = $productObj->getProductRatingStats($product['id']); ?>
+                            <div class="mb-3 d-flex align-items-center small gap-1">
+                                <div data-coreui-item-count="1" data-coreui-size="sm" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="1"></div>
+                                <span><?= number_format($stats['avg_rating'],1); ?>/5.0</span>
+                                <span class="text-muted">(<?= $stats['total_ratings']; ?>)</span>
+                                <button type="button" class="bg-white text-decoration-none border-0 rename py-1 px-2 text-dark" data-bs-toggle="modal" data-bs-target="#productratingsModal<?= $product['id']; ?>">See reviews</button>
+                            </div>
                             <div class="m-0">
                                 <?php if (in_array($product['id'], $popularProdIds)) { ?>
                                     <span class="opennow">Popular</span>

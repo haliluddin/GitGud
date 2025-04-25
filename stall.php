@@ -90,6 +90,22 @@
             echo "<script>Swal.fire({icon: 'warning', title: 'Login Required', text: 'Please log in to submit a report.', confirmButtonColor: '#CD5C08'});</script>";
         }
     }
+
+    $isOwner = $stallObj->isOwner($stall_id, $user_id);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_submit'])) {
+        $rid      = intval($_POST['review_id']);
+        $response = trim($_POST['seller_response']);
+        if ($isOwner && $rid && $response !== '') {
+            $stallObj->saveSellerResponse($rid, $response);
+            echo "<script>
+                Swal.fire({ icon: 'success', title: 'Reply submitted!', text: 'Your stall response has been saved.', showConfirmButton: false });
+            </script>";
+        }
+        $u = htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES);
+        echo "<meta http-equiv=\"refresh\" content=\"2;url={$u}\">";
+        exit;
+    }
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -122,6 +138,21 @@
 .variationitem-disabled:hover {
     background-color: #FFF5E4;
 }
+.ratemodal .modal-header,
+.ratemodal .modal-footer {
+    position: sticky;
+    z-index: 1020;
+    background-color: white;
+}
+.ratemodal .modal-header { top: 0; }
+.ratemodal .modal-footer { bottom: 0; }
+.ratemodal { max-height: 80vh; overflow-y: auto; }
+.modal-dialog { max-width: 50vw; }
+.helpful-toggle.active { color: #CD5C08; }
+.helpful-toggle.active i.fa-regular { display: none; }
+.helpful-toggle.active i.fa-solid  { display: inline-block; }
+.helpful-toggle i.fa-solid         { display: none; }
+textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
 </style>
 <div style="background-color: #f4f4f4;">
 
@@ -368,6 +399,13 @@
                                                         <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
                                                     </div>
                                             <?php } ?>
+                                            <?php $stats = $productObj->getProductRatingStats($product['id']); ?>
+                                            <div class="mb-3 d-flex align-items-center small gap-1">
+                                                <div data-coreui-item-count="1" data-coreui-size="sm" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="1"></div>
+                                                <span><?= number_format($stats['avg_rating'],1); ?>/5.0</span>
+                                                <span class="text-muted">(<?= $stats['total_ratings']; ?>)</span>
+                                                <button type="button" class="bg-white text-decoration-none border-0 rename py-1 px-2 text-dark" data-bs-toggle="modal" data-bs-target="#productratingsModal<?= $product['id']; ?>">See reviews</button>
+                                            </div>
                                             <div class="m-0">
                                                 <?php if (in_array($product['id'], $popularProdIds)) { ?>
                                                     <span class="opennow">Popular</span>
@@ -458,6 +496,13 @@
                                                         <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
                                                     </div>
                                             <?php } ?>
+                                            <?php $stats = $productObj->getProductRatingStats($product['id']); ?>
+                                            <div class="mb-3 d-flex align-items-center small gap-1">
+                                                <div data-coreui-item-count="1" data-coreui-size="sm" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="1"></div>
+                                                <span><?= number_format($stats['avg_rating'],1); ?>/5.0</span>
+                                                <span class="text-muted">(<?= $stats['total_ratings']; ?>)</span>
+                                                <button type="button" class="bg-white text-decoration-none border-0 rename py-1 px-2 text-dark" data-bs-toggle="modal" data-bs-target="#productratingsModal<?= $product['id']; ?>">See reviews</button>
+                                            </div>
                                             <div class="m-0">
                                                 <?php if (in_array($product['id'], $popularProdIds)) { ?>
                                                     <span class="opennow">Popular</span>
@@ -548,6 +593,13 @@
                                                         <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
                                                     </div>
                                             <?php } ?>
+                                            <?php $stats = $productObj->getProductRatingStats($product['id']); ?>
+                                            <div class="mb-3 d-flex align-items-center small gap-1">
+                                                <div data-coreui-item-count="1" data-coreui-size="sm" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="1"></div>
+                                                <span><?= number_format($stats['avg_rating'],1); ?>/5.0</span>
+                                                <span class="text-muted">(<?= $stats['total_ratings']; ?>)</span>
+                                                <button type="button" class="bg-white text-decoration-none border-0 rename py-1 px-2 text-dark" data-bs-toggle="modal" data-bs-target="#productratingsModal<?= $product['id']; ?>">See reviews</button>
+                                            </div>
                                             <div class="m-0">
                                                 <?php if (in_array($product['id'], $popularProdIds)) { ?>
                                                     <span class="opennow">Popular</span>
@@ -586,13 +638,12 @@
                 <section id="category<?= $cat['id']; ?>" class="pt-3 mt-3">
                     <h5><?= htmlspecialchars($cat['name']); ?></h5>
                     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
-                        <?php 
-                            $hasProducts = false;
-                            foreach ($products as $product):
-                                if ($product['category_id'] == $cat['id']):
+                        <?php $hasProducts = false; foreach ($products as $product): ?>
+                            <?php if ($product['category_id'] == $cat['id']): ?>
+                                <?php
                                     $hasProducts = true;
-                                    $variations = $stallObj->getProductVariations($product['id']);
-                                    $cardClickable = true; 
+                                    $variations   = $stallObj->getProductVariations($product['id']);
+                                    $cardClickable = true;
                                     if (!empty($variations)) {
                                         foreach ($variations as $variation) {
                                             $options = $stallObj->getVariationOptions($variation['id']);
@@ -603,142 +654,79 @@
                                                     break;
                                                 }
                                             }
-                                            if (!$variationHasStock) {
-                                                $cardClickable = false;
-                                                break;
-                                            }
+                                            if (!$variationHasStock) { $cardClickable = false; break; }
                                         }
                                     } else {
                                         $cardClickable = (($product['stock'] ?? 0) > 0);
                                     }
-                        ?>
-                                    <div class="col">
-                                        <?php if ($cardClickable): ?>
-                                            <a href="#" class="card-link text-decoration-none" data-bs-toggle="modal" data-bs-target="#menumodal<?= $product['id']; ?>">
-                                        <?php else: ?>
-                                            <a href="#" class="card-link text-decoration-none disabled-card">
-                                        <?php endif; ?>
-                                                <div class="card position-relative">
-                                                    <?php if (!$cardClickable): ?>
-                                                        <div class="closed">No stock</div>
-                                                    <?php endif; ?>
-                                                    <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?= htmlspecialchars($product['name']); ?>">
-                                                    <button class="addtocart position-absolute fw-bold d-flex justify-content-center align-items-center">+</button>
-                                                    <div class="card-body">
-                                                        <p class="card-text text-muted m-0"> <?= htmlspecialchars($product['category_name']); ?></p>
-                                                        <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
-                                                        <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
-                                                        <?php
-                                                            $today = date('Y-m-d');
-                                                            if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
-                                                                $product['discount'] = 0.00;
-                                                                $product['start_date'] = null;
-                                                                $product['end_date'] = null;
-                                                            } 
-                                                            if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
-                                                                $product['discount'] = 0.00;
-                                                                $product['start_date'] = null;
-                                                                $product['end_date'] = null;
-                                                            }                                                    
-                                                            if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
-                                                                $today >= $product['start_date'] && $today <= $product['end_date']) {
-                                                                $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
-                                                        ?>
-                                                                <div class="my-3">
-                                                                    <span class="proprice">₱<?= number_format($discountedPrice, 2); ?></span>
-                                                                    <span class="pricebefore small">₱<?= number_format($product['base_price'], 2); ?></span>
-                                                                </div>
-                                                        <?php } else { ?>
-                                                                <div class="my-3">
-                                                                    <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
-                                                                </div>
-                                                        <?php } ?>
-                                                        <div class="m-0">
-                                                            <?php if (in_array($product['id'], $popularProdIds)) { ?>
-                                                                <span class="opennow">Popular</span>
-                                                            <?php } ?>
-                                                            <?php if (in_array($product['id'], $promoProdIds)) { 
-                                                                $today = date('Y-m-d');
-                                                                if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
-                                                                    $product['discount'] = 0.00;
-                                                                    $product['start_date'] = null;
-                                                                    $product['end_date'] = null;
-                                                                } 
-                                                                if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
-                                                                    $today >= $product['start_date'] && $today <= $product['end_date']) { ?>
-                                                                    <span class="discount"><?= intval($product['discount']); ?>% off</span>
-                                                            <?php } } ?>
-                                                            <?php if (in_array($product['id'], $newProdIds)) { ?>
-                                                                <span class="newopen">New</span>
-                                                            <?php } ?>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                    </div>
-                        <?php 
-                                endif;
-                            endforeach;
-                        ?>
-                        <?php if (!$hasProducts): ?>
-                            <div class="w-100">
-                               No products found for this category.
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <?php foreach ($products as $product): ?>
-                    <!-- Modal for this product -->
-                    <div class="modal fade menumodal" id="menumodal<?= $product['id']; ?>" tabindex="-1" aria-labelledby="modalLabel<?= $product['id']; ?>" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <form class="modal-content">
-                                <div class="modal-body p-0">
-                                    <div class="card border-0 position-relative rounded-0">
-                                        <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top custom-img rounded-0" alt="<?= htmlspecialchars($product['name']); ?>">
-                                        <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        <div class="card-body">
-                                            <p class="card-text text-muted m-0"> <?= htmlspecialchars($product['category_name']); ?></p>
-                                            <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
-                                            <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
-                                            <?php
-                                                $today = date('Y-m-d');
-                                                if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
-                                                    $product['discount'] = 0.00;
-                                                    $product['start_date'] = null;
-                                                    $product['end_date'] = null;
-                                                } 
-                                                if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
-                                                    $today >= $product['start_date'] && $today <= $product['end_date']) {
-                                                    $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
-                                            ?>
+                                ?>
+                                <div class="col">
+                                    <a href="#" class="card-link text-decoration-none<?= $cardClickable ? '" data-bs-toggle="modal" data-bs-target="#menumodal' . $product['id'] . '"' : ' disabled-card"'; ?>>
+                                        <div class="card position-relative">
+                                            <?php if (!$cardClickable): ?>
+                                                <div class="closed">No stock</div>
+                                            <?php endif; ?>
+                                            <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?= htmlspecialchars($product['name']); ?>">
+                                            <button class="addtocart position-absolute fw-bold d-flex justify-content-center align-items-center">+</button>
+                                            <div class="card-body">
+                                                <p class="card-text text-muted m-0"><?= htmlspecialchars($product['category_name']); ?></p>
+                                                <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
+                                                <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
+                                                <?php
+                                                    $today = date('Y-m-d');
+                                                    if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                        $product['discount']   = 0.00;
+                                                        $product['start_date'] = null;
+                                                        $product['end_date']   = null;
+                                                    }
+                                                    if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) && $today >= $product['start_date'] && $today <= $product['end_date']) {
+                                                        $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
+                                                ?>
                                                     <div class="my-3">
                                                         <span class="proprice">₱<?= number_format($discountedPrice, 2); ?></span>
                                                         <span class="pricebefore small">₱<?= number_format($product['base_price'], 2); ?></span>
                                                     </div>
-                                            <?php } else { ?>
+                                                <?php } else { ?>
                                                     <div class="my-3">
                                                         <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
                                                     </div>
-                                            <?php } ?>
-
-                                            <?php 
-                                            $variations = $stallObj->getProductVariations($product['id']);
-                                            if (!empty($variations)) {
-                                                $totalVariationStock = 0;
-                                                foreach ($variations as $variation) {
-                                                    foreach ($stallObj->getVariationOptions($variation['id']) as $option) {
-                                                        $totalVariationStock += $stallObj->getStock($product['id'], $option['id']);
-                                                    }
-                                                }
-                                                $displayStock = $totalVariationStock;
-                                            } else {
-                                                $displayStock = $product['stock'] ?? 0;
-                                            }
-                                            ?>
-                                            <div class="m-0">
-                                                <?php if (in_array($product['id'], $popularProdIds)) { ?>
-                                                    <span class="opennow">Popular</span>
                                                 <?php } ?>
-                                                <?php if (in_array($product['id'], $promoProdIds)) { 
+                                                <?php $stats = $productObj->getProductRatingStats($product['id']); ?>
+                                                <div class="mb-3 d-flex align-items-center small gap-1">
+                                                    <div data-coreui-item-count="1" data-coreui-size="sm" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="1"></div>
+                                                    <span><?= number_format($stats['avg_rating'],1); ?>/5.0</span>
+                                                    <span class="text-muted">(<?= $stats['total_ratings']; ?>)</span>
+                                                    <button type="button" class="bg-white text-decoration-none border-0 rename py-1 px-2 text-dark" data-bs-toggle="modal" data-bs-target="#productratingsModal<?= $product['id']; ?>">See reviews</button>
+                                                </div>
+                                                <div class="m-0">
+                                                    <?php if (in_array($product['id'], $popularProdIds)): ?><span class="opennow">Popular</span><?php endif; ?>
+                                                    <?php if (in_array($product['id'], $promoProdIds) && $product['discount'] > 0 && $today >= $product['start_date'] && $today <= $product['end_date']): ?><span class="discount"><?= intval($product['discount']); ?>% off</span><?php endif; ?>
+                                                    <?php if (in_array($product['id'], $newProdIds)): ?><span class="newopen">New</span><?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <?php if (!$hasProducts): ?>
+                            <div class="w-100">No products found for this category.</div>
+                        <?php endif; ?>
+                    </div>
+                    <?php foreach ($products as $product): ?>
+                        <!-- Modal for this product -->
+                        <div class="modal fade menumodal" id="menumodal<?= $product['id']; ?>" tabindex="-1" aria-labelledby="modalLabel<?= $product['id']; ?>" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <form class="modal-content">
+                                    <div class="modal-body p-0">
+                                        <div class="card border-0 position-relative rounded-0">
+                                            <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top custom-img rounded-0" alt="<?= htmlspecialchars($product['name']); ?>">
+                                            <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <div class="card-body">
+                                                <p class="card-text text-muted m-0"> <?= htmlspecialchars($product['category_name']); ?></p>
+                                                <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
+                                                <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
+                                                <?php
                                                     $today = date('Y-m-d');
                                                     if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
                                                         $product['discount'] = 0.00;
@@ -746,258 +734,297 @@
                                                         $product['end_date'] = null;
                                                     } 
                                                     if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
-                                                        $today >= $product['start_date'] && $today <= $product['end_date']) { ?>
-                                                        <span class="discount"><?= intval($product['discount']); ?>% off</span>
-                                                <?php } } ?>
-                                                <?php if (in_array($product['id'], $newProdIds)) { ?>
-                                                    <span class="newopen">New</span>
-                                                <?php } ?>
-                                            </div>
-                                            <hr>
-
-                                            <?php 
-                                            if (!empty($variations)):
-                                            ?>
-                                                <?php foreach ($variations as $variation): ?>
-                                                    <div class="vrtn mt-3">
-                                                        <div class="variation-group mb-3" data-variation-id="<?= $variation['id']; ?>">
-                                                            <div class="d-flex justify-content-between variation mb-2">
-                                                                <div>
-                                                                    <h5 class="mb-0"><?= htmlspecialchars($variation['name']); ?></h5>
-                                                                    <span class="mt-2">Select 1</span>
-                                                                </div>
-                                                                <span class="mx-2 variationspan rounded-4 px-2 py-1 m-0">Required</span>
-                                                            </div>
-                                                            <?php 
-                                                            foreach ($stallObj->getVariationOptions($variation['id']) as $option):
-                                                                $optionStock = $stallObj->getStock($product['id'], $option['id']);
-                                                            ?>
-                                                                <div class="d-flex align-items-center justify-content-between variationitem mb-2 <?= ($optionStock <= 0 ? 'variationitem-disabled' : ''); ?>" onclick="if(!this.querySelector('input').disabled){ document.getElementById('variation<?= $option['id']; ?>').click(); }">
-                                                                    <span class="small text-center me-4 pe-2 border-end" style="color: #CD5C08;">Stocks<br><?= $optionStock; ?></span>
-                                                                    <div class="form-check d-flex gap-2 align-items-center flex-grow-1">
-                                                                        <input 
-                                                                            class="form-check-input" 
-                                                                            type="radio" 
-                                                                            name="variation_<?= $variation['id']; ?>"  
-                                                                            id="variation<?= $option['id']; ?>"
-                                                                            data-addprice="<?= $option['add_price']; ?>"
-                                                                            data-subtractprice="<?= $option['subtract_price']; ?>"
-                                                                            data-stock="<?= $optionStock; ?>"
-                                                                            <?= ($optionStock <= 0 ? 'disabled' : ''); ?>
-                                                                            onchange="updateAddToCartButtonState(<?= $product['id']; ?>)"
-                                                                        >
-                                                                        <img src="<?= htmlspecialchars($option['image']); ?>" alt="<?= htmlspecialchars($option['name']); ?>" width="45px" height="45px" class="rounded-2">
-                                                                        <label class="form-check-label" for="variation<?= $option['id']; ?>">
-                                                                            <?= htmlspecialchars($option['name']); ?>
-                                                                        </label>
-                                                                    </div>
-                                                                    <span class="px-2">
-                                                                        <?= ($option['add_price'] > 0)
-                                                                            ? '+ ₱' . number_format($option['add_price'], 2)
-                                                                            : (($option['subtract_price'] > 0)
-                                                                                ? '- ₱' . number_format($option['subtract_price'], 2)
-                                                                                : 'Free'); ?>
-                                                                    </span>
-                                                                </div>
-                                                            <?php endforeach; ?>
+                                                        $today >= $product['start_date'] && $today <= $product['end_date']) {
+                                                        $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
+                                                ?>
+                                                        <div class="my-3">
+                                                            <span class="proprice">₱<?= number_format($discountedPrice, 2); ?></span>
+                                                            <span class="pricebefore small">₱<?= number_format($product['base_price'], 2); ?></span>
                                                         </div>
-                                                    </div>
-                                                <?php endforeach; ?>
-                                            <?php endif; ?>
+                                                <?php } else { ?>
+                                                        <div class="my-3">
+                                                            <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
+                                                        </div>
+                                                <?php } ?>
 
-                                            <div class="speins mt-4 mb-5">
-                                                <div class="mb-3">
-                                                    <h5 class="mb-0">Special Instructions</h5>
-                                                    <span class="mt-2">Special requests are subject to the restaurant's approval. Tell us here!</span>
+                                                <?php 
+                                                $variations = $stallObj->getProductVariations($product['id']);
+                                                if (!empty($variations)) {
+                                                    $totalVariationStock = 0;
+                                                    foreach ($variations as $variation) {
+                                                        foreach ($stallObj->getVariationOptions($variation['id']) as $option) {
+                                                            $totalVariationStock += $stallObj->getStock($product['id'], $option['id']);
+                                                        }
+                                                    }
+                                                    $displayStock = $totalVariationStock;
+                                                } else {
+                                                    $displayStock = $product['stock'] ?? 0;
+                                                }
+                                                ?>
+                                                <div class="m-0">
+                                                    <?php if (in_array($product['id'], $popularProdIds)) { ?>
+                                                        <span class="opennow">Popular</span>
+                                                    <?php } ?>
+                                                    <?php if (in_array($product['id'], $promoProdIds)) { 
+                                                        $today = date('Y-m-d');
+                                                        if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
+                                                            $product['discount'] = 0.00;
+                                                            $product['start_date'] = null;
+                                                            $product['end_date'] = null;
+                                                        } 
+                                                        if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) &&
+                                                            $today >= $product['start_date'] && $today <= $product['end_date']) { ?>
+                                                            <span class="discount"><?= intval($product['discount']); ?>% off</span>
+                                                    <?php } } ?>
+                                                    <?php if (in_array($product['id'], $newProdIds)) { ?>
+                                                        <span class="newopen">New</span>
+                                                    <?php } ?>
                                                 </div>
-                                                <div class="input-group m-0">
-                                                    <textarea 
-                                                        name="specialinstructions<?= $product['id'] ?>" 
-                                                        id="specialinstructions<?= $product['id'] ?>" 
-                                                        placeholder="e.g. No mayo (Optional)" 
-                                                        class="rounded-2" 
-                                                        rows="3"
-                                                    ></textarea>
-                                                </div>                
+                                                <hr>
+
+                                                <?php 
+                                                if (!empty($variations)):
+                                                ?>
+                                                    <?php foreach ($variations as $variation): ?>
+                                                        <div class="vrtn mt-3">
+                                                            <div class="variation-group mb-3" data-variation-id="<?= $variation['id']; ?>">
+                                                                <div class="d-flex justify-content-between variation mb-2">
+                                                                    <div>
+                                                                        <h5 class="mb-0"><?= htmlspecialchars($variation['name']); ?></h5>
+                                                                        <span class="mt-2">Select 1</span>
+                                                                    </div>
+                                                                    <span class="mx-2 variationspan rounded-4 px-2 py-1 m-0">Required</span>
+                                                                </div>
+                                                                <?php 
+                                                                foreach ($stallObj->getVariationOptions($variation['id']) as $option):
+                                                                    $optionStock = $stallObj->getStock($product['id'], $option['id']);
+                                                                ?>
+                                                                    <div class="d-flex align-items-center justify-content-between variationitem mb-2 <?= ($optionStock <= 0 ? 'variationitem-disabled' : ''); ?>" onclick="if(!this.querySelector('input').disabled){ document.getElementById('variation<?= $option['id']; ?>').click(); }">
+                                                                        <span class="small text-center me-4 pe-2 border-end" style="color: #CD5C08;">Stocks<br><?= $optionStock; ?></span>
+                                                                        <div class="form-check d-flex gap-2 align-items-center flex-grow-1">
+                                                                            <input 
+                                                                                class="form-check-input" 
+                                                                                type="radio" 
+                                                                                name="variation_<?= $variation['id']; ?>"  
+                                                                                id="variation<?= $option['id']; ?>"
+                                                                                data-addprice="<?= $option['add_price']; ?>"
+                                                                                data-subtractprice="<?= $option['subtract_price']; ?>"
+                                                                                data-stock="<?= $optionStock; ?>"
+                                                                                <?= ($optionStock <= 0 ? 'disabled' : ''); ?>
+                                                                                onchange="updateAddToCartButtonState(<?= $product['id']; ?>)"
+                                                                            >
+                                                                            <img src="<?= htmlspecialchars($option['image']); ?>" alt="<?= htmlspecialchars($option['name']); ?>" width="45px" height="45px" class="rounded-2">
+                                                                            <label class="form-check-label" for="variation<?= $option['id']; ?>">
+                                                                                <?= htmlspecialchars($option['name']); ?>
+                                                                            </label>
+                                                                        </div>
+                                                                        <span class="px-2">
+                                                                            <?= ($option['add_price'] > 0)
+                                                                                ? '+ ₱' . number_format($option['add_price'], 2)
+                                                                                : (($option['subtract_price'] > 0)
+                                                                                    ? '- ₱' . number_format($option['subtract_price'], 2)
+                                                                                    : 'Free'); ?>
+                                                                        </span>
+                                                                    </div>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
+
+                                                <div class="speins mt-4 mb-5">
+                                                    <div class="mb-3">
+                                                        <h5 class="mb-0">Special Instructions</h5>
+                                                        <span class="mt-2">Special requests are subject to the restaurant's approval. Tell us here!</span>
+                                                    </div>
+                                                    <div class="input-group m-0">
+                                                        <textarea 
+                                                            name="specialinstructions<?= $product['id'] ?>" 
+                                                            id="specialinstructions<?= $product['id'] ?>" 
+                                                            placeholder="e.g. No mayo (Optional)" 
+                                                            class="rounded-2" 
+                                                            rows="3"
+                                                        ></textarea>
+                                                    </div>                
+                                                </div>
+                                                <span class="proprice" style="display:none;">₱<?= number_format($product['base_price'], 2); ?></span>
                                             </div>
-                                            <span class="proprice" style="display:none;">₱<?= number_format($product['base_price'], 2); ?></span>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-3 ordquantity">
-                                    <span class="small text-center" style="color: #CD5C08;">
-                                        <?= $displayStock; ?> stocks available
-                                    </span>
-                                    <div class="d-flex align-items-center">
-                                        <i class="fa-solid fa-minus" onclick="updateQuantity(<?= $product['id']; ?>, -1)"></i>
-                                        <span id="quantity<?= $product['id']; ?>" class="ordquanum"
-                                            <?php if(empty($variations)) echo 'data-stock="' . ($product['stock'] ?? 0) . '"'; ?>
-                                        >1</span>
+                                    <div class="d-flex align-items-center gap-3 ordquantity">
+                                        <span class="small text-center" style="color: #CD5C08;">
+                                            <?= $displayStock; ?> stocks available
+                                        </span>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-minus" onclick="updateQuantity(<?= $product['id']; ?>, -1)"></i>
+                                            <span id="quantity<?= $product['id']; ?>" class="ordquanum"
+                                                <?php if(empty($variations)) echo 'data-stock="' . ($product['stock'] ?? 0) . '"'; ?>
+                                            >1</span>
+                                            <?php if(!empty($variations)): ?>
+                                                <i class="fa-solid fa-plus disabled-plus" id="plusBtn<?= $product['id']; ?>"></i>
+                                            <?php else: ?>
+                                                <i class="fa-solid fa-plus <?php echo (($product['stock'] ?? 0) <= 1 ? 'disabled-plus' : ''); ?>" 
+                                                id="plusBtn<?= $product['id']; ?>" 
+                                                onclick="updateQuantity(<?= $product['id']; ?>, 1)"></i>
+                                            <?php endif; ?>
+                                        </div>
                                         <?php if(!empty($variations)): ?>
-                                            <i class="fa-solid fa-plus disabled-plus" id="plusBtn<?= $product['id']; ?>"></i>
+                                            <button type="button" class="btn btn-primary w-100 disabled-btn" id="addToCartBtn<?= $product['id']; ?>" onclick="addToCart(<?= $product['id']; ?>)" disabled>
+                                                Add to cart
+                                            </button>
                                         <?php else: ?>
-                                            <i class="fa-solid fa-plus <?php echo (($product['stock'] ?? 0) <= 1 ? 'disabled-plus' : ''); ?>" 
-                                            id="plusBtn<?= $product['id']; ?>" 
-                                            onclick="updateQuantity(<?= $product['id']; ?>, 1)"></i>
+                                            <button type="button" class="btn btn-primary w-100" id="addToCartBtn<?= $product['id']; ?>" onclick="addToCart(<?= $product['id']; ?>)">
+                                                Add to cart
+                                            </button>
                                         <?php endif; ?>
                                     </div>
-                                    <?php if(!empty($variations)): ?>
-                                        <button type="button" class="btn btn-primary w-100 disabled-btn" id="addToCartBtn<?= $product['id']; ?>" onclick="addToCart(<?= $product['id']; ?>)" disabled>
-                                            Add to cart
-                                        </button>
-                                    <?php else: ?>
-                                        <button type="button" class="btn btn-primary w-100" id="addToCartBtn<?= $product['id']; ?>" onclick="addToCart(<?= $product['id']; ?>)">
-                                            Add to cart
-                                        </button>
-                                    <?php endif; ?>
-                                </div>
-                                <script>
-                                    const modalElement = document.getElementById("menumodal<?= $product['id']; ?>");
-                                    modalElement.addEventListener("show.bs.modal", function() {
-                                        updateAddToCartButtonState(<?= $product['id']; ?>);
-                                        updateModalPlusState(<?= $product['id']; ?>);
-                                    });
-                                    
-                                    function updateAddToCartButtonState(productId) {
-                                        const modal = document.getElementById("menumodal" + productId);
-                                        const variationGroups = modal ? modal.querySelectorAll(".variation-group") : [];
-                                        const addToCartBtn = document.getElementById("addToCartBtn" + productId);
-                                        const plusBtn = document.getElementById("plusBtn" + productId);
-                                        let allSelected = true;
-                                        
-                                        variationGroups.forEach(group => {
-                                            if (!group.querySelector("input[type='radio']:checked")) {
-                                                allSelected = false;
-                                            }
+                                    <script>
+                                        const modalElement = document.getElementById("menumodal<?= $product['id']; ?>");
+                                        modalElement.addEventListener("show.bs.modal", function() {
+                                            updateAddToCartButtonState(<?= $product['id']; ?>);
+                                            updateModalPlusState(<?= $product['id']; ?>);
                                         });
                                         
-                                        if (allSelected) {
-                                            addToCartBtn.classList.remove("disabled-btn");
-                                            addToCartBtn.disabled = false;
-                                            updateModalPlusState(productId);
-                                        } else {
-                                            addToCartBtn.classList.add("disabled-btn");
-                                            addToCartBtn.disabled = true;
-                                            if (plusBtn) {
+                                        function updateAddToCartButtonState(productId) {
+                                            const modal = document.getElementById("menumodal" + productId);
+                                            const variationGroups = modal ? modal.querySelectorAll(".variation-group") : [];
+                                            const addToCartBtn = document.getElementById("addToCartBtn" + productId);
+                                            const plusBtn = document.getElementById("plusBtn" + productId);
+                                            let allSelected = true;
+                                            
+                                            variationGroups.forEach(group => {
+                                                if (!group.querySelector("input[type='radio']:checked")) {
+                                                    allSelected = false;
+                                                }
+                                            });
+                                            
+                                            if (allSelected) {
+                                                addToCartBtn.classList.remove("disabled-btn");
+                                                addToCartBtn.disabled = false;
+                                                updateModalPlusState(productId);
+                                            } else {
+                                                addToCartBtn.classList.add("disabled-btn");
+                                                addToCartBtn.disabled = true;
+                                                if (plusBtn) {
+                                                    plusBtn.classList.add("disabled-plus");
+                                                    plusBtn.onclick = null;
+                                                }
+                                            }
+                                        }
+                                        
+                                        function updateModalPlusState(productId) {
+                                            const quantitySpan = document.getElementById("quantity" + productId);
+                                            let currentQuantity = parseInt(quantitySpan.innerText);
+                                            let maxAvailable = 0;
+                                            const modal = document.getElementById("menumodal" + productId);
+                                            const variationGroups = modal ? modal.querySelectorAll(".variation-group") : [];
+                                            
+                                            if (variationGroups.length > 0) {
+                                                let allSelected = true;
+                                                let selectedStocks = [];
+                                                variationGroups.forEach(group => {
+                                                    const selected = group.querySelector("input[type='radio']:checked");
+                                                    if (!selected) {
+                                                        allSelected = false;
+                                                    } else {
+                                                        selectedStocks.push(parseInt(selected.dataset.stock));
+                                                    }
+                                                });
+                                                maxAvailable = allSelected ? Math.min(...selectedStocks) : 1;
+                                            } else {
+                                                maxAvailable = parseInt(quantitySpan.dataset.stock);
+                                            }
+                                            
+                                            const plusBtn = document.getElementById("plusBtn" + productId);
+                                            if (currentQuantity >= maxAvailable) {
                                                 plusBtn.classList.add("disabled-plus");
                                                 plusBtn.onclick = null;
+                                            } else {
+                                                plusBtn.classList.remove("disabled-plus");
+                                                plusBtn.onclick = function() { updateQuantity(productId, 1); };
                                             }
                                         }
-                                    }
-                                    
-                                    function updateModalPlusState(productId) {
-                                        const quantitySpan = document.getElementById("quantity" + productId);
-                                        let currentQuantity = parseInt(quantitySpan.innerText);
-                                        let maxAvailable = 0;
-                                        const modal = document.getElementById("menumodal" + productId);
-                                        const variationGroups = modal ? modal.querySelectorAll(".variation-group") : [];
                                         
-                                        if (variationGroups.length > 0) {
-                                            let allSelected = true;
-                                            let selectedStocks = [];
+                                        function updateQuantity(productId, change) {
+                                            const quantitySpan = document.getElementById("quantity" + productId);
+                                            let currentQuantity = parseInt(quantitySpan.innerText);
+                                            let maxAvailable = 0;
+                                            const modal = document.getElementById("menumodal" + productId);
+                                            const variationGroups = modal ? modal.querySelectorAll(".variation-group") : [];
+                                            
+                                            if (variationGroups.length > 0) {
+                                                let allSelected = true;
+                                                let selectedStocks = [];
+                                                variationGroups.forEach(group => {
+                                                    const selected = group.querySelector("input[type='radio']:checked");
+                                                    if (!selected) {
+                                                        allSelected = false;
+                                                    } else {
+                                                        selectedStocks.push(parseInt(selected.dataset.stock));
+                                                    }
+                                                });
+                                                maxAvailable = allSelected ? Math.min(...selectedStocks) : 1;
+                                            } else {
+                                                maxAvailable = parseInt(quantitySpan.dataset.stock);
+                                            }
+                                            
+                                            let newQuantity = currentQuantity + change;
+                                            newQuantity = Math.max(1, newQuantity);
+                                            if (newQuantity > maxAvailable) {
+                                                newQuantity = maxAvailable;
+                                            }
+                                            quantitySpan.innerText = newQuantity;
+                                            updateModalPlusState(productId);
+                                            updateAddToCartButtonState(productId);
+                                        }
+                                        
+                                        function addToCart(productId) {
+                                            const addToCartBtn = document.getElementById("addToCartBtn" + productId);
+                                            if (addToCartBtn.disabled) { return; }
+                                            
+                                            let quantity = parseInt(document.getElementById("quantity" + productId).innerText);
+                                            let specialInstructions = document.getElementById("specialinstructions" + productId)?.value || '';
+                                            let modal = document.getElementById("menumodal" + productId);
+                                            let variationGroups = modal.querySelectorAll(".variation-group");
+                                            let variationOptionIds = [];
+                                            let priceElement = modal.querySelector(".proprice");
+                                            
+                                            if (!priceElement) {
+                                                console.error("Price element (.proprice) not found in modal.");
+                                                return;
+                                            }
+                                            
+                                            let basePriceText = priceElement.innerText;
+                                            let basePrice = parseFloat(basePriceText.replace("₱", "").trim());
+                                            
                                             variationGroups.forEach(group => {
-                                                const selected = group.querySelector("input[type='radio']:checked");
-                                                if (!selected) {
-                                                    allSelected = false;
-                                                } else {
-                                                    selectedStocks.push(parseInt(selected.dataset.stock));
+                                                let checked = group.querySelector("input[type='radio']:checked");
+                                                if (checked) {
+                                                    variationOptionIds.push(checked.id.replace("variation", ""));
                                                 }
                                             });
-                                            maxAvailable = allSelected ? Math.min(...selectedStocks) : 1;
-                                        } else {
-                                            maxAvailable = parseInt(quantitySpan.dataset.stock);
-                                        }
-                                        
-                                        const plusBtn = document.getElementById("plusBtn" + productId);
-                                        if (currentQuantity >= maxAvailable) {
-                                            plusBtn.classList.add("disabled-plus");
-                                            plusBtn.onclick = null;
-                                        } else {
-                                            plusBtn.classList.remove("disabled-plus");
-                                            plusBtn.onclick = function() { updateQuantity(productId, 1); };
-                                        }
-                                    }
-                                    
-                                    function updateQuantity(productId, change) {
-                                        const quantitySpan = document.getElementById("quantity" + productId);
-                                        let currentQuantity = parseInt(quantitySpan.innerText);
-                                        let maxAvailable = 0;
-                                        const modal = document.getElementById("menumodal" + productId);
-                                        const variationGroups = modal ? modal.querySelectorAll(".variation-group") : [];
-                                        
-                                        if (variationGroups.length > 0) {
-                                            let allSelected = true;
-                                            let selectedStocks = [];
-                                            variationGroups.forEach(group => {
-                                                const selected = group.querySelector("input[type='radio']:checked");
-                                                if (!selected) {
-                                                    allSelected = false;
-                                                } else {
-                                                    selectedStocks.push(parseInt(selected.dataset.stock));
-                                                }
+                                            
+                                            let params = "product_id=" + productId + "&quantity=" + quantity + "&base_price=" + basePrice + "&request=" + encodeURIComponent(specialInstructions);
+                                            
+                                            variationOptionIds.forEach(id => {
+                                                params += "&variation_options[]=" + id;
                                             });
-                                            maxAvailable = allSelected ? Math.min(...selectedStocks) : 1;
-                                        } else {
-                                            maxAvailable = parseInt(quantitySpan.dataset.stock);
+                                            
+                                            let xhr = new XMLHttpRequest();
+                                            xhr.open("POST", "add_to_cart.php", true);
+                                            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                                            xhr.onreadystatechange = function () {
+                                                if (xhr.readyState === 4 && xhr.status === 200) {
+                                                    Swal.fire({icon: 'success', title: 'Added to Cart', text: xhr.responseText, confirmButtonColor: '#CD5C08'});
+                                                }
+                                            };
+                                            xhr.send(params);
                                         }
-                                        
-                                        let newQuantity = currentQuantity + change;
-                                        newQuantity = Math.max(1, newQuantity);
-                                        if (newQuantity > maxAvailable) {
-                                            newQuantity = maxAvailable;
-                                        }
-                                        quantitySpan.innerText = newQuantity;
-                                        updateModalPlusState(productId);
-                                        updateAddToCartButtonState(productId);
-                                    }
-                                    
-                                    function addToCart(productId) {
-                                        const addToCartBtn = document.getElementById("addToCartBtn" + productId);
-                                        if (addToCartBtn.disabled) { return; }
-                                        
-                                        let quantity = parseInt(document.getElementById("quantity" + productId).innerText);
-                                        let specialInstructions = document.getElementById("specialinstructions" + productId)?.value || '';
-                                        let modal = document.getElementById("menumodal" + productId);
-                                        let variationGroups = modal.querySelectorAll(".variation-group");
-                                        let variationOptionIds = [];
-                                        let priceElement = modal.querySelector(".proprice");
-                                        
-                                        if (!priceElement) {
-                                            console.error("Price element (.proprice) not found in modal.");
-                                            return;
-                                        }
-                                        
-                                        let basePriceText = priceElement.innerText;
-                                        let basePrice = parseFloat(basePriceText.replace("₱", "").trim());
-                                        
-                                        variationGroups.forEach(group => {
-                                            let checked = group.querySelector("input[type='radio']:checked");
-                                            if (checked) {
-                                                variationOptionIds.push(checked.id.replace("variation", ""));
-                                            }
-                                        });
-                                        
-                                        let params = "product_id=" + productId + "&quantity=" + quantity + "&base_price=" + basePrice + "&request=" + encodeURIComponent(specialInstructions);
-                                        
-                                        variationOptionIds.forEach(id => {
-                                            params += "&variation_options[]=" + id;
-                                        });
-                                        
-                                        let xhr = new XMLHttpRequest();
-                                        xhr.open("POST", "add_to_cart.php", true);
-                                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                                        xhr.onreadystatechange = function () {
-                                            if (xhr.readyState === 4 && xhr.status === 200) {
-                                                Swal.fire({icon: 'success', title: 'Added to Cart', text: xhr.responseText, confirmButtonColor: '#CD5C08'});
-                                            }
-                                        };
-                                        xhr.send(params);
-                                    }
-                                </script>
-                            </form>
+                                    </script>
+                                </form>
+                            </div>
                         </div>
-                    </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
                 </section>
             <?php endforeach; ?>
         <?php endif; ?>
@@ -1038,6 +1065,107 @@
                 </div>
             </div>
         </div>
+
+        <?php foreach ($products as $product): ?>
+            <?php
+                $stats          = $productObj->getProductRatingStats($product['id']);
+                $breakdown      = $productObj->getProductRatingBreakdown($product['id']);
+                $reviews        = $productObj->getProductReviews($product['id']);
+                $reviews_top    = $reviews;
+                $reviews_newest = $reviews;
+                usort($reviews_newest, fn($a,$b) => strtotime($b['created_at']) - strtotime($a['created_at']));
+                $reviews_high   = $reviews;
+                usort($reviews_high, fn($a,$b) => $b['rating_value'] - $a['rating_value']);
+                $reviews_low    = $reviews;
+                usort($reviews_low, fn($a,$b) => $a['rating_value'] - $b['rating_value']);
+                $sid = $product['id'];
+            ?>
+            <div class="modal fade" id="productratingsModal<?= $sid; ?>" tabindex="-1" role="dialog" aria-labelledby="productratingsTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content ratemodal">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Rate &amp; Reviews</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" style="background:#F4F4F4;">
+                            <div class="d-flex justify-content-between mb-3 p-4 border rounded bg-white">
+                                <div class="w-50">
+                                    <h1 class="m-0 fw-bold"><?= number_format($stats['avg_rating'],1); ?></h1>
+                                    <div data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="<?= round($stats['avg_rating']); ?>"></div>
+                                    <span>All ratings (<?= $stats['total_ratings']; ?>)</span>
+                                </div>
+                                <div class="w-50">
+                                    <?php foreach (range(5,1) as $star):
+                                        $count = $breakdown[$star] ?? 0;
+                                        $pct   = $stats['total_ratings'] > 0 ? ($count/$stats['total_ratings']*100) : 0;
+                                    ?>
+                                        <div class="d-flex align-items-center small gap-1">
+                                            <span><?= $star; ?></span>
+                                            <div data-coreui-item-count="1" data-coreui-size="sm" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="1"></div>
+                                            <div class="w3-light-grey w3-round-xlarge" style="width:100%;height:10px;">
+                                                <?php if ($count > 0): ?><div class="w3-container w3-round-xlarge" style="width:<?= $pct; ?>%;height:10px;background:#CD5C08"></div><?php endif; ?>
+                                            </div>
+                                            <span><?= $count; ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <div class="nav-container d-flex gap-3 mb-2">
+                                <a href="#all<?= $sid; ?>" class="nav-link active">Top reviews</a>
+                                <a href="#newest<?= $sid; ?>" class="nav-link">Newest</a>
+                                <a href="#highrating<?= $sid; ?>" class="nav-link">Highest Rating</a>
+                                <a href="#lowrating<?= $sid; ?>" class="nav-link">Lowest Rating</a>
+                            </div>
+
+                            <?php foreach ([['all', $reviews_top], ['newest', $reviews_newest], ['highrating', $reviews_high], ['lowrating', $reviews_low]] as [$key, $list]): ?>
+                                <div id="<?= $key . $sid; ?>" class="section-content <?= $key === 'all' ? 'active d-block' : 'd-none'; ?>">
+                                    <?php if (empty($list)): ?>
+                                        <p class="p-5 border rounded-2 bg-white text-center">No reviews yet.</p>
+                                    <?php else: foreach ($list as $rev): ?>
+                                        <?php $userHasHelped = isset($_SESSION['user']) ? $productObj->hasUserMarkedHelpful($rev['id'], $_SESSION['user']['id']) : false; ?>
+                                        <div class="p-4 border rounded-2 bg-white mb-3">
+                                            <h6 class="mb-1 fw-bold"><?= htmlspecialchars($rev['first_name']); ?></h6>
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <div data-coreui-size="sm" data-coreui-toggle="rating" data-coreui-read-only="true" data-coreui-value="<?= $rev['rating_value']; ?>"></div>
+                                                <small class="text-muted"><?= htmlspecialchars($rev['created_at']); ?></small>
+                                            </div>
+                                            <?php if (!empty($rev['comment'])): ?><p class="my-3"><?= htmlspecialchars($rev['comment']); ?></p><?php endif; ?>
+                                            <div class="my-3">
+                                                <?php if ($isOwner && empty($rev['seller_response'])): ?>
+                                                    <button type="button" class="reply-btn text-white border-0 rounded-1 py-1 px-3" style="background-color: #CD5C08" data-review-id="<?= $rev['id']; ?>">Reply</button>
+                                                    <form method="POST" class="reply-form d-none mb-3" data-review-id="<?= $rev['id']; ?>">
+                                                        <input type="hidden" name="reply_submit" value="1">
+                                                        <input type="hidden" name="review_id" value="<?= $rev['id']; ?>">
+                                                        <label class="fw-bold" for="seller_response_<?= $rev['id']; ?>">Your Reply:</label>
+                                                        <textarea id="seller_response_<?= $rev['id']; ?>" name="seller_response" class="w-100 px-3 py-2 rounded-1 border mb-2" placeholder="Write your response here..." required></textarea>
+                                                        <button type="submit" class="text-white border-0 rounded-1 py-1 px-3" style="background-color: #CD5C08">Reply</button>
+                                                        <button type="button" class="cancel-reply-btn text-white border-0 rounded-1 py-1 px-3" style="background-color: gray">Cancel</button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
+                                            <?php if (!empty($rev['seller_response'])): ?><p class="p-3 rounded-2 mb-3" style="background-color:#f4f4f4">Stall Response: <?= htmlspecialchars($rev['seller_response']); ?></p><?php endif; ?>
+                                            <div class="d-flex gap-3 align-items-center border rounded-2">
+                                                <img src="<?= htmlspecialchars($product['image']); ?>" width="55" height="55" class="border rounded-start" alt="">
+                                                <div>
+                                                    <span><?= htmlspecialchars($product['name']); ?></span><br>
+                                                    <?php if (!empty($product['variations'])): ?><span class="small text-muted">Variation: <?= htmlspecialchars($product['variations']); ?></span><?php endif; ?>
+                                                </div>
+                                            </div>
+                                            <?php $iconClass = $userHasHelped ? 'fa-solid' : 'fa-regular'; ?>
+                                            <div class="small text-end mt-2 helpful-toggle<?= $userHasHelped ? ' active' : ''; ?>" style="cursor:pointer;" data-review-id="<?= $rev['id']; ?>">
+                                                <i class="<?= $iconClass ?> fa-thumbs-up"></i>
+                                                <span>Helpful <span class="helpful-count"><?= (int)($rev['helpful_count'] ?? 0); ?></span></span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
 
         <script>
             document.getElementById('likeBtn')?.addEventListener('click', function(){
@@ -1112,6 +1240,65 @@
         </script>
 
         <script src="assets/js/navigation.js?v=<?= time(); ?>"></script>
+
+        <script>
+            document.querySelectorAll('.helpful-toggle').forEach(el => {
+                el.addEventListener('click', async () => {
+                    const reviewId = el.dataset.reviewId;
+                    if (!reviewId) return;
+                    try {
+                        const resp = await fetch('toggle_helpful.php', {
+                            method: 'POST',
+                            headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                            body: new URLSearchParams({ review_id: reviewId })
+                        });
+                        const json = await resp.json();
+                        if (!json.success) return Swal.fire({ icon: 'warning', title: 'Oops', text: json.message });
+                        el.classList.toggle('active', json.toggledOn);
+                        const icon = el.querySelector('i');
+                        icon.classList.toggle('fa-regular', !json.toggledOn);
+                        icon.classList.toggle('fa-solid', json.toggledOn);
+                        el.querySelector('.helpful-count').innerText = json.count;
+                    } catch (err) {
+                        console.error(err);
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Could not update. Please try again.' });
+                    }
+                });
+            });
+        </script>
+        <script>
+            document.querySelectorAll('.reply-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.reviewId;
+                    btn.classList.add('d-none');
+                    document.querySelector(`.reply-form[data-review-id="${id}"]`).classList.remove('d-none');
+                });
+            });
+            document.querySelectorAll('.cancel-reply-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const form = btn.closest('.reply-form');
+                    const id   = form.dataset.reviewId;
+                    form.classList.add('d-none');
+                    document.querySelector(`.reply-btn[data-review-id="${id}"]`).classList.remove('d-none');
+                });
+            });
+        </script>
+        <script>
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('shown.bs.modal', () => {
+                    const navLinks = modal.querySelectorAll('.nav-container .nav-link');
+                    navLinks.forEach(n => n.classList.remove('active'));
+                    const topNav = navLinks[0];
+                    topNav.classList.add('active');
+                    const panes = modal.querySelectorAll('.section-content');
+                    panes.forEach(p => { p.classList.remove('active','d-block'); p.classList.add('d-none'); });
+                    const targetId   = topNav.getAttribute('href');
+                    const targetPane = modal.querySelector(targetId);
+                    if (targetPane) { targetPane.classList.remove('d-none'); targetPane.classList.add('active','d-block'); }
+                });
+            });
+        </script>
+        
     </div>
 </div>
 
