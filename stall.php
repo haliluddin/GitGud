@@ -184,7 +184,22 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                                     <span class="pageon text-muted">Closed now</span>
                                 <?php endif; ?>
                             <?php endif; ?>
+
                             <span class="dot text-muted"></span>
+
+                            <div class="mx-2 d-flex align-items-center gap-1">
+                                <?php 
+                                    $stallStats = $productObj->getStallAverageRating($stall_id);
+                                    $stallCount = $productObj->getStallRatingCount($stall_id);
+                                ?>
+                                <div data-coreui-item-count="1" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="<?= round($stallStats); ?>"></div>
+                                <span><?= number_format($stallStats,1); ?>/5.0</span>
+                                <span class="text-muted">(<?= $stallCount; ?>)</span>
+                                <button type="button" class="conopepay" data-bs-toggle="modal" data-bs-target="#stallReviewsModal">See reviews</button>
+                            </div>
+
+                            <span class="dot text-muted"></span>
+                            
                             <button class="conopepay" data-bs-toggle="modal" data-bs-target="#morestallinfo"
                                 data-email="<?= htmlspecialchars($stall['email']); ?>"
                                 data-phone="<?= htmlspecialchars($stall['phone']); ?>"
@@ -1148,7 +1163,7 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                                                 <img src="<?= htmlspecialchars($product['image']); ?>" width="55" height="55" class="border rounded-start" alt="">
                                                 <div>
                                                     <span><?= htmlspecialchars($product['name']); ?></span><br>
-                                                    <?php if (!empty($product['variations'])): ?><span class="small text-muted">Variation: <?= htmlspecialchars($product['variations']); ?></span><?php endif; ?>
+                                                    <?php if (!empty($rev['variations'])): ?><span class="small text-muted">Variation: <?= htmlspecialchars($rev['variations']); ?></span><?php endif; ?>
                                                 </div>
                                             </div>
                                             <?php $iconClass = $userHasHelped ? 'fa-solid' : 'fa-regular'; ?>
@@ -1166,6 +1181,107 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                 </div>
             </div>
         <?php endforeach; ?>
+
+        <div class="modal fade" id="stallReviewsModal" tabindex="-1" aria-labelledby="stallReviewsTitle" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content ratemodal">
+                    <div class="modal-header">
+                        <h5 class="modal-title">All Stall Reviews</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="background:#F4F4F4;">
+                        <div class="d-flex justify-content-between mb-3 p-4 border rounded bg-white">
+                            <div class="w-50">
+                                <h1 class="m-0 fw-bold"><?= number_format($stallStats,1); ?></h1>
+                                <div data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="<?= round($stallStats); ?>"></div>
+                                <span>All ratings (<?= $stallCount; ?>)</span>
+                            </div>
+                            <div class="w-50">
+                                <?php 
+                                    $stallBreak = $productObj->getStallRatingBreakdown($stall_id);
+                                    foreach (range(5,1) as $star):
+                                        $count = $stallBreak[$star] ?? 0;
+                                        $pct   = $stallCount > 0 ? ($count/$stallCount*100) : 0;
+                                ?>
+                                    <div class="d-flex align-items-center small gap-1">
+                                        <span><?= $star; ?></span>
+                                        <div data-coreui-item-count="1" data-coreui-size="sm" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="1"></div>
+                                        <div class="w3-light-grey w3-round-xlarge" style="width:100%;height:10px;">
+                                            <?php if ($count > 0): ?><div class="w3-container w3-round-xlarge" style="width:<?= $pct; ?>%;height:10px;background:#CD5C08"></div><?php endif; ?>
+                                        </div>
+                                        <span><?= $count; ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <!-- Tabs -->
+                        <div class="nav-container d-flex gap-3 mb-2">
+                            <a href="#stallAll" class="nav-link active">Top reviews</a>
+                            <a href="#stallNewest" class="nav-link">Newest</a>
+                            <a href="#stallHigh" class="nav-link">Highest Rating</a>
+                            <a href="#stallLow" class="nav-link">Lowest Rating</a>
+                        </div>
+
+                        <?php
+                            $reviewsTop    = $productObj->getStallReviews($stall_id, 'helpful');
+                            $reviewsNewest = $productObj->getStallReviews($stall_id, 'newest');
+                            $reviewsHigh   = $productObj->getStallReviews($stall_id, 'highest');
+                            $reviewsLow    = $productObj->getStallReviews($stall_id, 'lowest');
+                            $sections = [
+                                ['stallAll', $reviewsTop],
+                                ['stallNewest', $reviewsNewest],
+                                ['stallHigh', $reviewsHigh],
+                                ['stallLow', $reviewsLow]
+                            ];
+                        ?>
+                        <?php foreach ($sections as list($key, $list)): ?>
+                            <div id="<?= $key; ?>" class="section-content <?= $key==='stallAll'? 'active d-block' : 'd-none'; ?>">
+                                <?php if (empty($list)): ?>
+                                    <p class="p-5 border rounded-2 bg-white text-center">No reviews yet.</p>
+                                <?php else: foreach ($list as $rev):
+                                    $userHasHelped = isset($_SESSION['user'])
+                                    && $productObj->hasUserMarkedHelpful($rev['id'], $_SESSION['user']['id']);
+                                ?>
+                                    <div class="p-4 border rounded-2 bg-white mb-3">
+                                        <h6 class="mb-1 fw-bold"><?= htmlspecialchars($rev['first_name']); ?></h6>
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <div data-coreui-size="sm" data-coreui-toggle="rating" data-coreui-read-only="true" data-coreui-value="<?= $rev['rating_value']; ?>"></div>
+                                            <small class="text-muted"><?= htmlspecialchars($rev['created_at']); ?></small>
+                                        </div>
+                                        <?php if (!empty($rev['comment'])): ?><p class="my-3"><?= htmlspecialchars($rev['comment']); ?></p><?php endif; ?>
+                                        <div class="my-3">
+                                            <?php if ($isOwner && empty($rev['seller_response'])): ?>
+                                                <button type="button" class="reply-btn text-white border-0 rounded-1 py-1 px-3" style="background-color: #CD5C08" data-review-id="<?= $rev['id']; ?>">Reply</button>
+                                                <form method="POST" class="reply-form d-none mb-3" data-review-id="<?= $rev['id']; ?>">
+                                                    <input type="hidden" name="reply_submit" value="1">
+                                                    <input type="hidden" name="review_id" value="<?= $rev['id']; ?>">
+                                                    <label class="fw-bold" for="seller_response_<?= $rev['id']; ?>">Your Reply:</label>
+                                                    <textarea id="seller_response_<?= $rev['id']; ?>" name="seller_response" class="w-100 px-3 py-2 rounded-1 border mb-2" placeholder="Write your response here..." required></textarea>
+                                                    <button type="submit" class="text-white border-0 rounded-1 py-1 px-3" style="background-color: #CD5C08">Reply</button>
+                                                    <button type="button" class="cancel-reply-btn text-white border-0 rounded-1 py-1 px-3" style="background-color: gray">Cancel</button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if (!empty($rev['seller_response'])): ?><p class="p-3 rounded-2 mb-3" style="background-color:#f4f4f4">Stall Response: <?= htmlspecialchars($rev['seller_response']); ?></p><?php endif; ?>
+                                        <div class="d-flex gap-3 align-items-center border rounded-2">
+                                            <img src="<?= htmlspecialchars($rev['product_image']); ?>" width="55" height="55" class="border rounded-start" alt="">
+                                            <div>
+                                                <span><?= htmlspecialchars($rev['product_name']); ?></span><br>
+                                                <?php if (!empty($rev['variations'])): ?><span class="small text-muted">Variation: <?= htmlspecialchars($rev['variations']); ?></span><?php endif; ?>
+                                            </div>
+                                        </div>
+                                        <div class="small text-end mt-2 helpful-toggle<?= $userHasHelped ? ' active' : '';?>" data-review-id="<?= $rev['id'];?>" style="cursor:pointer;">
+                                            <i class="<?= $userHasHelped ? 'fa-solid' : 'fa-regular'; ?> fa-thumbs-up"></i>
+                                            <span>Helpful <span class="helpful-count"><?= $rev['helpful_count']; ?></span></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <script>
             document.getElementById('likeBtn')?.addEventListener('click', function(){
@@ -1298,7 +1414,80 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                 });
             });
         </script>
-        
+        <script>
+            const stallModal = document.getElementById('stallReviewsModal');
+            stallModal.addEventListener('shown.bs.modal', () => {
+                const navLinks = stallModal.querySelectorAll('.nav-container .nav-link');
+                navLinks.forEach(n => n.classList.remove('active'));
+                navLinks[0].classList.add('active');
+                const panes = stallModal.querySelectorAll('.section-content');
+                panes.forEach(p => { p.classList.remove('active','d-block'); p.classList.add('d-none'); });
+                const target = stallModal.querySelector('#stallAll');
+                target.classList.remove('d-none'); target.classList.add('active','d-block');
+
+                stallModal.querySelectorAll('.reply-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const card = btn.closest('.p-4');               // the review “card”
+                    const id   = btn.dataset.reviewId;
+                    btn.classList.add('d-none');
+                    card
+                    .querySelector(`.reply-form[data-review-id="${id}"]`)
+                    .classList.remove('d-none');
+                };
+                });
+
+                // handle Cancel button
+                stallModal.querySelectorAll('.cancel-reply-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const form = btn.closest('.reply-form');
+                    const id   = form.dataset.reviewId;
+                    form.classList.add('d-none');
+                    stallModal
+                    .querySelector(`.reply-btn[data-review-id="${id}"]`)
+                    .classList.remove('d-none');
+                };
+                });
+            });
+            stallModal.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    stallModal.querySelectorAll('.section-content').forEach(p => p.classList.add('d-none'));
+                    stallModal.querySelector(targetId).classList.remove('d-none');
+                    stallModal.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        </script>
+        <script>
+            document
+                .querySelectorAll('.nav-container')
+                .forEach(navContainer => {
+                const links = navContainer.querySelectorAll('.nav-link');
+                links.forEach(link => {
+                    link.addEventListener('click', e => {
+                    e.preventDefault();
+                    links.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+
+                    const modal = link.closest('.modal-content') || link.closest('.modal');
+                    modal
+                        .querySelectorAll('.section-content')
+                        .forEach(p => {
+                        p.classList.remove('active','d-block');
+                        p.classList.add('d-none');
+                        });
+
+                    const target = modal.querySelector(link.getAttribute('href'));
+                    if (target) {
+                        target.classList.remove('d-none');
+                        target.classList.add('active','d-block');
+                    }
+                    });
+                });
+            });
+        </script>
+
     </div>
 </div>
 

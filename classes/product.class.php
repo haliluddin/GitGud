@@ -504,6 +504,7 @@ class Product {
                     r.rating_value,
                     r.seller_response,
                     r.comment,
+                    r.variations,
                     r.created_at,
                     COUNT(rh.id) AS helpful_count
                 FROM ratings r
@@ -562,23 +563,114 @@ class Product {
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->execute([$reviewId, $userId]);
         return (bool)$stmt->fetchColumn();
-      }
+    }
       
-      public function addHelpfulMark(int $reviewId, int $userId): bool {
+    public function addHelpfulMark(int $reviewId, int $userId): bool {
         $sql = "INSERT INTO rating_helpful (rating_id, user_id) VALUES (?, ?)";
         return (bool)$this->db->connect()->prepare($sql)->execute([$reviewId, $userId]);
-      }
-      
-      public function removeHelpfulMark(int $reviewId, int $userId): bool {
+    }
+    
+    public function removeHelpfulMark(int $reviewId, int $userId): bool {
         $sql = "DELETE FROM rating_helpful WHERE rating_id = ? AND user_id = ?";
         return (bool)$this->db->connect()->prepare($sql)->execute([$reviewId, $userId]);
-      }
+    }
       
     public function getHelpfulCount(int $reviewId): int {
         $sql  = "SELECT COUNT(*) FROM rating_helpful WHERE rating_id = ?";
         $stmt = $this->db->connect()->prepare($sql);
         $stmt->execute([$reviewId]);
         return (int) $stmt->fetchColumn();
+    }
+
+
+
+    public function getStallAverageRating(int $stall_id): float {
+        $sql = "SELECT AVG(r.rating_value) AS avg_rating
+                  FROM ratings r
+                  JOIN products p ON p.id = r.product_id
+                 WHERE p.stall_id = :sid";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['sid' => $stall_id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row && $row['avg_rating'] !== null
+             ? round((float)$row['avg_rating'], 1)
+             : 0.0;
+    }
+
+    public function getStallRatingCount(int $stall_id): int {
+        $sql = "SELECT COUNT(*) AS cnt
+                  FROM ratings r
+                  JOIN products p ON p.id = r.product_id
+                 WHERE p.stall_id = :sid";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['sid' => $stall_id]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function getStallRatingBreakdown(int $stall_id): array {
+        $sql = "SELECT r.rating_value, COUNT(*) AS cnt
+                  FROM ratings r
+                  JOIN products p ON p.id = r.product_id
+                 WHERE p.stall_id = :sid
+              GROUP BY r.rating_value";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute(['sid' => $stall_id]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $break = [5=>0,4=>0,3=>0,2=>0,1=>0];
+        foreach ($rows as $r) {
+            $rv = (int)$r['rating_value'];
+            if (isset($break[$rv])) {
+                $break[$rv] = (int)$r['cnt'];
+            }
+        }
+        return $break;
+    }
+
+    public function getStallReviews(int $stall_id, string $orderBy = 'helpful', int $limit = 100): array {
+        switch ($orderBy) {
+            case 'newest':
+                $orderSql = "r.created_at DESC";
+                break;
+            case 'highest':
+                $orderSql = "r.rating_value DESC";
+                break;
+            case 'lowest':
+                $orderSql = "r.rating_value ASC";
+                break;
+            case 'helpful':
+            default:
+                $orderSql = "COUNT(rh.id) DESC, r.created_at DESC";
+                break;
+        }
+
+        $sql = "SELECT
+                    u.first_name,
+                    r.id,
+                    r.product_id,
+                    p.name AS product_name,
+                    p.image AS product_image,
+                    r.rating_value,
+                    r.seller_response,
+                    r.comment,
+                    r.variations,
+                    r.created_at,
+                    COUNT(rh.id) AS helpful_count
+                FROM ratings r
+                JOIN products p ON p.id = r.product_id
+                JOIN users u ON u.id = r.user_id
+                LEFT JOIN rating_helpful rh ON rh.rating_id = r.id
+               WHERE p.stall_id = :sid
+            GROUP BY r.id
+            ORDER BY {$orderSql}
+               LIMIT :lim";
+
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue('sid', $stall_id, PDO::PARAM_INT);
+        $stmt->bindValue('lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 }

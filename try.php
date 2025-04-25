@@ -275,7 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_submit'])) {
                                             <img src="<?= htmlspecialchars($product['image']); ?>" width="55" height="55" class="border rounded-start" alt="">
                                             <div>
                                                 <span><?= htmlspecialchars($product['name']); ?></span><br>
-                                                <?php if (!empty($product['variations'])): ?><span class="small text-muted">Variation: <?= htmlspecialchars($product['variations']); ?></span><?php endif; ?>
+                                                <?php if (!empty($rev['variations'])): ?><span class="small text-muted">Variation: <?= htmlspecialchars($rev['variations']); ?></span><?php endif; ?>
                                             </div>
                                         </div>
                                         <?php $iconClass = $userHasHelped ? 'fa-solid' : 'fa-regular'; ?>
@@ -354,6 +354,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_submit'])) {
         });
     });
 </script>
+<script>
+  document
+    .querySelectorAll('.nav-container')
+    .forEach(navContainer => {
+      const links = navContainer.querySelectorAll('.nav-link');
+      links.forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          links.forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+
+          const modal = link.closest('.modal-content') || link.closest('.modal');
+          modal
+            .querySelectorAll('.section-content')
+            .forEach(p => {
+              p.classList.remove('active','d-block');
+              p.classList.add('d-none');
+            });
+
+          const target = modal.querySelector(link.getAttribute('href'));
+          if (target) {
+            target.classList.remove('d-none');
+            target.classList.add('active','d-block');
+          }
+        });
+      });
+    });
+</script>
+
 
 <?php
 include_once 'modals.php';

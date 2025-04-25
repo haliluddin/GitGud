@@ -780,6 +780,7 @@ class Stall {
           SELECT 
             r.rating_value,
             r.comment,
+            r.variations,
             r.created_at,
             r.seller_response,
             r.response_at,
