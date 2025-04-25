@@ -29,10 +29,9 @@ foreach ($ordersData as $order) {
     $groupedOrders[$status][$osid]['items'][] = $order;
 }
 
-// right after you fetch $ordersData and group it...
+if ( ! empty($groupedOrders['Completed']) ) {
 foreach ($groupedOrders['Completed'] as $osid => &$orderGroup) {
     foreach ($orderGroup['items'] as &$item) {
-        // fetch existing rating if any
         $rating = $stallObj->getRatingDetails(
             $user_id,
             $osid,
@@ -42,10 +41,10 @@ foreach ($groupedOrders['Completed'] as $osid => &$orderGroup) {
         if ($rating) {
             $item['rated']          = true;
             $item['rating_value']   = (int)$rating['rating_value'];
-            $item['comment']        = $rating['comment'];            // may be null
+            $item['comment']        = $rating['comment'];            
             $item['created_at']     = $rating['created_at'];
-            $item['seller_response']= $rating['seller_response'];     // may be null
-            $item['response_at']    = $rating['response_at'];         // may be null
+            $item['seller_response']= $rating['seller_response'];     
+            $item['response_at']    = $rating['response_at'];         
             $item['helpful_count']  = (int)$rating['helpful_count'];
         } else {
             $item['rated'] = false;
@@ -54,6 +53,7 @@ foreach ($groupedOrders['Completed'] as $osid => &$orderGroup) {
     unset($item);
 }
 unset($orderGroup);
+}
 
 
 $statusMapping = [
