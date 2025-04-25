@@ -399,7 +399,7 @@ $searchCategory = isset($_GET['search_category'])
                             } else if ($businessStatus == 'Rejected') {
                                 $statusDisplay = '<span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span>';
                             } else {
-                                $statusDisplay = '<span class="small rounded-5 text-muted border border-muted p-1 border-2 fw-bold">' . $businessStatus . '</span>';
+                                $statusDisplay = '<span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">' . $businessStatus . '</span>';
                             }
                             echo '<tr>';
                             echo '<td class="fw-normal small py-3 px-4">' . htmlspecialchars($business['owner_name']) . '</td>';
@@ -1200,7 +1200,7 @@ $('.delete-category-btn').on('click', function() {
                         <div class="input-group">
                             <label for="updateAppStatus">Status</label>
                             <select name="status" id="updateAppStatus" class="form-control" required>
-                                <option value="Pending Approval">Pending Approval</option>
+                                <option value="On Hold">On Hold</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Rejected">Rejected</option>
                             </select>
