@@ -15,7 +15,7 @@ if (isset($_POST['search'])) {
             <div class="search-item" data-url="enter_park.php?id=<?= encrypt($park['id']) ?>">
                 <img src="<?= $park['business_logo'] ?>" class="search-logo">
                 <div class="search-info">
-                    <p class="search-name"><?= htmlspecialchars($park['business_name']) ?></p>
+                    <p class="search-name"><?= $park['business_name'] ?></p>
                     <p class="search-location"><?= htmlspecialchars($park['street_building_house']) ?>, <?= htmlspecialchars($park['barangay']) ?>, Zamboanga City</p>
                 </div>
             </div>

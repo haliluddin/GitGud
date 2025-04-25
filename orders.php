@@ -415,11 +415,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         fetch(url)
             .then(response => {
-                console.log('Response status:', response.status);
                 return response.json();
             })
             .then(data => {
-                console.log('Received data:', data);
                 if (data.error) {
                     console.error('Error fetching orders:', data.error);
                     return;
@@ -435,7 +433,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to update the orders display
     function updateOrdersDisplay(groupedOrders, statusMapping) {
-        console.log('Updating orders display with:', groupedOrders);
         
         // Flash the update indicator
         const indicator = document.getElementById('update-indicator');
@@ -451,14 +448,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update individual status sections
         for (const [status, sectionId] of Object.entries(statusMapping)) {
-            console.log(`Updating section for status: ${status}, sectionId: ${sectionId}`);
             updateStatusSection(status, sectionId, groupedOrders[status] || {});
         }
         
         // Rebind event listeners to new elements
         rebindEventListeners();
-        
-        console.log('Orders display update complete');
         
         // Update the last refresh time in the footer
         const now = new Date();
@@ -526,7 +520,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // If no orders for this status, hide section
         if (!ordersGroup || Object.keys(ordersGroup).length === 0) {
             section.innerHTML = '<div class="d-flex justify-content-center align-items-center border rounded-2 bg-white h-25 mb-3">No orders in this section.</div>';
-            section.classList.add('d-none');
             return;
         }
         

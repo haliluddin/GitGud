@@ -139,7 +139,7 @@
         echo "<p class='text-center my-5'>No food parks available at this time.</p>";
     } else { 
     ?>
-    <div class="row justify-content-center row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
         <?php 
             foreach ($validParks as $park) { 
                 $isOpen = false;
