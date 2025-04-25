@@ -253,14 +253,106 @@ $searchCategory = isset($_GET['search_category'])
 </style>
 <main class="nav-main">
     <div class="nav-container d-flex gap-3 my-2 flex-wrap">
-        <a href="#all" class="nav-link" data-target="all">Accounts</a>
+        <a href="#all" class="nav-link" data-target="all">Dashboard</a>
+        <a href="#accounts" class="nav-link" data-target="accounts">Accounts</a>
         <a href="#applications" class="nav-link" data-target="applications">Applications</a>
         <a href="#reports" class="nav-link" data-target="reports">Reports</a>
         <a href="#categories" class="nav-link" data-target="reports">Categories</a>
     </div>
 
-    <!-- Accounts Section -->
+    <!-- Dashboard Section -->
     <div id="all" class="w-100 border rounded-2 p-3 bg-white section-content">
+        <div>
+            <h5 class="fw-bold mb-2">Dashboard</h5>
+            <span class="small"><?= $currentDateTime ?></span>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3 mt-3">
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Accounts</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    </div>
+                    <i class="fa-solid fa-user dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">10</h2>
+                    <div class="d-flex align-items-center small text-danger gap-1">
+                        <i class="fa-solid fa-arrow-down"></i>
+                        <span class="text-danger">11%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Parks</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    </div>
+                    <i class="fa-solid fa-parachute-box dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">20</h2>
+                    <div class="d-flex align-items-center small text-success gap-1">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span class="text-success">11%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Stalls</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    </div>
+                    <i class="fa-solid fa-store dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">20</h2>
+                    <div class="d-flex align-items-center small text-success gap-1">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span class="text-success">11%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Products</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    </div>
+                    <i class="fa-solid fa-burger dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">10</h2>
+                    <div class="d-flex align-items-center small text-success gap-1">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span class="text-success">11%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Orders</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    </div>
+                    <i class="fa-solid fa-utensils dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">10</h2>
+                    <div class="d-flex align-items-center small text-success gap-1">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span class="text-success">11%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accounts Section -->
+    <div id="accounts" class="w-100 border rounded-2 p-3 bg-white section-content">
         <div class="d-flex justify-content-between">
             <div>
                 <h5 class="fw-bold mb-2">Manage Accounts</h5>

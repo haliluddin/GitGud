@@ -1,390 +1,423 @@
+
 <?php
+include_once 'landingheader.php';
 include_once 'links.php';
-include_once 'header.php';
-require_once __DIR__ . '/classes/product.class.php';
-require_once __DIR__ . '/classes/stall.class.php';
-require_once __DIR__ . '/classes/park.class.php';
+require_once __DIR__ . '/classes/admin.class.php';
+require_once __DIR__ . '/classes/db.class.php';
+require_once __DIR__ . '/classes/user.class.php';
 require_once __DIR__ . '/classes/encdec.class.php';
+require_once './email/verification_token.class.php';
 
-$stallObj   = new Stall();
-$productObj = new Product();
-$parkObj    = new Park();
+$userObj = new User();
+$adminObj = new Admin();
+if (isset($_SESSION['user'])) {
+    if ($userObj->isVerified($_SESSION['user']['id']) != 1) {
+        header('Location: email/verify_email.php');
+        exit();
+    }
 
-if (isset($_GET['id'])) {
-    $stall_id        = decrypt(urldecode($_GET['id']));
-    $stall           = $parkObj->getStall($stall_id);
-    $products        = $stallObj->getProducts($stall_id);
-    $categories      = $productObj->getCategories($stall_id);
-    $totalProducts   = $stallObj->getTotalProducts($stall_id);
-    $likeCount       = $productObj->getStallLikes($stall_id);
-    $likedByUser     = isset($user_id) ? $productObj->isStallLiked($stall_id, $user_id) : false;
-    $popularProducts = $productObj->getPopularProducts($stall_id);
-    $promoProducts   = $productObj->getPromoProducts($stall_id);
-    $newProducts     = $productObj->getNewProducts($stall_id);
-    $popularProdIds  = array_column($popularProducts, 'id');
-    $promoProdIds    = array_column($promoProducts, 'id');
-    $newProdIds      = array_column($newProducts, 'id');
+    if ($user['role'] != 'Admin') {
+        header('Location: index.php');
+        exit();
+    }
 }
-
 date_default_timezone_set('Asia/Manila');
-$currentTime = date('H:i');
-$currentDay  = date('l');
+$currentDateTime = date("l, F j, Y h:i A");
+$searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-$isOpen = false;
-if (!empty($stall['stall_operating_hours'])) {
-    $hoursArray = explode('; ', $stall['stall_operating_hours']);
-    foreach ($hoursArray as $hours) {
-        if (strpos($hours, '<br>') !== false) {
-            list($days, $timeRange) = explode('<br>', $hours);
-            $daysArray              = array_map('trim', explode(',', $days));
-            if (in_array($currentDay, $daysArray)) {
-                list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-                $openTime24                 = date('H:i', strtotime($openTime));
-                $closeTime24                = date('H:i', strtotime($closeTime));
-                if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                    $isOpen = true;
-                    break;
+$verificationObj = new Verification();
+
+$first_name = $middle_name = $last_name = $phone = $email = $dob = $sex = $password = $confirm_password = '';
+$first_name_err = $middle_name_err = $last_name_err = $phone_err = $email_err = $dob_err = $sex_err = $password_err = $confirm_password_err = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['update_user'])) {
+        $user_id = $_POST['edit_user_id'];
+        $first_name = htmlspecialchars(trim($_POST['edit_first_name']));
+        $middle_name = htmlspecialchars(trim($_POST['edit_middle_name']));
+        $last_name = htmlspecialchars(trim($_POST['edit_last_name']));
+        $birth_date = $_POST['edit_birth_date'];
+        $sex = $_POST['edit_sex']; 
+        $role = htmlspecialchars(trim($_POST['edit_role']));
+        $update = $userObj->updateUser($user_id, $first_name, $middle_name, $last_name, $birth_date, $sex, $role);
+        if ($update) {
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit();
+        } else {
+            echo "
+            <script>
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to update user.',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '" . $_SERVER['PHP_SELF'] . "';
+                    }
+                });
+            </script>";
+        }
+    }
+    if (isset($_POST['firstname']) && isset($_POST['middlename']) && isset($_POST['lastname']) && isset($_POST['phone']) && isset($_POST['email']) && isset($_POST['dob']) && isset($_POST['sex']) && isset($_POST['password']) && isset($_POST['confirm_password'])) {
+        $first_name = htmlspecialchars(trim($_POST['firstname']));
+        $middle_name = htmlspecialchars(trim($_POST['middlename']));
+        $last_name = htmlspecialchars(trim($_POST['lastname']));
+        $phone = htmlspecialchars(trim($_POST['phone']));
+        $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
+        $dob = htmlspecialchars(trim($_POST['dob']));
+        $sex = htmlspecialchars(trim($_POST['sex']));
+        $password = htmlspecialchars(trim($_POST['password']));
+        $confirm_password = htmlspecialchars(trim($_POST['confirm_password']));
+        if (!preg_match("/^[a-zA-Z-' ]*$/", $first_name)) {
+            $first_name_err = "Only letters and white space allowed";
+        }
+        if (!preg_match("/^[a-zA-Z-' ]*$/", $last_name)) {
+            $last_name_err = "Only letters and white space allowed";
+        }
+        if ($password !== $confirm_password) {
+            $password_err = 'Passwords do not match';
+        } else if (strlen($password) < 8) {
+            $password_err = 'Password must be at least 8 characters';
+        }
+        if ($first_name_err == '' && $middle_name_err == '' && $last_name_err == '' && $phone_err == '' && $email_err == '' && $dob_err == '' && $sex_err == '' && $password_err == '' && $confirm_password_err == '') {
+            $userObj->first_name = $first_name;
+            $userObj->middle_name = $middle_name;
+            $userObj->last_name = $last_name;
+            $userObj->phone = $phone;
+            $userObj->email = $email;
+            $userObj->birth_date = $dob;
+            $userObj->sex = $sex;
+            $userObj->password = $password;
+            $add = $userObj->addUser();
+            if ($add == 'success') {
+                $userObj->email = $email;
+                $userObj->password = $password;
+                $user = $userObj->checkUser();
+                if ($user == true) {
+                    $verification = $verificationObj->sendVerificationEmail($user['id'], $user['email'], $user['first_name']);
+                    if ($verification) {
+                        echo "
+                        <script>
+                            Swal.fire({
+                                title: 'Email Verification Sent',
+                                text: 'A verification link has been sent to your email: $email',
+                                icon: 'success',
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'OK'
+                            });
+                        </script>";
+                    } else {
+                        echo "ERROR: " . $verification;
+                        echo "
+                        <script>
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'Failed to send verification email.',
+                                icon: 'error',
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'OK'
+                            });
+                        </script>";
+                    }
+                } else {
+                    echo "
+                    <script>
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to retrieve user information.',
+                            icon: 'error',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                    </script>";
                 }
+            } else if ($add == 'email') {
+                echo "
+                <script>
+                    Swal.fire({
+                        title: 'Email Already Taken',
+                        text: 'The email address is already registered.',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                </script>";
+            } else if ($add == 'phone') {
+                echo "
+                <script>
+                    Swal.fire({
+                        title: 'Phone Number Already Taken',
+                        text: 'The phone number is already registered.',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                </script>";
+            } else {
+                echo "
+                <script>
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to add user.',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                </script>";
             }
         }
     }
 }
 
-$park              = $parkObj->getPark($stall['park_id']);
-$parkOperatingHours = [];
-if (!empty($park['operating_hours'])) {
-    $parkOperatingHours = explode('; ', $park['operating_hours']);
-}
-
-$parkIsOpen = false;
-foreach ($parkOperatingHours as $hours) {
-    if (strpos($hours, '<br>') !== false) {
-        list($days, $timeRange) = explode('<br>', $hours);
-        $daysArray              = array_map('trim', explode(',', $days));
-        if (in_array($currentDay, $daysArray)) {
-            list($openTime, $closeTime) = array_map('trim', explode(' - ', $timeRange));
-            $openTime24                 = date('H:i', strtotime($openTime));
-            $closeTime24                = date('H:i', strtotime($closeTime));
-            if ($currentTime >= $openTime24 && $currentTime <= $closeTime24) {
-                $parkIsOpen = true;
-                break;
-            }
-        }
-    }
-}
-
-$isOwner = $stallObj->isOwner($stall_id, $user_id);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_submit'])) {
-    $rid      = intval($_POST['review_id']);
-    $response = trim($_POST['seller_response']);
-    if ($isOwner && $rid && $response !== '') {
-        $stallObj->saveSellerResponse($rid, $response);
-        echo "<script>
-            Swal.fire({ icon: 'success', title: 'Reply submitted!', text: 'Your stall response has been saved.', showConfirmButton: false });
-        </script>";
-    }
-    $u = htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES);
-    echo "<meta http-equiv=\"refresh\" content=\"2;url={$u}\">";
-    exit;
-}
 ?>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
-    .ratemodal .modal-header,
-    .ratemodal .modal-footer {
-        position: sticky;
-        z-index: 1020;
-        background-color: white;
-    }
-    .ratemodal .modal-header { top: 0; }
-    .ratemodal .modal-footer { bottom: 0; }
-    .ratemodal { max-height: 80vh; overflow-y: auto; }
-    .modal-dialog { max-width: 50vw; }
-    .helpful-toggle.active { color: #CD5C08; }
-    .helpful-toggle.active i.fa-regular { display: none; }
-    .helpful-toggle.active i.fa-solid  { display: inline-block; }
-    .helpful-toggle i.fa-solid         { display: none; }
-    textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
+    .nav-main{ padding: 20px 120px; }
+    .salestable th{ padding-top: 10px; }
+    .dropdown-menu-center { left: 50% !important; transform: translateX(-50%) !important; }
+    .acchead a{ text-decoration: none; color: black; margin-bottom: 8px; }
+    button:disabled { background-color: #D3d3d3 !important; }
 </style>
-
-<div style="background-color: #f4f4f4;">
-    <div class="disabled" <?php if (isset($stall['status']) && $stall['status'] === 'Unavailable') { echo 'style="pointer-events: none; opacity: 0.5;"'; } ?>>
-        <?php foreach ($categories as $cat): ?>
-            <section id="category<?= $cat['id']; ?>" class="pt-3 mt-3">
-                <h5><?= htmlspecialchars($cat['name']); ?></h5>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
-                    <?php $hasProducts = false; foreach ($products as $product): ?>
-                        <?php if ($product['category_id'] == $cat['id']): ?>
-                            <?php
-                                $hasProducts = true;
-                                $variations   = $stallObj->getProductVariations($product['id']);
-                                $cardClickable = true;
-                                if (!empty($variations)) {
-                                    foreach ($variations as $variation) {
-                                        $options = $stallObj->getVariationOptions($variation['id']);
-                                        $variationHasStock = false;
-                                        foreach ($options as $option) {
-                                            if ($stallObj->getStock($product['id'], $option['id']) > 0) {
-                                                $variationHasStock = true;
-                                                break;
-                                            }
-                                        }
-                                        if (!$variationHasStock) { $cardClickable = false; break; }
-                                    }
-                                } else {
-                                    $cardClickable = (($product['stock'] ?? 0) > 0);
-                                }
-                            ?>
-                            <div class="col">
-                                <a href="#" class="card-link text-decoration-none<?= $cardClickable ? '" data-bs-toggle="modal" data-bs-target="#menumodal' . $product['id'] . '"' : ' disabled-card"'; ?>>
-                                    <div class="card position-relative">
-                                        <?php if (!$cardClickable): ?>
-                                            <div class="closed">No stock</div>
-                                        <?php endif; ?>
-                                        <img src="<?= htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?= htmlspecialchars($product['name']); ?>">
-                                        <button class="addtocart position-absolute fw-bold d-flex justify-content-center align-items-center">+</button>
-                                        <div class="card-body">
-                                            <p class="card-text text-muted m-0"><?= htmlspecialchars($product['category_name']); ?></p>
-                                            <h5 class="card-title my-2"><?= htmlspecialchars($product['name']); ?></h5>
-                                            <p class="card-text text-muted m-0"><?= htmlspecialchars($product['description']); ?></p>
-                                            <?php
-                                                $today = date('Y-m-d');
-                                                if ($product['discount'] > 0 && !is_null($product['end_date']) && $today > $product['end_date']) {
-                                                    $product['discount']   = 0.00;
-                                                    $product['start_date'] = null;
-                                                    $product['end_date']   = null;
-                                                }
-                                                if ($product['discount'] > 0 && !is_null($product['start_date']) && !is_null($product['end_date']) && $today >= $product['start_date'] && $today <= $product['end_date']) {
-                                                    $discountedPrice = $product['base_price'] * ((100 - $product['discount']) / 100);
-                                            ?>
-                                                <div class="my-3">
-                                                    <span class="proprice">₱<?= number_format($discountedPrice, 2); ?></span>
-                                                    <span class="pricebefore small">₱<?= number_format($product['base_price'], 2); ?></span>
-                                                </div>
-                                            <?php } else { ?>
-                                                <div class="my-3">
-                                                    <span class="proprice">₱<?= number_format($product['base_price'], 2); ?></span>
-                                                </div>
-                                            <?php } ?>
-                                            <?php $stats = $productObj->getProductRatingStats($product['id']); ?>
-                                            <div class="mb-3 d-flex align-items-center small gap-1">
-                                                <div data-coreui-item-count="1" data-coreui-size="sm" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="1"></div>
-                                                <span><?= number_format($stats['avg_rating'],1); ?>/5.0</span>
-                                                <span class="text-muted">(<?= $stats['total_ratings']; ?>)</span>
-                                                <button type="button" class="bg-white text-decoration-none border-0 rename py-1 px-2 text-dark" data-bs-toggle="modal" data-bs-target="#productratingsModal<?= $product['id']; ?>">See reviews</button>
-                                            </div>
-                                            <div class="m-0">
-                                                <?php if (in_array($product['id'], $popularProdIds)): ?><span class="opennow">Popular</span><?php endif; ?>
-                                                <?php if (in_array($product['id'], $promoProdIds) && $product['discount'] > 0 && $today >= $product['start_date'] && $today <= $product['end_date']): ?><span class="discount"><?= intval($product['discount']); ?>% off</span><?php endif; ?>
-                                                <?php if (in_array($product['id'], $newProdIds)): ?><span class="newopen">New</span><?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                    <?php if (!$hasProducts): ?>
-                        <div class="w-100">No products found for this category.</div>
-                    <?php endif; ?>
-                </div>
-            </section>
-        <?php endforeach; ?>
+<main class="nav-main">
+    <div class="nav-container d-flex gap-3 my-2 flex-wrap">
+        <a href="#all" class="nav-link" data-target="all">Dashboard</a>
+        <a href="#accounts" class="nav-link" data-target="accounts">Accounts</a>
+        <a href="#applications" class="nav-link" data-target="applications">Applications</a>
+        <a href="#reports" class="nav-link" data-target="reports">Reports</a>
+        <a href="#categories" class="nav-link" data-target="reports">Categories</a>
     </div>
 
-    <?php foreach ($products as $product): ?>
-        <?php
-            $stats          = $productObj->getProductRatingStats($product['id']);
-            $breakdown      = $productObj->getProductRatingBreakdown($product['id']);
-            $reviews        = $productObj->getProductReviews($product['id']);
-            $reviews_top    = $reviews;
-            $reviews_newest = $reviews;
-            usort($reviews_newest, fn($a,$b) => strtotime($b['created_at']) - strtotime($a['created_at']));
-            $reviews_high   = $reviews;
-            usort($reviews_high, fn($a,$b) => $b['rating_value'] - $a['rating_value']);
-            $reviews_low    = $reviews;
-            usort($reviews_low, fn($a,$b) => $a['rating_value'] - $b['rating_value']);
-            $sid = $product['id'];
-        ?>
-        <div class="modal fade" id="productratingsModal<?= $sid; ?>" tabindex="-1" role="dialog" aria-labelledby="productratingsTitle" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content ratemodal">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Rate &amp; Reviews</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Dashboard Section -->
+    <div id="all" class="w-100 border rounded-2 p-3 bg-white section-content">
+        <div>
+            <h5 class="fw-bold mb-2">Dashboard</h5>
+            <span class="small"><?= $currentDateTime ?></span>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3 mt-3">
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Accounts</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
                     </div>
-                    <div class="modal-body" style="background:#F4F4F4;">
-                        <div class="d-flex justify-content-between mb-3 p-4 border rounded bg-white">
-                            <div class="w-50">
-                                <h1 class="m-0 fw-bold"><?= number_format($stats['avg_rating'],1); ?></h1>
-                                <div data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="<?= round($stats['avg_rating']); ?>"></div>
-                                <span>All ratings (<?= $stats['total_ratings']; ?>)</span>
-                            </div>
-                            <div class="w-50">
-                                <?php foreach (range(5,1) as $star):
-                                    $count = $breakdown[$star] ?? 0;
-                                    $pct   = $stats['total_ratings'] > 0 ? ($count/$stats['total_ratings']*100) : 0;
-                                ?>
-                                    <div class="d-flex align-items-center small gap-1">
-                                        <span><?= $star; ?></span>
-                                        <div data-coreui-item-count="1" data-coreui-size="sm" data-coreui-read-only="true" data-coreui-toggle="rating" data-coreui-value="1"></div>
-                                        <div class="w3-light-grey w3-round-xlarge" style="width:100%;height:10px;">
-                                            <?php if ($count > 0): ?><div class="w3-container w3-round-xlarge" style="width:<?= $pct; ?>%;height:10px;background:#CD5C08"></div><?php endif; ?>
-                                        </div>
-                                        <span><?= $count; ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <div class="nav-container d-flex gap-3 mb-2">
-                            <a href="#all<?= $sid; ?>" class="nav-link active">Top reviews</a>
-                            <a href="#newest<?= $sid; ?>" class="nav-link">Newest</a>
-                            <a href="#highrating<?= $sid; ?>" class="nav-link">Highest Rating</a>
-                            <a href="#lowrating<?= $sid; ?>" class="nav-link">Lowest Rating</a>
-                        </div>
-
-                        <?php foreach ([['all', $reviews_top], ['newest', $reviews_newest], ['highrating', $reviews_high], ['lowrating', $reviews_low]] as [$key, $list]): ?>
-                            <div id="<?= $key . $sid; ?>" class="section-content <?= $key === 'all' ? 'active d-block' : 'd-none'; ?>">
-                                <?php if (empty($list)): ?>
-                                    <p class="p-5 border rounded-2 bg-white text-center">No reviews yet.</p>
-                                <?php else: foreach ($list as $rev): ?>
-                                    <?php $userHasHelped = isset($_SESSION['user']) ? $productObj->hasUserMarkedHelpful($rev['id'], $_SESSION['user']['id']) : false; ?>
-                                    <div class="p-4 border rounded-2 bg-white mb-3">
-                                        <h6 class="mb-1 fw-bold"><?= htmlspecialchars($rev['first_name']); ?></h6>
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <div data-coreui-size="sm" data-coreui-toggle="rating" data-coreui-read-only="true" data-coreui-value="<?= $rev['rating_value']; ?>"></div>
-                                            <small class="text-muted"><?= htmlspecialchars($rev['created_at']); ?></small>
-                                        </div>
-                                        <?php if (!empty($rev['comment'])): ?><p class="my-3"><?= htmlspecialchars($rev['comment']); ?></p><?php endif; ?>
-                                        <div class="my-3">
-                                            <?php if ($isOwner && empty($rev['seller_response'])): ?>
-                                                <button type="button" class="reply-btn text-white border-0 rounded-1 py-1 px-3" style="background-color: #CD5C08" data-review-id="<?= $rev['id']; ?>">Reply</button>
-                                                <form method="POST" class="reply-form d-none mb-3" data-review-id="<?= $rev['id']; ?>">
-                                                    <input type="hidden" name="reply_submit" value="1">
-                                                    <input type="hidden" name="review_id" value="<?= $rev['id']; ?>">
-                                                    <label class="fw-bold" for="seller_response_<?= $rev['id']; ?>">Your Reply:</label>
-                                                    <textarea id="seller_response_<?= $rev['id']; ?>" name="seller_response" class="w-100 px-3 py-2 rounded-1 border mb-2" placeholder="Write your response here..." required></textarea>
-                                                    <button type="submit" class="text-white border-0 rounded-1 py-1 px-3" style="background-color: #CD5C08">Reply</button>
-                                                    <button type="button" class="cancel-reply-btn text-white border-0 rounded-1 py-1 px-3" style="background-color: gray">Cancel</button>
-                                                </form>
-                                            <?php endif; ?>
-                                        </div>
-                                        <?php if (!empty($rev['seller_response'])): ?><p class="p-3 rounded-2 mb-3" style="background-color:#f4f4f4">Stall Response: <?= htmlspecialchars($rev['seller_response']); ?></p><?php endif; ?>
-                                        <div class="d-flex gap-3 align-items-center border rounded-2">
-                                            <img src="<?= htmlspecialchars($product['image']); ?>" width="55" height="55" class="border rounded-start" alt="">
-                                            <div>
-                                                <span><?= htmlspecialchars($product['name']); ?></span><br>
-                                                <?php if (!empty($rev['variations'])): ?><span class="small text-muted">Variation: <?= htmlspecialchars($rev['variations']); ?></span><?php endif; ?>
-                                            </div>
-                                        </div>
-                                        <?php $iconClass = $userHasHelped ? 'fa-solid' : 'fa-regular'; ?>
-                                        <div class="small text-end mt-2 helpful-toggle<?= $userHasHelped ? ' active' : ''; ?>" style="cursor:pointer;" data-review-id="<?= $rev['id']; ?>">
-                                            <i class="<?= $iconClass ?> fa-thumbs-up"></i>
-                                            <span>Helpful <span class="helpful-count"><?= (int)($rev['helpful_count'] ?? 0); ?></span></span>
-                                        </div>
-                                    </div>
-                                <?php endforeach; endif; ?>
-                            </div>
-                        <?php endforeach; ?>
-
+                    <i class="fa-solid fa-user dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">10</h2>
+                    <div class="d-flex align-items-center small text-danger gap-1">
+                        <i class="fa-solid fa-arrow-down"></i>
+                        <span class="text-danger">11%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Parks</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    </div>
+                    <i class="fa-solid fa-parachute-box dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">20</h2>
+                    <div class="d-flex align-items-center small text-success gap-1">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span class="text-success">11%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Stalls</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    </div>
+                    <i class="fa-solid fa-store dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">20</h2>
+                    <div class="d-flex align-items-center small text-success gap-1">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span class="text-success">11%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Products</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    </div>
+                    <i class="fa-solid fa-burger dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">10</h2>
+                    <div class="d-flex align-items-center small text-success gap-1">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span class="text-success">11%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 rounded-2 border bg-white w-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <p class="m-0">Total Orders</p>
+                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    </div>
+                    <i class="fa-solid fa-utensils dashicon fs-5"></i>
+                </div>
+                <div class="d-flex align-items-end justify-content-between">
+                    <h2 class="fw-bold m-0">10</h2>
+                    <div class="d-flex align-items-center small text-success gap-1">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span class="text-success">11%</span>
                     </div>
                 </div>
             </div>
         </div>
-    <?php endforeach; ?>
-    <br><br><br>
-</div>
 
-<script src="assets/js/navigation.js?v=<?= time(); ?>"></script>
-<script>
-    document.querySelectorAll('.helpful-toggle').forEach(el => {
-        el.addEventListener('click', async () => {
-            const reviewId = el.dataset.reviewId;
-            if (!reviewId) return;
-            try {
-                const resp = await fetch('toggle_helpful.php', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/x-www-form-urlencoded'},
-                    body: new URLSearchParams({ review_id: reviewId })
-                });
-                const json = await resp.json();
-                if (!json.success) return Swal.fire({ icon: 'warning', title: 'Oops', text: json.message });
-                el.classList.toggle('active', json.toggledOn);
-                const icon = el.querySelector('i');
-                icon.classList.toggle('fa-regular', !json.toggledOn);
-                icon.classList.toggle('fa-solid', json.toggledOn);
-                el.querySelector('.helpful-count').innerText = json.count;
-            } catch (err) {
-                console.error(err);
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Could not update. Please try again.' });
-            }
-        });
-    });
-</script>
-<script>
-    document.querySelectorAll('.reply-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.reviewId;
-            btn.classList.add('d-none');
-            document.querySelector(`.reply-form[data-review-id="${id}"]`).classList.remove('d-none');
-        });
-    });
-    document.querySelectorAll('.cancel-reply-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const form = btn.closest('.reply-form');
-            const id   = form.dataset.reviewId;
-            form.classList.add('d-none');
-            document.querySelector(`.reply-btn[data-review-id="${id}"]`).classList.remove('d-none');
-        });
-    });
-</script>
-<script>
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('shown.bs.modal', () => {
-            const navLinks = modal.querySelectorAll('.nav-container .nav-link');
-            navLinks.forEach(n => n.classList.remove('active'));
-            const topNav = navLinks[0];
-            topNav.classList.add('active');
-            const panes = modal.querySelectorAll('.section-content');
-            panes.forEach(p => { p.classList.remove('active','d-block'); p.classList.add('d-none'); });
-            const targetId   = topNav.getAttribute('href');
-            const targetPane = modal.querySelector(targetId);
-            if (targetPane) { targetPane.classList.remove('d-none'); targetPane.classList.add('active','d-block'); }
-        });
-    });
-</script>
-<script>
-  document
-    .querySelectorAll('.nav-container')
-    .forEach(navContainer => {
-      const links = navContainer.querySelectorAll('.nav-link');
-      links.forEach(link => {
-        link.addEventListener('click', e => {
-          e.preventDefault();
-          links.forEach(l => l.classList.remove('active'));
-          link.classList.add('active');
+    </div>
+    
+    <script src="assets/js/pagination.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/navigation.js?v=<?php echo time(); ?>"></script>
+    <br><br><br><br>
 
-          const modal = link.closest('.modal-content') || link.closest('.modal');
-          modal
-            .querySelectorAll('.section-content')
-            .forEach(p => {
-              p.classList.remove('active','d-block');
-              p.classList.add('d-none');
-            });
-
-          const target = modal.querySelector(link.getAttribute('href'));
-          if (target) {
-            target.classList.remove('d-none');
-            target.classList.add('active','d-block');
-          }
-        });
-      });
-    });
-</script>
-
+</main>
 
 <?php
-include_once 'modals.php';
-include_once './footer.php';
+include_once 'footer.php';
 ?>
+
+
+ <div class="d-flex gap-3 my-3">
+            <div class="w-75">
+                <div class="table-responsive py-2 px-3 border rounded-2 mb-3">
+                    <h6 class="mb-3">Pending Applications <span class="fw-bold">(10)</span></h6>
+                    <table class="salestable w-100 text-center border-top">
+                        <tr>
+                            <th class="text-truncate">Owner</th>
+                            <th class="text-truncate">Business Name</th>
+                            <th class="text-truncate">Location</th>
+                            <th class="text-truncate">Other Info</th>
+                            <th class="text-truncate">Date Applied</th>
+                            <th class="text-truncate">Status</th>
+                            <th class="text-truncate">Action</th>
+                        </tr>
+                        <tbody id="applicationsTableBody">
+                            <?php
+                            $getBusinesses = $adminObj->getBusinesses();
+                            if ($getBusinesses) {
+                                foreach ($getBusinesses as $business) {
+                                    $businessStatus = htmlspecialchars($business['business_status']);
+                                    if ($businessStatus == 'Pending Approval') {
+                                        $statusDisplay = '<span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">Pending</span>';
+                                    } else if ($businessStatus == 'Approved') {
+                                        $statusDisplay = '<span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Accepted</span>';
+                                    } else if ($businessStatus == 'Rejected') {
+                                        $statusDisplay = '<span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span>';
+                                    } else {
+                                        $statusDisplay = '<span class="small rounded-5 text-muted border border-muted p-1 border-2 fw-bold">' . $businessStatus . '</span>';
+                                    }
+                                    echo '<tr>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">' . htmlspecialchars($business['owner_name']) . '</td>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">' . $business['business_name'] . '</td>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">' . htmlspecialchars($business['region_province_city']) . ', ' . htmlspecialchars($business['barangay']) . ', ' . htmlspecialchars($business['street_building_house']) . '</td>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">
+                                        <i class="fa-solid fa-chevron-down rename small" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#moreparkinfo" 
+                                            data-email="' . htmlspecialchars($business['business_email']) . '"
+                                            data-phone="' . htmlspecialchars($business['business_phone']) . '"
+                                            data-hours="' . htmlspecialchars($business['operating_hours']) . '"
+                                            data-permit="' . htmlspecialchars($business['business_permit']) . '"
+                                            data-logo="' . htmlspecialchars($business['business_logo']) . '">
+                                        </i>
+                                    </td>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">' . htmlspecialchars($business['created_at']) . '</td>';
+                                    echo '<td class="fw-normal small py-3 px-4 status-cell">' . $statusDisplay . '</td>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">';
+                                    echo '<div class="d-flex gap-2 justify-content-center">';
+                                    echo '<button class="approve-btn bg-success text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px">Approve</button>';
+                                    echo '<button class="deny-btn bg-danger text-white border-0 small py-1 rounded-1" data-id="' . htmlspecialchars($business['id']) . '" style="width:60px">Deny</button>';
+                                    echo '</div>';
+                                    echo '</td>';
+                                    echo '</tr>';
+                                }
+                            } else {
+                                echo '<tr><td colspan="7" class="text-center py-5">No result found</td></tr>';
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-responsive py-2 px-3 border rounded-2">
+                    <h6 class="mb-3">Pending Reports <span class="fw-bold">(10)</span></h6>
+                    <table class="salestable w-100 text-center border-top">
+                        <tr>
+                            <th class="text-truncate">Reported By</th>
+                            <th class="text-truncate">Reported Park</th>
+                            <th class="text-truncate">Reason</th>
+                            <th class="text-truncate">Date Reported</th>
+                            <th class="text-truncate">Status</th>
+                            <th class="text-truncate">Action</th>
+                        </tr>
+                        <tbody id="reportsTableBody">
+                            <?php
+                            $reports = $adminObj->getReports();
+                            if ($reports) {
+                                foreach ($reports as $report) {
+                                    $fullReporter = htmlspecialchars($report['reporter_first'] . ' ' . $report['reporter_last']);
+                                    $reportedParkName = htmlspecialchars($report['reported_park_name']);
+                                    echo '<tr>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">' . $fullReporter . '</td>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">' . $reportedParkName . '</td>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">' . htmlspecialchars($report['reason']) . '</td>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">' . htmlspecialchars($report['created_at']) . '</td>';
+                                    $status = $report['status'];
+                                    if ($status == 'Pending') {
+                                        $statusHTML = '<span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">Pending</span>';
+                                    } elseif ($status == 'Rejected') {
+                                        $statusHTML = '<span class="small rounded-5 text-danger border border-danger p-1 border-2 fw-bold">Rejected</span>';
+                                    } elseif ($status == 'Resolved') {
+                                        $statusHTML = '<span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Resolved</span>';
+                                    }
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">' . $statusHTML . '</td>';
+                                    echo '<td class="fw-normal small py-3 px-4 text-truncate">';
+                                    echo '<div class="d-flex gap-2 justify-content-center">';
+                                    echo '<button class="approve-btn bg-success text-white border-0 small py-1 rounded-1" style="width:60px">Resolve</button>';
+                                    echo '<button class="deny-btn bg-danger text-white border-0 small py-1 rounded-1" style="width:60px">Reject</button>';
+                                    echo '</div>';
+                                    echo '</td>';
+                                    echo '</tr>';
+                                }
+                            } else {
+                                echo '<tr><td colspan="6" class="text-center py-5">No reports found</td></tr>';
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="w-25 py-2 px-3 border rounded-2">
+                <h6 class="mb-3">User Activity</h6>
+                <div class="d-flex gap-2 border-bottom py-2">
+                    <img src="assets/images/profile.jpg" width="35" height="35" style="border-radius: 50%">
+                    <div>
+                        <p class="small m-0">Naila Haliluddin searched on GitGud</p>
+                        <p class="small text-muted m-0">"cheese"</p>
+                        <p class="small text-muted m-0">7:43 PM</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 border-bottom py-2">
+                    <img src="assets/images/profile.jpg" width="35" height="35" style="border-radius: 50%">
+                    <div>
+                        <p class="small m-0">Naila Haliluddin searched on GitGud</p>
+                        <p class="small text-muted m-0">"cheese"</p>
+                        <p class="small text-muted m-0">7:43 PM</p>
+                    </div>
+                </div>
+            </div>
+        </div>

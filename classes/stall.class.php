@@ -8,17 +8,23 @@ class Stall {
         $this->db = new Database();
     }
 
-    public function getStallId($userId){
-        $sql = "SELECT id FROM stalls WHERE user_id = :user_id;";
-        $query = $this->db->connect()->prepare($sql);
-        $query->execute(array(':user_id' => $userId));
-        $result = $query->fetch();
-
-        if ($result === false) {
-            return false;
-        }
-        return $result['id'];
+    public function getStallId($userId, $parkId){
+        $sql = "
+          SELECT id 
+            FROM stalls 
+           WHERE user_id = :user_id
+             AND park_id = :park_id
+           LIMIT 1
+        ";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([
+          ':user_id' => $userId,
+          ':park_id' => $parkId
+        ]);
+        $row = $stmt->fetch();
+        return $row ? $row['id'] : false;
     }
+    
 
     public function getStall($stallId){
         $sql = "SELECT * FROM stalls WHERE id = :id;";

@@ -13,7 +13,10 @@ $productObj = new Product();
 if ($user['role'] === 'Admin' && isset($_GET['stall_id'])) {
     $stall_id = intval($_GET['stall_id']);
 } else {
-    $stall_id = $stallObj->getStallId($_SESSION['user']['id']);
+    $stall_id = $stallObj->getStallId(
+        $_SESSION['user']['id'],
+        $_SESSION['current_park_id']
+    );
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

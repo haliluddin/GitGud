@@ -159,6 +159,22 @@ class Park {
         return $stmt->fetchColumn() > 0;
     }
 
+    public function getUserStall($user_id, $park_id) {
+        $sql  = "SELECT * 
+                 FROM stalls 
+                 WHERE user_id = :user_id 
+                   AND park_id = :park_id
+                 LIMIT 1";
+        $conn = $this->db->connect();
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([
+            ':user_id' => $user_id,
+            ':park_id' => $park_id
+        ]);
+    
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     function addStall($user_id, $park_id, $businessname, $description, $businessemail, $businessphonenumber, $website, $stalllogo, $operatingHours, $categories, $payment_methods) { 
         $conn = $this->db->connect(); 
     

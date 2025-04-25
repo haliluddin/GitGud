@@ -13,7 +13,10 @@ $stallObj = new Stall();
 if (!empty($_GET['stall_id']) && is_numeric($_GET['stall_id'])) {
     $stall_id = intval($_GET['stall_id']);
 } elseif (!empty($_SESSION['user']['id'])) {
-    $stall_id = $stallObj->getStallId($_SESSION['user']['id']);
+    $stall_id = $stallObj->getStallId(
+        $_SESSION['user']['id'],
+        $_SESSION['current_park_id']
+    );
 } else {
     die('No stall or user session found.');
 }

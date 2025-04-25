@@ -13,7 +13,10 @@ $productName = $productCode = $category = $description = $basePrice = $discount 
 $imagePathErr = $productNameErr = $productCodeErr = $categoryErr = $descriptionErr = $basePriceErr = $startDateErr = $endDateErr = $discountErr = $initialStockErr = '';
 $variationStockErr = '';
 
-$stall_id = $stallObj->getStallId($_SESSION['user']['id']);
+$stall_id = $stallObj->getStallId(
+    $_SESSION['user']['id'],
+    $_SESSION['current_park_id']
+);
 $selectCategories = $productObj->getCategories($stall_id);
 $variationsData = [];
 
