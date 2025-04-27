@@ -173,6 +173,12 @@
                 } else {
                     $status = $isOpen ? 'open' : 'closed';
                 }
+
+                $setStatus = $parkObj->getParkStalls($park['id']);
+                if (empty($setStatus)) {
+                    $status = 'unavailable';
+                }
+
                 ?>
                 <div class="col park-card border rounded p-0 mx-2" data-status="<?= $status; ?>">
                     <?php
