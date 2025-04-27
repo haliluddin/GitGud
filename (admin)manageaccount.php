@@ -241,6 +241,33 @@ $searchCategory = isset($_GET['search_category'])
     ? trim($_GET['search_category'])
     : '';
 
+
+    $today     = date('Y-m-d');
+    $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+    $entities = [
+      'users'    => ['label'=>'Total Accounts','icon'=>'fa-user'],
+      'business' => ['label'=>'Total Parks','icon'=>'fa-parachute-box'],
+      'stalls'   => ['label'=>'Total Stalls','icon'=>'fa-store'],
+      'products' => ['label'=>'Total Products','icon'=>'fa-burger'],
+      'orders'   => ['label'=>'Total Orders','icon'=>'fa-utensils'],
+    ];
+
+    $stats = [];
+    foreach ($entities as $table => $meta) {
+        $total    = $adminObj->getTotalCount($table);
+        $todayNew = $adminObj->getDailyCount($table, $today);
+        $yestNew  = $adminObj->getDailyCount($table, $yesterday);
+
+        if ($yestNew > 0) {
+            $pct = round((($todayNew - $yestNew) / $yestNew) * 100);
+        } else {
+            $pct = $todayNew > 0 ? 100 : 0;
+        }
+
+        $trend = $pct >= 0 ? 'up' : 'down';
+        $stats[$table] = compact('total','pct','trend');
+    }
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -260,7 +287,7 @@ $searchCategory = isset($_GET['search_category'])
         <a href="#categories" class="nav-link" data-target="reports">Categories</a>
     </div>
 
-    <!-- Dashboard Section -->
+   <!-- Dashboard Section -->
     <div id="all" class="w-100 border rounded-2 p-3 bg-white section-content">
         <div>
             <h5 class="fw-bold mb-2">Dashboard</h5>
@@ -268,87 +295,180 @@ $searchCategory = isset($_GET['search_category'])
         </div>
         
         <div class="d-flex align-items-center gap-3 mt-3">
-            <div class="p-3 rounded-2 border bg-white w-100">
+            <?php foreach ($entities as $table => $meta): 
+                    $s = $stats[$table];
+            ?>
+                <div class="p-3 rounded-2 border bg-white w-100">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div>
-                        <p class="m-0">Total Accounts</p>
-                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
+                    <p class="m-0"><?= $meta['label'] ?></p>
+                    <span class="small" style="color: #ccc;"><?= date('M d, Y') ?></span>
                     </div>
-                    <i class="fa-solid fa-user dashicon fs-5"></i>
+                    <i class="fa-solid <?= $meta['icon'] ?> dashicon fs-5"></i>
                 </div>
                 <div class="d-flex align-items-end justify-content-between">
-                    <h2 class="fw-bold m-0">10</h2>
-                    <div class="d-flex align-items-center small text-danger gap-1">
-                        <i class="fa-solid fa-arrow-down"></i>
-                        <span class="text-danger">11%</span>
+                    <h2 class="fw-bold m-0"><?= $s['total'] ?></h2>
+                    <div class="d-flex align-items-center small <?= $s['trend']==='up' ? 'text-success' : 'text-danger' ?> gap-1">
+                    <i class="fa-solid fa-arrow-<?= $s['trend'] ?>"></i>
+                    <span class="<?= $s['trend']==='up' ? 'text-success' : 'text-danger' ?>">
+                        <?= abs($s['pct']) ?>%
+                    </span>
                     </div>
                 </div>
-            </div>
-            <div class="p-3 rounded-2 border bg-white w-100">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                        <p class="m-0">Total Parks</p>
-                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
-                    </div>
-                    <i class="fa-solid fa-parachute-box dashicon fs-5"></i>
                 </div>
-                <div class="d-flex align-items-end justify-content-between">
-                    <h2 class="fw-bold m-0">20</h2>
-                    <div class="d-flex align-items-center small text-success gap-1">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span class="text-success">11%</span>
-                    </div>
-                </div>
-            </div>
-            <div class="p-3 rounded-2 border bg-white w-100">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                        <p class="m-0">Total Stalls</p>
-                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
-                    </div>
-                    <i class="fa-solid fa-store dashicon fs-5"></i>
-                </div>
-                <div class="d-flex align-items-end justify-content-between">
-                    <h2 class="fw-bold m-0">20</h2>
-                    <div class="d-flex align-items-center small text-success gap-1">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span class="text-success">11%</span>
-                    </div>
-                </div>
-            </div>
-            <div class="p-3 rounded-2 border bg-white w-100">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                        <p class="m-0">Total Products</p>
-                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
-                    </div>
-                    <i class="fa-solid fa-burger dashicon fs-5"></i>
-                </div>
-                <div class="d-flex align-items-end justify-content-between">
-                    <h2 class="fw-bold m-0">10</h2>
-                    <div class="d-flex align-items-center small text-success gap-1">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span class="text-success">11%</span>
-                    </div>
-                </div>
-            </div>
-            <div class="p-3 rounded-2 border bg-white w-100">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                        <p class="m-0">Total Orders</p>
-                        <span class="small" style="color: #ccc;">Jan 04, 2025</span>
-                    </div>
-                    <i class="fa-solid fa-utensils dashicon fs-5"></i>
-                </div>
-                <div class="d-flex align-items-end justify-content-between">
-                    <h2 class="fw-bold m-0">10</h2>
-                    <div class="d-flex align-items-center small text-success gap-1">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span class="text-success">11%</span>
-                    </div>
-                </div>
-            </div>
+            <?php endforeach; ?>
         </div>
+
+        <div class="d-flex gap-3 my-3">
+            <div class="w-75">
+                <div class="table-responsive py-2 px-3 border rounded-2 mb-3">
+                    <?php
+                        $pendingApps = $adminObj->getPendingBusinesses();
+                        $countPending = count($pendingApps);
+                    ?>
+                    <h6 class="mb-3">Pending Applications <span class="fw-bold">(<?= $countPending ?>)</span></h6>
+                    <table class="salestable w-100 text-center border-top">
+                        <tr>
+                            <th>Owner</th>
+                            <th>Business Name</th>
+                            <th>Location</th>
+                            <th>Other Info</th>
+                            <th>Date Applied</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                        <tbody>
+                        <?php if ($pendingApps): ?>
+                            <?php foreach ($pendingApps as $b): ?>
+                            <tr>
+                                <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($b['owner_name']) ?></td>
+                                <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($b['business_name']) ?></td>
+                                <td class="fw-normal small py-3 px-4 text-truncate">
+                                <?= htmlspecialchars($b['region_province_city']) ?>,
+                                <?= htmlspecialchars($b['barangay']) ?>,
+                                <?= htmlspecialchars($b['street_building_house']) ?>
+                                </td>
+                                <td class="fw-normal small py-3 px-4">
+                                <i class="fa-solid fa-chevron-down rename small"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#moreparkinfo"
+                                    data-email="<?= htmlspecialchars($b['business_email']) ?>"
+                                    data-phone="<?= htmlspecialchars($b['business_phone']) ?>"
+                                    data-hours="<?= htmlspecialchars($b['operating_hours']) ?>"
+                                    data-permit="<?= htmlspecialchars($b['business_permit']) ?>"
+                                    data-logo="<?= htmlspecialchars($b['business_logo']) ?>">
+                                </i>
+                                </td>
+                                <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($b['created_at']) ?></td>
+                                <td class="fw-normal small py-3 px-4">
+                                <span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">Pending</span>
+                                </td>
+                                <td class="fw-normal small py-3 px-4">
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button class="approve-btn bg-success text-white border-0 small py-1 rounded-1"
+                                            data-id="<?= htmlspecialchars($b['id']) ?>"
+                                            style="width:60px">Approve
+                                    </button>
+                                    <button class="deny-btn    bg-danger  text-white border-0 small py-1 rounded-1"
+                                            data-id="<?= htmlspecialchars($b['id']) ?>"
+                                            style="width:60px">Deny
+                                    </button>
+                                </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                            <td colspan="7" class="text-center py-5">No pending applications</td>
+                            </tr>
+                        <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-responsive py-2 px-3 border rounded-2">
+                    <?php
+                        $pendingReports      = $adminObj->getPendingReports();
+                        $countPendingReports = count($pendingReports);
+                    ?>
+
+                    <h6 class="mb-3">Pending Reports <span class="fw-bold">(<?= $countPendingReports ?>)</span></h6>
+                    <table class="salestable w-100 text-center border-top">
+                        <tr>
+                            <th>Reported By</th>
+                            <th>Reported Park</th>
+                            <th>Reason</th>
+                            <th>Date Reported</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                        <tbody>
+                            <?php if ($pendingReports): ?>
+                                <?php foreach ($pendingReports as $r): ?>
+                                    <tr>
+                                    <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['reporter_first'].' '.$r['reporter_last']) ?></td>
+                                    <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['reported_park_name']) ?></td>
+                                    <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['reason']) ?></td>
+                                    <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['created_at']) ?></td>
+                                    <td class="fw-normal small py-3 px-4">
+                                        <span class="small rounded-5 text-warning border border-warning p-1 border-2 fw-bold">Pending</span>
+                                    </td>
+                                    <td class="fw-normal small py-3 px-4">
+                                        <div class="d-flex gap-2 justify-content-center mb-1">
+                                        <form method="POST" action="" style="display:inline-block; margin-right:5px;">
+                                            <input type="hidden" name="report_id" value="<?= $r['id'] ?>">
+                                            <input type="hidden" name="action" value="resolve">
+                                            <input type="submit" name="report_update" value="Resolve"
+                                                class="bg-success text-white border-0 small py-1 rounded-1"
+                                                style="width:60px;">
+                                        </form>
+                                        <form method="POST" action="" style="display:inline-block;">
+                                            <input type="hidden" name="report_id" value="<?= $r['id'] ?>">
+                                            <input type="hidden" name="action" value="reject">
+                                            <input type="submit" name="report_update" value="Reject"
+                                                class="bg-danger text-white border-0 small py-1 rounded-1"
+                                                style="width:60px;">
+                                        </form>
+                                        </div>
+                                    </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <?php else: ?>
+                                <tr>
+                                    <td colspan="6" class="text-center py-5">No pending reports</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="w-25 py-2 px-3 border rounded-2 mb-3">
+                <?php
+                    $recentActivities = $adminObj->getAllActivities(10);
+                ?>
+                <h6 class="mb-3">User Activity (last 10)</h6>
+                <?php if (!empty($recentActivities)): ?>
+                    <?php foreach ($recentActivities as $act): 
+                    $time = date("g:i A", strtotime($act['created_at']));
+                    ?>
+                    <div class="d-flex gap-2 border-bottom py-2">
+                        <img src="assets/images/profile.jpg" width="35" height="35" style="border-radius: 50%">
+                        <div>
+                        <p class="small m-0">
+                            <strong><?= htmlspecialchars($act['user_fullname']) ?></strong>
+                            <?= htmlspecialchars($act['message']) ?>
+                        </p>
+                        <p class="small text-muted m-0">"<?= htmlspecialchars($act['detail']) ?>"</p>
+                        <p class="small text-muted m-0"><?= $time ?></p>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p class="small text-center py-2">No activity found</p>
+                <?php endif; ?>
+            </div>
+
+        </div>
+
     </div>
 
     <!-- Accounts Section -->
