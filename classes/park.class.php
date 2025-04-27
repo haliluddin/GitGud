@@ -679,6 +679,12 @@ class Park {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function isParkOwnerOfPark($userId, $parkId) {
+        $stmt = $this->db->connect()->prepare("SELECT COUNT(*) FROM business WHERE user_id = ? AND id = ?");
+        $stmt->execute([$userId, $parkId]);
+        return $stmt->fetchColumn() > 0;
+    }
+
     public function getCartItemCount(int $user_id): int {
         $sql = "
           SELECT COALESCE(SUM(quantity),0)
@@ -689,6 +695,7 @@ class Park {
         $stmt->execute([$user_id]);
         return (int) $stmt->fetchColumn();
     }
+    
     public function getNotificationCount(int $user_id): int {
         $sql = "
           SELECT COUNT(*) 

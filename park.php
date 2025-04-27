@@ -428,14 +428,13 @@
                             $canAccessStall = false;
                             if (isset($user)) {
                                 $user_id = $user['id'];
-                                // Admin can access all stalls
-                                if ($user['role'] === 'Admin') {
+                                $isParkOwnerOfPark = $parkObj->isParkOwnerOfPark($user_id, $park_id);
+
+                                // Admin/Food Park Owner can access all stalls
+                                if ($user['role'] === 'Admin' || $isParkOwnerOfPark) {
                                     $canAccessStall = true;
                                 }
-                                // Park owner can access all stalls in their park
-                                else if ($is_food_park_owner) {
-                                    $canAccessStall = true;
-                                }
+
                                 // Stall owner can access their own stall
                                 else if ($is_stall_owner && isset($stall['user_id']) && $stall['user_id'] == $user_id) {
                                     $canAccessStall = true;
