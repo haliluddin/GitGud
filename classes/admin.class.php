@@ -63,26 +63,20 @@ class Admin {
     }
     
     public function updateBusinessStatus($id, $status, $rejection_reason = null, $setStatus = 0) {
-        // Start building the SQL query
         $sql = "UPDATE business SET business_status = :status";
         
-        // Add rejection reason if status is 'Rejected'
         if ($status == 'Rejected') {
             $sql .= ", rejection_reason = :rejection_reason";
         }
         
-        // Add status update if setStatus is provided
         if ($setStatus != 0) {
             $sql .= ", status = :setStatus";
         }
         
-        // Add WHERE clause (fixed missing space before WHERE)
         $sql .= " WHERE id = :id";
         
-        // Prepare the query
         $query = $this->db->connect()->prepare($sql);
         
-        // Bind parameters
         $query->bindParam(':status', $status);
         $query->bindParam(':id', $id);
         
@@ -94,7 +88,6 @@ class Admin {
             $query->bindParam(':setStatus', $setStatus);
         }
         
-        // Execute and return result
         return $query->execute();
     }
 
@@ -260,6 +253,29 @@ class Admin {
             }
         }
 
+        $ratings = $this->getUserRatingsActivity($user_id);
+        if ($ratings) {
+            foreach ($ratings as $r) {
+                $activities[] = [
+                    'message'    => "$userFullName reviewed",
+                    'detail'     => '"' . $r['product_names'] . '"',
+                    'created_at' => $r['created_at']
+                ];
+            }
+        }
+
+        $helpful = $this->getUserRatingHelpfulActivity($user_id);
+        if ($helpful) {
+            foreach ($helpful as $h) {
+                $revieweeName = trim($h['first_name'] . ' ' . $h['last_name']);
+                $activities[] = [
+                    'message'    => "$userFullName liked review of",
+                    'detail'     => '"' . $revieweeName . '"',
+                    'created_at' => $h['created_at']
+                ];
+            }
+        }
+
         usort($activities, function($a, $b) {
             return strtotime($b['created_at']) - strtotime($a['created_at']);
         });
@@ -267,6 +283,42 @@ class Admin {
         return $activities;
     }
 
+    public function getUserRatingsActivity($user_id) {
+        $sql = "
+            SELECT 
+              GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names,
+              r.created_at
+            FROM ratings r
+            JOIN products p ON r.product_id = p.id
+            WHERE r.user_id = :user_id
+            GROUP BY UNIX_TIMESTAMP(r.created_at)
+            ORDER BY r.created_at DESC
+        ";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function getUserRatingHelpfulActivity($user_id) {
+        $sql = "
+            SELECT 
+              u2.first_name,
+              u2.last_name,
+              rh.created_at
+            FROM rating_helpful rh
+            JOIN ratings r       ON rh.rating_id = r.id
+            JOIN users u2         ON r.user_id = u2.id
+            WHERE rh.user_id = :user_id
+            ORDER BY rh.created_at DESC
+        ";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->bindValue(':user_id', $user_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    
     public function updateReportStatus($report_id, $newStatus) {
         $sql = "UPDATE reports SET status = :newStatus WHERE id = :report_id";
         $stmt = $this->db->connect()->prepare($sql);
@@ -532,6 +584,185 @@ class Admin {
         $sql = "DELETE FROM stored_categories WHERE id = :id";
         $stmt = $this->db->connect()->prepare($sql);
         return $stmt->execute([':id' => $id]);
+    }
+
+    public function getTotalCount(string $table): int {
+        $stmt = $this->db->connect()
+                     ->prepare("SELECT COUNT(*) AS cnt FROM `{$table}`");
+        $stmt->execute();
+        return (int)$stmt->fetch()['cnt'];
+    }
+    public function getDailyCount(string $table, string $date): int {
+        $stmt = $this->db->connect()
+                     ->prepare("SELECT COUNT(*) AS cnt
+                                FROM `{$table}`
+                                WHERE DATE(created_at) = :date");
+        $stmt->bindValue(':date', $date);
+        $stmt->execute();
+        return (int)$stmt->fetch()['cnt'];
+    }
+
+    public function getPendingBusinesses(): array {
+        $sql = "
+          SELECT 
+            b.id, 
+            b.business_name, 
+            b.business_type, 
+            b.region_province_city, 
+            b.barangay, 
+            b.street_building_house, 
+            b.business_status, 
+            b.business_email, 
+            b.business_phone, 
+            b.business_permit,
+            b.business_logo, 
+            b.created_at, 
+            CONCAT(u.first_name, ' ', u.last_name) AS owner_name,
+            GROUP_CONCAT(
+              DISTINCT CONCAT(oh.days, '<br>', oh.open_time, ' - ', oh.close_time)
+              SEPARATOR '; '
+            ) AS operating_hours
+          FROM business b
+          INNER JOIN users u        ON b.user_id = u.id
+          LEFT JOIN operating_hours oh ON oh.business_id = b.id
+          WHERE b.business_status = 'Pending Approval'
+          GROUP BY b.id
+          ORDER BY b.created_at DESC
+        ";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getPendingReports(): array {
+        $sql = "
+          SELECT 
+            r.id, 
+            r.reported_by, 
+            r.reported_park, 
+            r.reason, 
+            r.status, 
+            r.created_at,
+            u1.first_name AS reporter_first,
+            u1.last_name  AS reporter_last,
+            b.business_name AS reported_park_name
+          FROM reports r
+          JOIN users u1 ON r.reported_by = u1.id
+          JOIN business b ON r.reported_park = b.id
+          WHERE r.status = 'Pending'
+          ORDER BY r.created_at DESC
+        ";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAllActivities(int $limit = 10): array {
+        $db = $this->db->connect();
+    
+        // Each sub‐SELECT tags its own message and detail columns
+        $unionSql = "
+          SELECT CONCAT(u.first_name,' ',u.last_name) AS user_fullname,
+                 'registered their food park' AS message,
+                 b.business_name AS detail,
+                 b.created_at
+          FROM business b
+          JOIN users u ON b.user_id = u.id
+    
+          UNION ALL
+    
+          SELECT CONCAT(u.first_name,' ',u.last_name),
+                 'added to cart',
+                 GROUP_CONCAT(p.name SEPARATOR ', '),
+                 c.created_at
+          FROM cart c
+          JOIN products p ON c.product_id = p.id
+          JOIN users u   ON c.user_id   = u.id
+          GROUP BY c.user_id, c.created_at
+    
+          UNION ALL
+    
+          SELECT CONCAT(u.first_name,' ',u.last_name),
+                 'received notification',
+                 n.message,
+                 n.created_at
+          FROM notifications n
+          JOIN users u ON n.user_id = u.id
+    
+          UNION ALL
+    
+          SELECT CONCAT(u.first_name,' ',u.last_name),
+                 'ordered',
+                 GROUP_CONCAT(p.name SEPARATOR ', '),
+                 o.created_at
+          FROM orders o
+          JOIN order_stalls os ON o.id = os.order_id
+          JOIN order_items oi  ON os.id = oi.order_stall_id
+          JOIN products p      ON oi.product_id = p.id
+          JOIN users u         ON o.user_id = u.id
+          GROUP BY o.id
+    
+          UNION ALL
+    
+          SELECT CONCAT(u.first_name,' ',u.last_name),
+                 CONCAT('reported ', b.business_name),
+                 r.reason,
+                 r.created_at
+          FROM reports r
+          JOIN users u    ON r.reported_by  = u.id
+          JOIN business b ON r.reported_park = b.id
+    
+          UNION ALL
+    
+          SELECT CONCAT(u.first_name,' ',u.last_name),
+                 'registered their food stall',
+                 s.name,
+                 s.created_at
+          FROM stalls s
+          JOIN users u ON s.user_id = u.id
+    
+          UNION ALL
+    
+          SELECT CONCAT(u.first_name,' ',u.last_name),
+                 'liked',
+                 s.name,
+                 sl.created_at
+          FROM stall_likes sl
+          JOIN stalls s ON sl.stall_id = s.id
+          JOIN users u  ON sl.user_id  = u.id
+    
+          UNION ALL
+    
+          SELECT CONCAT(u.first_name,' ',u.last_name),
+                 'reviewed',
+                 p.name,
+                 r.created_at
+          FROM ratings r
+          JOIN products p ON r.product_id = p.id
+          JOIN users u    ON r.user_id    = u.id
+    
+          UNION ALL
+    
+          SELECT CONCAT(u.first_name,' ',u.last_name),
+                 'liked review of',
+                 CONCAT(u2.first_name,' ',u2.last_name),
+                 rh.created_at
+          FROM rating_helpful rh
+          JOIN ratings r  ON rh.rating_id = r.id
+          JOIN users u    ON rh.user_id   = u.id
+          JOIN users u2   ON r.user_id    = u2.id
+        ";
+    
+        // Wrap the UNION and apply ORDER + LIMIT
+        $sql = "SELECT * FROM ( $unionSql ) AS all_acts
+                ORDER BY created_at DESC
+                LIMIT :lim";
+    
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+    
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 }
