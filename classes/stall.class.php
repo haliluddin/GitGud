@@ -922,25 +922,33 @@ class Stall {
 
     public function getPaymentMethodBreakdown($stall_id, $start, $end) {
         $sql = "
-          SELECT o.payment_method, SUM(os.subtotal) AS total_amount
+          SELECT o.payment_method,
+                 SUM(os.subtotal) AS total_amount
           FROM order_stalls os
-          JOIN orders o ON os.order_id=o.id
-          WHERE os.stall_id=? AND DATE(os.created_at) BETWEEN ? AND ?
-          GROUP BY o.payment_method";
+          JOIN orders o ON os.order_id = o.id
+          WHERE os.stall_id = ?
+            AND DATE(os.created_at) BETWEEN ? AND ?
+            AND os.status = 'Preparing'
+          GROUP BY o.payment_method
+        ";
         $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute([$stall_id,$start,$end]);
+        $stmt->execute([$stall_id, $start, $end]);
         return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
     public function getOrderTypeBreakdown($stall_id, $start, $end) {
         $sql = "
-          SELECT o.order_type, SUM(os.subtotal) AS total_amount
+          SELECT o.order_type,
+                 SUM(os.subtotal) AS total_amount
           FROM order_stalls os
-          JOIN orders o ON os.order_id=o.id
-          WHERE os.stall_id=? AND DATE(os.created_at) BETWEEN ? AND ?
-          GROUP BY o.order_type";
+          JOIN orders o ON os.order_id = o.id
+          WHERE os.stall_id = ?
+            AND DATE(os.created_at) BETWEEN ? AND ?
+            AND os.status = 'Preparing'
+          GROUP BY o.order_type
+        ";
         $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute([$stall_id,$start,$end]);
+        $stmt->execute([$stall_id, $start, $end]);
         return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
