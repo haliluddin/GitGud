@@ -422,9 +422,32 @@
                                 $products = json_decode($stall['products'], true);
                                 $hasProducts = !empty($products);
                             }
-                            if ($hasProducts) { ?>
+
+                            if (!$hasProducts) {
+                                $status = 'unavailable';
+                            }
+
+                            // Check if current user is admin, park owner, or stall owner of this stall
+                            $canAccessStall = false;
+                            if (isset($user)) {
+                                $user_id = $user['id'];
+                                // Admin can access all stalls
+                                if ($user['role'] === 'Admin') {
+                                    $canAccessStall = true;
+                                }
+                                // Park owner can access all stalls in their park
+                                else if ($is_food_park_owner) {
+                                    $canAccessStall = true;
+                                }
+                                // Stall owner can access their own stall
+                                else if ($is_stall_owner && isset($stall['user_id']) && $stall['user_id'] == $user_id) {
+                                    $canAccessStall = true;
+                                }
+                            }
+
+                            if ($hasProducts || $canAccessStall) { ?>
                                 <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="card-link text-decoration-none bg-white">
-                        <?php }?>
+                        <?php } ?>
                         
                             <div class="card" style="position: relative;">
                                 <?php if ($status === 'unavailable' || !$hasProducts) { ?>
