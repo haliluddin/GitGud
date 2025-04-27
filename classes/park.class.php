@@ -671,4 +671,11 @@ class Park {
         $stmt->execute([':stall_id' => $stallId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getParkStalls($parkId) {
+        $sql = "SELECT * FROM stalls WHERE park_id = :park_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([':park_id' => $parkId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
