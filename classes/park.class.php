@@ -684,4 +684,28 @@ class Park {
         $stmt->execute([$userId, $parkId]);
         return $stmt->fetchColumn() > 0;
     }
+
+    public function getCartItemCount(int $user_id): int {
+        $sql = "
+          SELECT COALESCE(SUM(quantity),0)
+          FROM cart
+          WHERE user_id = ?
+        ";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$user_id]);
+        return (int) $stmt->fetchColumn();
+    }
+    
+    public function getNotificationCount(int $user_id): int {
+        $sql = "
+          SELECT COUNT(*) 
+          FROM notifications
+          WHERE user_id  = ?
+            AND status   = 'Unread'
+        ";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$user_id]);
+        return (int) $stmt->fetchColumn();
+    }
+        
 }
