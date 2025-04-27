@@ -234,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grand_opening'], $_PO
                 
                 <?php
                 $isParkFirstTime = $parkObj->isParkFirstTime($park_id);
-                if ($isParkFirstTime != 0) { ?>
+                if ($isParkFirstTime === 0) { ?>
                     <button class="variation-btn addrem m-2" style="background-color: #28a745; color: white;" data-bs-toggle="modal" data-bs-target="#grandOpeningModal">Open Park First Time</button>
                 <?php } ?>
                 
