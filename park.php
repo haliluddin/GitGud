@@ -414,20 +414,31 @@
                     }
                 ?>
                     <div class="col stall-card" data-status="<?= $status; ?>">
-                        <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="card-link text-decoration-none bg-white">
+                        
+                        <?php
+                            // Check if the stall has products
+                            $hasProducts = false;
+                            if (!empty($stall['products'])) {
+                                $products = json_decode($stall['products'], true);
+                                $hasProducts = !empty($products);
+                            }
+                            if ($hasProducts) { ?>
+                                <a href="stall.php?id=<?= encrypt($stall['id']); ?>" class="card-link text-decoration-none bg-white">
+                        <?php }?>
+                        
                             <div class="card" style="position: relative;">
-                                <?php if ($status === 'unavailable') { ?>
+                                <?php if ($status === 'unavailable' || !$hasProducts) { ?>
                                     <div class="closed text-center">
                                         <span>Unavailable</span>
                                     </div>
-                                <?php } elseif ($status === 'closed') { 
+                                <?php } elseif ($status === 'closed' && $hasProducts) { 
                                     // Display closed message (for the park or the stall)
                                     $closedMessage = getNextMutualOpening(
-    explode('; ', $stall['stall_operating_hours']),
-    $parkOperatingHours,
-    $currentDay,
-    $currentTime
-);
+                                        explode('; ', $stall['stall_operating_hours']),
+                                        $parkOperatingHours,
+                                        $currentDay,
+                                        $currentTime
+                                    );
                                 ?>
                                     <div class="closed text-center">
                                         <div>
