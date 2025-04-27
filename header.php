@@ -56,6 +56,15 @@ if (isset($_SESSION['user'])) {
     }
 }
 
+$cartCount  = 0;
+$notifCount = 0;
+
+if ($user) {
+    $cartCount = $parkObj->getCartItemCount($user['id']);
+    $notifCount = $parkObj->getNotificationCount($user['id']);
+}
+
+
 if (isset($park_id))
     $allStalls = $parkObj->getStalls($park_id);
 
@@ -94,8 +103,26 @@ if (isset($park_id))
         </div>
         <div class="d-flex gap-3 align-items-center nav">
             <?php if ($user): ?>
-                <a href="cart.php" class="rounded-5 cbu"><i class="fa-solid fa-cart-shopping"></i></a>
-                <a href="notification.php" class="rounded-5 cbu"><i class="fa-solid fa-bell"></i></a>
+
+                <a href="cart.php" class="cbu rounded-5 position-relative">
+                    <i class="fa-solid fa-cart-shopping fa-lg"></i>
+                    <?php if ($cartCount > 0): ?>
+                        <span class="badge bg-dark rounded-pill position-absolute top-0 start-100 translate-middle">
+                        <?= $cartCount ?>
+                        <span class="visually-hidden">items in cart</span>
+                        </span>
+                    <?php endif; ?>
+                </a>
+                <a href="notification.php" class="cbu rounded-5 position-relative">
+                    <i class="fa-solid fa-bell"></i>
+                    <?php if ($notifCount > 0): ?>
+                        <span class="badge bg-dark rounded-pill position-absolute top-0 start-100 translate-middle">
+                        <?= $notifCount ?>
+                        <span class="visually-hidden">unread notifications</span>
+                        </span>
+                    <?php endif; ?>
+                </a>
+
                 <div class="dropdown">
                     <a href="javascript:void(0)" onclick="toggleDropdown()" class="d-flex gap-2 align-items-center pro-tm">
                         <img height="40" width="40" class="rounded-5" src="<?php echo $user['profile_img'] ?? 'assets/images/profile.jpg'; ?>" alt="Profile Image"> 

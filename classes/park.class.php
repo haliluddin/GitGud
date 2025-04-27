@@ -678,4 +678,27 @@ class Park {
         $stmt->execute([':park_id' => $parkId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getCartItemCount(int $user_id): int {
+        $sql = "
+          SELECT COALESCE(SUM(quantity),0)
+          FROM cart
+          WHERE user_id = ?
+        ";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$user_id]);
+        return (int) $stmt->fetchColumn();
+    }
+    public function getNotificationCount(int $user_id): int {
+        $sql = "
+          SELECT COUNT(*) 
+          FROM notifications
+          WHERE user_id  = ?
+            AND status   = 'Unread'
+        ";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$user_id]);
+        return (int) $stmt->fetchColumn();
+    }
+        
 }
