@@ -91,7 +91,11 @@
         }
     }
 
-    $isOwner = $stallObj->isOwner($stall_id, $user_id);
+    if (isset($user_id)) {
+        $isOwner = $stallObj->isOwner($stall_id, $user_id);
+    } else {
+        $isOwner = false;
+    }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_submit'])) {
         $rid      = intval($_POST['review_id']);
@@ -225,10 +229,12 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                 <div class="stall-action">
                     <?php if (isset($user_id) && $user_id == $stall['user_id']): ?>
                         <button class="pagelike" onclick="window.location.href='editpage.php?id=<?= urlencode(encrypt($stall['id'])) ?>&source=stall';">Edit Page</button>
-                        <?php else: ?>
-                        <button id="likeBtn" class="pagelike <?= $likedByUser ? 'liked' : ''; ?>">
-                            <?= $likedByUser ? 'Liked' : 'Like'; ?>
-                        </button>
+                        <?php else:
+                            if (isset($user_id)) { ?>
+                            <button id="likeBtn" class="pagelike <?= $likedByUser ? 'liked' : ''; ?>">
+                                <?= $likedByUser ? 'Liked' : 'Like'; ?>
+                            </button>
+                        <?php } ?>
                     <?php endif; ?>
                 </div>
                 <?php if ($user && isset($user['role']) && $user['role'] === 'Customer'): ?>
