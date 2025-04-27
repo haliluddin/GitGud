@@ -534,7 +534,7 @@ class Stall {
     
 
 
-    public function getStallCreationDate($stall_id){ 
+    /*public function getStallCreationDate($stall_id){ 
         $stmt = $this->db->connect()->prepare("SELECT created_at FROM stalls WHERE id = ?");
         $stmt->execute([$stall_id]);
         return $stmt->fetchColumn();
@@ -741,7 +741,7 @@ class Stall {
         ");
         $stmt->execute([$stall_id, $start, $end]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    } */
 
     public function deleteallread($user_id){
         $stmt = $this->db->connect()->prepare("
@@ -750,7 +750,7 @@ class Stall {
             AND status = 'Read'
         ");
         $stmt->execute([$user_id]);
-    }
+    } 
 
     public function markallread($user_id){
         $stmt = $this->db->connect()->prepare("UPDATE notifications SET status = 'Read' WHERE user_id = ?");
@@ -831,5 +831,162 @@ class Stall {
     }
     
 
+    public function getSalesByDay($stall_id, $start, $end) {
+        $sql = "
+          SELECT DATE(o.created_at) AS date, SUM(oi.subtotal) AS total_sales
+          FROM order_items oi
+          JOIN order_stalls os ON oi.order_stall_id = os.id
+          JOIN orders o        ON os.order_id        = o.id
+          WHERE os.stall_id = ?
+            AND DATE(o.created_at) BETWEEN ? AND ?
+            AND os.status = 'Preparing'
+          GROUP BY DATE(o.created_at) ORDER BY DATE(o.created_at)";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$stall_id, $start, $end]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getOrdersByDay($stall_id, $start, $end) {
+        $sql = "
+          SELECT DATE(created_at) AS date, COUNT(*) AS total_orders
+          FROM order_stalls
+          WHERE stall_id = ? AND DATE(created_at) BETWEEN ? AND ? AND status = 'Preparing'
+          GROUP BY DATE(created_at) ORDER BY DATE(created_at)";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$stall_id, $start, $end]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getSalesByMenuItem($stall_id, $start, $end, $limit, $offset) {
+        $limit  = (int) $limit;
+        $offset = (int) $offset;
+
+        $sql = "
+        SELECT 
+            p.id            AS product_id,
+            p.name          AS product_name,
+            SUM(oi.subtotal) AS total_sales,
+            COUNT(*)        AS order_count
+        FROM order_items oi
+        JOIN order_stalls os ON oi.order_stall_id = os.id
+        JOIN orders o        ON os.order_id        = o.id
+        JOIN products p      ON oi.product_id      = p.id
+        WHERE os.stall_id = ?
+            AND DATE(o.created_at) BETWEEN ? AND ?
+            AND os.status = 'Preparing'
+        GROUP BY p.id, p.name
+        ORDER BY total_sales DESC
+        LIMIT {$limit} OFFSET {$offset}
+        ";
+
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$stall_id, $start, $end]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getLiveOpsMonitor($stall_id, $start, $end) {
+        $conn = $this->db->connect();
+        $c = $conn->prepare(
+          "SELECT COUNT(*) FROM order_stalls WHERE stall_id=? AND DATE(created_at) BETWEEN ? AND ? AND status='Canceled'"
+        ); $c->execute([$stall_id,$start,$end]); $can = $c->fetchColumn();
+        $n = $conn->prepare("
+          SELECT COUNT(DISTINCT o.user_id)
+          FROM orders o JOIN order_stalls os ON o.id=os.order_id
+          WHERE os.stall_id=? AND DATE(o.created_at) BETWEEN ? AND ?
+            AND o.user_id NOT IN (
+              SELECT user_id FROM orders WHERE DATE(created_at) < ?
+            )"
+        ); $n->execute([$stall_id,$start,$end,$start]); $new = $n->fetchColumn();
+        $r = $conn->prepare("
+          SELECT COUNT(DISTINCT o.user_id)
+          FROM orders o JOIN order_stalls os ON o.id=os.order_id
+          WHERE os.stall_id=? AND DATE(o.created_at) BETWEEN ? AND ?
+            AND o.user_id IN (
+              SELECT user_id FROM orders WHERE DATE(created_at) < ?
+            )"
+        ); $r->execute([$stall_id,$start,$end,$start]); $rep = $r->fetchColumn();
+        $np = $conn->prepare("
+          SELECT COUNT(*) FROM order_stalls os
+          LEFT JOIN order_items oi ON os.id=oi.order_stall_id
+          WHERE os.stall_id=? AND DATE(os.created_at) BETWEEN ? AND ? AND oi.id IS NULL
+        "); $np->execute([$stall_id,$start,$end]); $nop = $np->fetchColumn();
+
+        return [
+          'canceled_orders'    => (int)$can,
+          'new_customers'      => (int)$new,
+          'repeated_customers' => (int)$rep,
+          'no_product_sales'   => (int)$nop
+        ];
+    }
+
+    public function getPaymentMethodBreakdown($stall_id, $start, $end) {
+        $sql = "
+          SELECT o.payment_method, SUM(os.subtotal) AS total_amount
+          FROM order_stalls os
+          JOIN orders o ON os.order_id=o.id
+          WHERE os.stall_id=? AND DATE(os.created_at) BETWEEN ? AND ?
+          GROUP BY o.payment_method";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$stall_id,$start,$end]);
+        return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+
+    public function getOrderTypeBreakdown($stall_id, $start, $end) {
+        $sql = "
+          SELECT o.order_type, SUM(os.subtotal) AS total_amount
+          FROM order_stalls os
+          JOIN orders o ON os.order_id=o.id
+          WHERE os.stall_id=? AND DATE(os.created_at) BETWEEN ? AND ?
+          GROUP BY o.order_type";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$stall_id,$start,$end]);
+        return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+
+    public function getAvgPreparationTime($stall_id, $start, $end) {
+        $sql = "
+          SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, updated_at)) AS avg_min
+          FROM order_stalls
+          WHERE stall_id=? AND DATE(created_at) BETWEEN ? AND ?";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$stall_id,$start,$end]);
+        return (float)$stmt->fetchColumn();
+    }
+
+    public function getLostSalesDueToCancel($stall_id, $start, $end) {
+        $sql = "
+          SELECT SUM(subtotal) FROM order_stalls
+          WHERE stall_id=? AND DATE(created_at) BETWEEN ? AND ? AND status='Canceled'";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$stall_id,$start,$end]);
+        return (float)$stmt->fetchColumn();
+    }
+
+    public function getMenuViewCount($stall_id, $start, $end) {
+        $sql = "
+          SELECT COUNT(*) FROM menu_views
+          WHERE stall_id=? AND DATE(viewed_at) BETWEEN ? AND ?";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$stall_id,$start,$end]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getOrderPlacementCount($stall_id, $start, $end) {
+        $sql = "
+          SELECT COUNT(DISTINCT o.user_id)
+          FROM orders o
+          JOIN order_stalls os ON o.id=os.order_id
+          WHERE os.stall_id=? AND DATE(o.created_at) BETWEEN ? AND ?";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([$stall_id,$start,$end]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getCustomerConversion($stall_id, $start, $end) {
+        $views  = $this->getMenuViewCount($stall_id,$start,$end);
+        $orders = $this->getOrderPlacementCount($stall_id,$start,$end);
+        return ['viewed'=>$views,'ordered'=>$orders];
+    }
     
 }

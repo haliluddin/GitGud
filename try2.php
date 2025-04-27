@@ -1,447 +1,282 @@
 <?php
-    include_once 'header.php'; 
-    include_once 'links.php'; 
+    include_once 'header.php';
+    include_once 'links.php';
+    include_once 'modals.php';
     include_once 'nav.php';
-    include_once 'modals.php'; 
+    require_once __DIR__ . '/classes/stall.class.php';
 
-    $park = $parkObj->getPark($park_id);
-    $parkOwner = $parkObj->getParkOwner($park_id);
+
+    $stallObj = new Stall();
+    
+    if ($user['role'] === 'Admin' && isset($_GET['stall_id'])) {
+        $stall_id = intval(decrypt(urldecode($_GET['stall_id'])));
+    } else {
+        $stall_id = $stallObj->getStallId(
+            $_SESSION['user']['id'],
+            $_SESSION['current_park_id']
+        );
+    }
+
 ?>
 <style>
     main{
         padding: 20px 120px;
     }
+    #customer {
+        max-width: 250px;
+        max-height: 250px;
+    }
 </style>
+
 <main>
-    <div class="d-flex justify-content-between align-items-center">
-        <h2 class="fw-bold m-0">Hello, <?= $parkOwner['owner_name'] ?>!</h2>
-        <div class="py-2 px-3 rounded-2 border bg-white w-25 d-flex align-items-center justify-content-between" data-bs-toggle="offcanvas" data-bs-target="#foodparkbranch" aria-controls="foodparkbranch" style="cursor: pointer;">
+
+    <div class="d-flex justify-content-end mb-3">
+        <div data-coreui-start-date="2022/08/03" data-coreui-end-date="2022/08/17" data-coreui-locale="en-US" data-coreui-toggle="date-range-picker"></div>
+    </div>
+
+    <div class="bg-white border rounded-2 p-4 w-100 mb-3">
+
+        <div class="mb-2">
             <div class="d-flex align-items-center gap-3">
-                <img src="<?= $park['business_logo'] ?>" width="50px" height="50px" class="rounded-5">
-                <div>
-                    <p class="m-0 fw-bold"><?= $park['business_name'] ?></p>
-                    <span class="text-muted small"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City</span>
-                </div>
+                <h4 class="m-0 fw-bold mb-1">Sales by Day</h4>
+                <span class="small">27 Jul. - 02 Aug.</span>
             </div>
-            <i class="fa-solid fa-angle-down"></i>
+            <span class="small text-muted">Breakdown of total sales and order volume per day. Use this to see whether your stall is trending upwards or downwards over time.</span>
         </div>
+        
+        <ul class="nav nav-tabs">
+            <li class="nav-item"><a class="nav-link active" data-coreui-toggle="tab" href="#sales-pane">Sales</a></li>
+            <li class="nav-item"><a class="nav-link" data-coreui-toggle="tab" href="#orders-pane">Orders</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="sales-pane">
+                <div class="my-3">
+                    <h3 class="m-0 fw-bold">₱433</h3>
+                    <span>Total Sales</span>
+                </div>
+                <canvas id="sales" width="400" height="100"></canvas>
+                <script>
+                    const salesCtx = document.getElementById('sales').getContext('2d');
+                    const salesGradient = salesCtx.createLinearGradient(0, 0, 0, 400);
+                    salesGradient.addColorStop(0, '#F79043');
+                    salesGradient.addColorStop(1, '#FBCAA5');
+                    const salesChart = new Chart(salesCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['07/27', '07/28', '07/29', '07/30', '07/31', '08/01', '08/02'],
+                            datasets: [{
+                                data: [65, 59, 80, 81, 56, 55, 70],
+                                fill: true,
+                                backgroundColor: salesGradient,
+                                borderColor: '#CD5C08',
+                                borderWidth: 2,
+                                tension: 0.4,
+                                pointBackgroundColor: 'white',
+                                pointRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: { y: { beginAtZero: true } },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                </script>
+            </div>
+
+            <div class="tab-pane fade" id="orders-pane">
+                <div class="my-3">
+                    <h3 class="m-0 fw-bold">66</h3>
+                    <span>Total Orders</span>
+                </div>
+                <canvas id="orders" width="400" height="100"></canvas>
+                <script>
+                    let ordersChart;
+                    document.querySelector('a[href="#orders-pane"]').addEventListener('shown.coreui.tab', () => {
+                        if (!ordersChart) {
+                            const ordersCtx = document.getElementById('orders').getContext('2d');
+                            const ordersGradient = ordersCtx.createLinearGradient(0, 0, 0, 400);
+                            ordersGradient.addColorStop(0, '#F79043');
+                            ordersGradient.addColorStop(1, '#FBCAA5');
+                            ordersChart = new Chart(ordersCtx, {
+                                type: 'line',
+                                data: {
+                                    labels: ['07/27', '07/28', '07/29', '07/30', '07/31', '08/01', '08/02'],
+                                    datasets: [{
+                                        data: [65, 59, 80, 81, 56, 55, 60],
+                                        fill: true,
+                                        backgroundColor: ordersGradient,
+                                        borderColor: '#CD5C08',
+                                        borderWidth: 2,
+                                        tension: 0.4,
+                                        pointBackgroundColor: 'white',
+                                        pointRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    scales: { y: { beginAtZero: true } },
+                                    plugins: { legend: { display: false } }
+                                }
+                            });
+                        } else {
+                            ordersChart.resize();
+                        }
+                    });
+                </script>
+            </div>
+        </div>
+
     </div>
 
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="foodparkbranch" aria-labelledby="foodparkbranchLabel" style="width: 40%;">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="foodparkbranchLabel">Manage Food Park</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <div class="text-center mb-4 border-bottom pb-3">
-                <div class="profile-picture" data-bs-toggle="modal" data-bs-target="#editfoodpark">
-                    <img src="<?= $park['business_logo'] ?>" alt="Profile Picture" class="profile-img rounded-5">
-                    <div class="camera-overlay">
-                        <i class="fa-solid fa-camera"></i>
-                    </div>
+    <div class="d-flex gap-3 mb-3">
+        <div class="bg-white border rounded-2 p-4 w-75">
+            <div class="mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <h4 class="m-0 fw-bold mb-1">Sales by Menu Item</h4>
+                    <span class="small">27 Jul. - 02 Aug.</span>
                 </div>
-                <h4 class="fw-bold m-0 mb-1 mt-3"><?= $park['business_name'] ?></h4>
-                <span class="text-muted mb-1"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City, Philippines</span>
-                <div class="d-flex gap-2 text-muted align-items-center justify-content-center mb-1">
-                    <span><i class="fa-solid fa-envelope"></i> <?= $park['business_email'] ?></span>
-                    <span class="dot"></span>
-                    <span><i class="fa-solid fa-phone small"></i> +63<?= $park['business_phone'] ?></span>
-                </div>
-                <button class="variation-btn addrem m-2" data-bs-toggle="modal" data-bs-target="#editfoodpark">Edit Park</button>
-                <button class="variation-btn addrem" data-bs-toggle="modal" data-bs-target="#deletepark">Delete Park</button>
+                <span class="small text-muted">Ranking of which menu items are the most and least popular. Use this to see which of you menu items are trending up or down over time.</span>
             </div>
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="fw-bold mb-1">All Branch</h5>
-                    <span class="small text-muted">Currently selected 1/2 branch</span>
-                </div>
-                <button class="disatc m-0 small" onclick="window.location.href='parkregistration.php';">+ New Branch</button>
-            </div>
-            <div class="d-flex justify-content-between align-items-center border rounded-2 py-2 px-3 mt-2 selectbranch">
-                <div class="d-flex gap-3 align-items-center">
-                    <img src="assets/images/foodpark.jpg" width="50px" height="50px" style="border-radius: 50%;">
-                    <div class="">
-                        <h6>Food Park Name</h6>
-                        <p class="text-muted m-0" style="font-size: 12px;">Food Park Location</p>
-                        <span class="text-muted" style="font-size: 12px;">10 food stalls</span>
-                    </div>
-                </div>
-                <i class="fa-solid fa-check text-success fw-bold fs-5"></i>
-            </div>
-            <div class="d-flex justify-content-between align-items-center border rounded-2 py-2 px-3 mt-2 selectbranch">
-                <div class="d-flex gap-3 align-items-center">
-                    <img src="assets/images/foodpark.jpg" width="50px" height="50px" style="border-radius: 50%;">
-                    <div class="">
-                        <h6>Food Park Name</h6>
-                        <p class="text-muted m-0" style="font-size: 12px;">Food Park Location</p>
-                        <span class="text-muted" style="font-size: 12px;">10 food stalls</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="d-flex align-items-center gap-3 mt-3">
-        <div class="p-3 rounded-2 border bg-white w-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <div>
-                    <p class="m-0">Total Food Stalls</p>
-                    <span class="small" style="color: #ccc;">Jan 04, 2025</span>
-                </div>
-                <i class="fa-solid fa-parachute-box dashicon fs-5"></i>
-            </div>
-            <div class="d-flex align-items-end justify-content-between">
-                <h2 class="fw-bold m-0">10</h2>
-                <div class="d-flex align-items-center small text-danger gap-1">
-                    <i class="fa-solid fa-arrow-down"></i>
-                    <span class="text-danger">11%</span>
-                </div>
-            </div>
-        </div>
-        <div class="p-3 rounded-2 border bg-white w-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <div>
-                    <p class="m-0">Total Sales</p>
-                    <span class="small" style="color: #ccc;">Jan 04, 2025</span>
-                </div>
-                <i class="fa-solid fa-sack-dollar dashicon fs-5"></i>
-            </div>
-            <div class="d-flex align-items-end justify-content-between">
-                <h2 class="fw-bold m-0">₱1,000</h2>
-                <div class="d-flex align-items-center small text-success gap-1">
-                    <i class="fa-solid fa-arrow-up"></i>
-                    <span class="text-success">11%</span>
-                </div>
-            </div>
-        </div>
-        <div class="p-3 rounded-2 border bg-white w-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <div>
-                    <p class="m-0">Total Transaction</p>
-                    <span class="small" style="color: #ccc;">Jan 04, 2025</span>
-                </div>
-                <i class="fa-solid fa-radiation dashicon fs-5"></i>
-            </div>
-            <div class="d-flex align-items-end justify-content-between">
-                <h2 class="fw-bold m-0">20</h2>
-                <div class="d-flex align-items-center small text-success gap-1">
-                    <i class="fa-solid fa-arrow-up"></i>
-                    <span class="text-success">11%</span>
-                </div>
-            </div>
-        </div>
-        <div class="p-3 rounded-2 border bg-white w-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <div>
-                    <p class="m-0">Total Visit</p>
-                    <span class="small" style="color: #ccc;">Jan 04, 2025</span>
-                </div>
-                <i class="fa-solid fa-eye dashicon fs-5"></i>
-            </div>
-            <div class="d-flex align-items-end justify-content-between">
-                <h2 class="fw-bold m-0">10</h2>
-                <div class="d-flex align-items-center small text-success gap-1">
-                    <i class="fa-solid fa-arrow-up"></i>
-                    <span class="text-success">11%</span>
-                </div>
-            </div>
-        </div>
-        <div class="p-3 rounded-2 border bg-white w-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <div>
-                    <p class="m-0">Total Orders</p>
-                    <span class="small" style="color: #ccc;">Jan 04, 2025</span>
-                </div>
-                <i class="fa-solid fa-burger dashicon fs-5"></i>
-            </div>
-            <div class="d-flex align-items-end justify-content-between">
-                <h2 class="fw-bold m-0">10</h2>
-                <div class="d-flex align-items-center small text-success gap-1">
-                    <i class="fa-solid fa-arrow-up"></i>
-                    <span class="text-success">11%</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="d-flex gap-3 my-3">
-        <div class="w-75"> 
-            <div class="p-4 rounded-2 border bg-white mb-3">
-                <div class="d-flex align-items-center justify-content-between">
-                    <h5 class="m-0 fw-bold">Sales by Month</h5>
-                    <i class="fa-solid fa-ellipsis"></i>
-                </div>
-                <div class="mt-3">
-                    <canvas id="salesChart" width="100" height="40"></canvas>
-                </div>
-            </div>
-            <div class="p-4 rounded-2 border bg-white">
-                <div class="d-flex align-items-center justify-content-between">
-                    <h5 class="m-0 fw-bold">Visits by Month</h5>
-                    <i class="fa-solid fa-ellipsis"></i>
-                </div>
-                <div class="mt-3">
-                    <canvas id="visitsChart" width="100" height="40"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="p-4 rounded-2 border bg-white w-25">
-            <h5 class="m-0 fw-bold mb-1">Stall Performance</h5>
-            <span class="small text-muted">We found some ongoing issues for your food stall</span>
-
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall1.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">1</h5>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall2.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">2</h5>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall3.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">3</h5>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall4.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">4</h5>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall5.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">5</h5>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall1.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">6</h5>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall1.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">7</h5>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall2.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">8</h5>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall3.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">9</h5>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall3.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <h5 class="fw-bold" style="color: #CD5C08;">10</h5>
-            </div>
-        </div>
-    </div>
-    
-    <div class="d-flex gap-3 my-3">
-        <div class="p-4 rounded-2 border bg-white w-75">
-            <div class="d-flex align-items-center justify-content-between">
-                <h5 class="m-0 fw-bold">Orders by Month</h5>
-                <i class="fa-solid fa-ellipsis"></i>
-            </div>
-            <div class="mt-3">
-                <canvas id="ordersChart" width="100" height="40"></canvas>
-            </div>
+            <table class="salestable w-100">
+                <tr>
+                    <th style="width:12%">Leaderboard</th>
+                    <th style="width:60%">Product Name</th>
+                    <th style="width:14%" class="text-end">Sales</th>
+                    <th style="width:14%" class="text-end">Order Count</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>Product 7</td>
+                    <td class="text-end">₱220</td>
+                    <td class="text-end">22</td>
+                </tr>
+            </table>
+            <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3"></div>
         </div>
         <div class="bg-white border p-4 w-25 rounded-2">
-            <h5 class="m-0 fw-bold mb-1">Live Ops Monitor</h5>
-            <span class="small text-muted">We found some ongoing issues for your food stall</span>
+            <h4 class="m-0 fw-bold mb-3">Live Ops Monitor</h4>
             <div class="d-flex align-items-center border rounded-2 py-2 my-2">
                 <h4 class="text-danger px-3 m-0 fw-bold">2</h4>
                 <div>
                     <p class="m-0 fw-bold">Canceled Orders</p>
-                    <span class="text-muted small">Today</span>
+                    <span class="small">27 Jul. - 02 Aug.</span>
                 </div>
-                <i class="fa-solid fa-angle-right ms-auto me-3"></i> <!-- The ms-auto class pushes the icon to the right -->
-            </div>
-            <div class="d-flex align-items-center border rounded-2 py-2 mb-2">
-                <h4 class="text-success px-3 m-0 fw-bold">3</h4>
-                <div>
-                    <p class="m-0 fw-bold">Likes</p>
-                    <span class="text-muted small">Today</span>
-                </div>
-                <i class="fa-solid fa-angle-right ms-auto me-3"></i> <!-- The ms-auto class pushes the icon to the right -->
+                <i class="fa-solid fa-angle-right ms-auto me-3"></i>
             </div>
             <div class="d-flex align-items-center border rounded-2 py-2 mb-2">
                 <h4 class="text-success px-3 m-0 fw-bold">3</h4>
                 <div>
                     <p class="m-0 fw-bold">New Customers</p>
-                    <span class="text-muted small">Today</span>
+                    <span class="small">27 Jul. - 02 Aug.</span>
                 </div>
-                <i class="fa-solid fa-angle-right ms-auto me-3"></i> <!-- The ms-auto class pushes the icon to the right -->
+                <i class="fa-solid fa-angle-right ms-auto me-3"></i>
+            </div>
+            <div class="d-flex align-items-center border rounded-2 py-2 mb-2">
+                <h4 class="text-success px-3 m-0 fw-bold">3</h4>
+                <div>
+                    <p class="m-0 fw-bold">Repeated Customers</p>
+                    <span class="small">27 Jul. - 02 Aug.</span>
+                </div>
+                <i class="fa-solid fa-angle-right ms-auto me-3"></i>
             </div>
             <div class="d-flex align-items-center border rounded-2 py-2">
                 <h4 class="text-success px-3 m-0 fw-bold">3</h4>
                 <div>
-                    <p class="m-0 fw-bold">Repeated Customers</p>
-                    <span class="text-muted small">Today</span>
+                    <p class="m-0 fw-bold">No Product Sales</p>
+                    <span class="small">27 Jul. - 02 Aug.</span>
                 </div>
-                <i class="fa-solid fa-angle-right ms-auto me-3"></i> <!-- The ms-auto class pushes the icon to the right -->
+                <i class="fa-solid fa-angle-right ms-auto me-3"></i>
             </div>
         </div>
     </div>
-
-    <div class="d-flex gap-3 my-3">
-        <div class="w-75 border rounded-2 p-4 bg-white">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="m-0 fw-bold">Transaction History</h5>
-                <div class="d-flex align-items-center text-muted small gap-4">
-                    <select name="sortOptions" id="sortOptions" class="border-0 text-muted small py-1 px-2">
-                        <option value="all">All Transaction</option>
-                    </select>
-                    <i class="fa-regular fa-circle-down rename"></i>
-                    <div class="d-flex gap-2 align-items-center small rename py-1 px-2">
-                        <span style="cursor: context-menu;">47s</span>
-                        <i class="fa-solid fa-arrow-rotate-left"></i>
+    <div class="d-flex gap-3">
+        <div class="bg-white border rounded-2 p-4 w-50">
+            <div class="mb-4">
+                <h4 class="m-0 fw-bold mb-1">Operations Health</h4>
+                <span class="small text-muted">Overview of your stall's operational metrics, including payment method breakdown, dine-in vs take-out performance, average preparation time, and sales lost through cancellations.</span>
+            </div>
+            <div class="d-flex gap-3 my-3">
+                <div class="p-3 d-flex align-items-end border w-50 rounded-2" style="background-color: #f4f4f4;">
+                    <div class="w-50">
+                        <h5 class="m-0 fw-bold">₱100</h5>
+                        <span>Online</span>
                     </div>
-                    <i class="fa-solid fa-magnifying-glass rename"></i>
+                    <span>vs.</span>
+                    <div class="w-50 text-end">
+                        <h5 class="m-0 fw-bold">₱100</h5>
+                        <span>Cash</span>
+                    </div>
+                </div>
+                <div class="p-3 d-flex align-items-end border w-50 rounded-2" style="background-color: #f4f4f4;">
+                    <div class="w-50">
+                        <h5 class="m-0 fw-bold">₱100</h5>
+                        <span>Dine In</span>
+                    </div>
+                    <span>vs.</span>
+                    <div class="w-50 text-end">
+                        <h5 class="m-0 fw-bold">₱100</h5>
+                        <span>Take Out</span>
+                    </div>
                 </div>
             </div>
-            <table class="salestable w-100 text-center border-top rounded-2">
-                <tr>
-                    <th class="pt-2">Food Stall</th>
-                    <th class="pt-2">Date</th>
-                    <th class="pt-2">Amount Paid</th>
-                    <th class="pt-2">Period Cover</th>
-                    <th class="pt-2">Payment Method</th>
-                    <th class="pt-2">Action</th>
-                </tr>
-                <tr>
-                    <td class="fw-normal py-3">Food Stall Name</td>
-                    <td class="fw-normal py-3">07/29/2024 22:59</td>
-                    <td class="fw-normal py-3">₱100</td>
-                    <td class="fw-normal py-3">30 Days</td>
-                    <td class="fw-normal py-3">Cash</td>
-                    <td class="fw-normal py-3 tabact">
-                        <i class="fa-solid fa-pen-to-square me-2 p-1 small rounded-1" data-bs-toggle="modal" data-bs-target="#editpayment"></i>
-                        <i class="fa-solid fa-trash p-1 small rounded-1" onclick="if (confirm('Are you sure you want to delete this payment?')) deletePayment();"></i>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="fw-normal py-3">Food Stall Name</td>
-                    <td class="fw-normal py-3">07/29/2024 22:59</td>
-                    <td class="fw-normal py-3">₱100</td>
-                    <td class="fw-normal py-3">30 Days</td>
-                    <td class="fw-normal py-3">Cash</td>
-                    <td class="fw-normal py-3 tabact">
-                        <i class="fa-solid fa-pen-to-square me-2 p-1 small rounded-1" data-bs-toggle="modal" data-bs-target="#editpayment"></i>
-                        <i class="fa-solid fa-trash p-1 small rounded-1" onclick="if (confirm('Are you sure you want to delete this payment?')) deletePayment();"></i>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="fw-normal py-3">Food Stall Name</td>
-                    <td class="fw-normal py-3">07/29/2024 22:59</td>
-                    <td class="fw-normal py-3">₱100</td>
-                    <td class="fw-normal py-3">30 Days</td>
-                    <td class="fw-normal py-3">Cash</td>
-                    <td class="fw-normal py-3 tabact">
-                        <i class="fa-solid fa-pen-to-square me-2 p-1 small rounded-1" data-bs-toggle="modal" data-bs-target="#editpayment"></i>
-                        <i class="fa-solid fa-trash p-1 small rounded-1" onclick="if (confirm('Are you sure you want to delete this payment?')) deletePayment();"></i>
-                    </td>
-                </tr>
-                
-            </table>
+            <div class="d-flex gap-3">
+                <div class="p-3 rounded-2 w-50 border" style="background-color: #f4f4f4;"> 
+                    <h5 class="m-0 fw-bold mb-1">12 min</h5>
+                    <p class="mb-4">Avg. Preparation Time</p>
+                    <span class="small">27 Jul. - 02 Aug.</span>
+                </div>
+                <div class="p-3 rounded-2 w-50 border" style="background-color: #f4f4f4;">
+                    <h5 class="m-0 fw-bold mb-1">₱100</h5>
+                    <p class="mb-4">Lost Sales Due to Cancel</p>
+                    <span class="small">27 Jul. - 02 Aug.</span>
+                </div>
+            </div>
         </div>
-        <div class="p-4 rounded-2 border bg-white w-25">
-            <h5 class="m-0 fw-bold mb-1">Overdue Payment</h5>
-            <span class="small text-muted">We found some ongoing issues for your food stall</span>
-
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall1.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
+        <div class="bg-white border rounded-2 p-4 w-50">
+            <div class="mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <h4 class="m-0 fw-bold mb-1">Customer Conversion</h4>
+                    <span class="small">27 Jul. - 02 Aug.</span>
                 </div>
-                <i class="fa-solid fa-angle-right"></i>
+                <span class="small text-muted">See how often customers who find your stall end up viewing your menu, and how often customers who view your menu end up placing an order.</span>
             </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall2.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <i class="fa-solid fa-angle-right"></i>
+            <div class="d-flex justify-content-center">
+                <canvas id="customer"></canvas>
             </div>
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="d-flex gap-2 align-items-center">
-                    <img src="assets/images/stall3.jpg" width="50" height="50" class="rounded-5">
-                    <div>
-                        <p class="m-0 fw-bold">Food Stall Name</p>
-                        <span class="small text-muted">Stall Owner Name</span>
-                    </div>
-                </div>
-                <i class="fa-solid fa-angle-right"></i>
-            </div>
+            
+            <script>
+                const custCtx = document.getElementById('customer').getContext('2d');
+                new Chart(custCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Viewed Menu', 'Placed Order'],
+                        datasets: [{
+                            data: [80, 20],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.7)',
+                                'rgba(54, 162, 235, 0.7)'
+                            ],
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom', labels: {boxWidth:12, padding:16} },
+                            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed}%` } }
+                        }
+                    }
+                });
+            </script>
         </div>
     </div>
-    <br><br><br><br>
+
 </main>
-<script src="assets/js/dashboardchart.js?v=<?php echo time(); ?>"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="./assets/js/sales.js?v=<?php echo time(); ?>"></script>
-
 <?php
-    include_once './footer.php'; 
+    include_once './footer.php';
 ?>
