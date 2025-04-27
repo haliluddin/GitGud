@@ -678,4 +678,10 @@ class Park {
         $stmt->execute([':park_id' => $parkId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function isParkOwnerOfPark($userId, $parkId) {
+        $stmt = $this->db->connect()->prepare("SELECT COUNT(*) FROM business WHERE user_id = ? AND id = ?");
+        $stmt->execute([$userId, $parkId]);
+        return $stmt->fetchColumn() > 0;
+    }
 }
