@@ -231,9 +231,12 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                         <button class="pagelike" onclick="window.location.href='editpage.php?id=<?= urlencode(encrypt($stall['id'])) ?>&source=stall';">Edit Page</button>
                         <?php else:
                             if (isset($user_id)) { ?>
-                            <button id="likeBtn" class="pagelike <?= $likedByUser ? 'liked' : ''; ?>">
-                                <?= $likedByUser ? 'Liked' : 'Like'; ?>
-                            </button>
+                                <button id="likeBtn" class="pagelike <?= $likedByUser ? 'liked' : ''; ?>">
+                                    <?= $likedByUser ? 'Liked' : 'Like'; ?>
+                                </button>
+                        <?php } else {
+                            ?>  
+                            <button id="likeBtn" class="pagelike" onclick="window.location.href='signin.php';">Like</button>
                         <?php } ?>
                     <?php endif; ?>
                 </div>
