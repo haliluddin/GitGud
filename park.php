@@ -417,11 +417,8 @@
                         
                         <?php
                             // Check if the stall has products
-                            $hasProducts = false;
-                            if (!empty($stall['products'])) {
-                                $products = json_decode($stall['products'], true);
-                                $hasProducts = !empty($products);
-                            }
+                            $stallProducts = $parkObj->getStallProducts($stall['id']);
+                            $hasProducts = !empty($stallProducts);
 
                             if (!$hasProducts) {
                                 $status = 'unavailable';

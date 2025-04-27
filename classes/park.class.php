@@ -664,4 +664,11 @@ class Park {
         $stmt->execute([$userId, $parkId]);
         return $stmt->fetchColumn() > 0;
     }
+
+    public function getStallProducts($stallId) {
+        $sql = "SELECT * FROM products WHERE stall_id = :stall_id";
+        $stmt = $this->db->connect()->prepare($sql);
+        $stmt->execute([':stall_id' => $stallId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
