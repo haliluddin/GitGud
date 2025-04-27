@@ -440,6 +440,91 @@ $searchCategory = isset($_GET['search_category'])
                         </tbody>
                     </table>
                 </div>
+                
+                <div class="table-responsive py-2 px-3 border rounded-2">
+                    <?php 
+                        $delRequests = $userObj->getReviewDeletionRequests();
+                    ?>
+                    <h6 class="mb-3">Review Deletion Requests <span class="fw-bold">(<?= count($delRequests) ?>)</span></h6>
+                    <table class="salestable w-100 text-center border-top">
+                        <tr>
+                            <th>Requested by</th>
+                            <th>Reviewed by</th>
+                            <th>Product</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Response</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                        <?php if ($delRequests): ?>
+                        <?php foreach($delRequests as $r): ?>
+                            <tr>
+                                <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['stall_name']) ?></td>
+                                <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['first_name'].' '.$r['last_name']) ?></td>
+                                <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['product_name']) ?></td>
+                                <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['rating_value']) ?></td>
+                                <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['comment']) ?></td>
+                                <td class="fw-normal small py-3 px-4"><?= !empty($r['seller_response']) ? htmlspecialchars($r['seller_response']) : 'N/A' ?></td>
+                                <td class="fw-normal small py-3 px-4"><?= htmlspecialchars($r['created_at']) ?></td>
+                                <td class="fw-normal small py-3 px-4">
+                                    <button class="bg-danger text-white border-0 small py-1 rounded-1" style="width:60px" data-bs-toggle="modal" data-bs-target="#deletereview" data-request-id="<?= $r['id'] ?>">Delete</button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <?php else: ?>
+                        <tr>
+                            <td colspan="8" class="text-center py-5">No deletion requests</td>
+                        </tr>
+                        <?php endif; ?>
+                    </table>
+                </div>
+
+                <div class="modal fade" id="deletereview" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="fw-bold mb-4"><i class="fa-solid fa-circle-exclamation"></i> Delete Review</h4>
+                                    <span>You are about to delete this review.<br>Are you sure?</span>
+                                    <div class="mt-5 mb-3">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button id="confirm-delete-review" type="button" class="btn btn-primary">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    let deleteReqId = null;
+                    document.querySelectorAll('[data-bs-target="#deletereview"]').forEach(btn=>{
+                        btn.addEventListener('click', ()=> deleteReqId = btn.dataset.requestId );
+                    });
+
+                    document.getElementById('confirm-delete-review').addEventListener('click', ()=>{
+                        if (!deleteReqId) return;
+                        fetch('ajax_admin_delete_review.php', {
+                            method: 'POST',
+                            headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({ request_id: deleteReqId })
+                        })
+                        .then(res=>res.json())
+                        .then(json=>{
+                            if (json.success) {
+                            Swal.fire('Deleted','Review has been removed','success')
+                                .then(()=> location.reload());
+                            } else {
+                            Swal.fire('Error', json.message,'error');
+                            }
+                        });
+                    });
+                </script>
+
             </div>
             <div class="w-25 py-2 px-3 border rounded-2 mb-3">
                 <?php

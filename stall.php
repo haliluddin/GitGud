@@ -1148,7 +1148,17 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                                     <?php else: foreach ($list as $rev): ?>
                                         <?php $userHasHelped = isset($_SESSION['user']) ? $productObj->hasUserMarkedHelpful($rev['id'], $_SESSION['user']['id']) : false; ?>
                                         <div class="p-4 border rounded-2 bg-white mb-3">
-                                            <h6 class="mb-1 fw-bold"><?= htmlspecialchars($rev['first_name']); ?></h6>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-1 fw-bold"><?= htmlspecialchars($rev['first_name']); ?></h6>
+                                                <?php if ($isOwner): ?>
+                                                <div class="dropdown">
+                                                    <i class="fa-solid fa-ellipsis mores" id="requestdelete" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                                                    <div class="dropdown-menu py-0" aria-labelledby="requestdelete">
+                                                        <a href="javascript:void(0)" class="request-delete-btn text-danger" data-review-id="<?= $rev['id'] ?>">Request for deletion</a>
+                                                    </div>
+                                                </div>
+                                                <?php endif; ?>
+                                            </div>
                                             <div class="d-flex align-items-center gap-2 mb-2">
                                                 <div data-coreui-size="sm" data-coreui-toggle="rating" data-coreui-read-only="true" data-coreui-value="<?= $rev['rating_value']; ?>"></div>
                                                 <small class="text-muted"><?= htmlspecialchars($rev['created_at']); ?></small>
@@ -1252,7 +1262,17 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                                     && $productObj->hasUserMarkedHelpful($rev['id'], $_SESSION['user']['id']);
                                 ?>
                                     <div class="p-4 border rounded-2 bg-white mb-3">
-                                        <h6 class="mb-1 fw-bold"><?= htmlspecialchars($rev['first_name']); ?></h6>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-1 fw-bold"><?= htmlspecialchars($rev['first_name']); ?></h6>
+                                            <?php if ($isOwner): ?>
+                                            <div class="dropdown">
+                                                <i class="fa-solid fa-ellipsis mores" id="requestdelete" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                                                <div class="dropdown-menu py-0" aria-labelledby="requestdelete">
+                                                    <a href="javascript:void(0)" class="request-delete-btn text-danger" data-review-id="<?= $rev['id'] ?>">Request for deletion</a>
+                                                </div>
+                                            </div>
+                                            <?php endif; ?>
+                                        </div>
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <div data-coreui-size="sm" data-coreui-toggle="rating" data-coreui-read-only="true" data-coreui-value="<?= $rev['rating_value']; ?>"></div>
                                             <small class="text-muted"><?= htmlspecialchars($rev['created_at']); ?></small>
@@ -1496,6 +1516,38 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                 });
             });
         </script>
+        <script>
+            document.querySelectorAll('.request-delete-btn').forEach(btn=>{
+            btn.addEventListener('click', e=>{
+                const reviewId = btn.dataset.reviewId;
+                Swal.fire({
+                title: 'Request deletion?',
+                text: "This will notify the admin to remove this review.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, request it'
+                }).then(result=>{
+                if(result.isConfirmed){
+                    fetch('ajax_request_review_deletion.php', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ review_id: reviewId })
+                    })
+                    .then(res=>res.json())
+                    .then(json=>{
+                    if(json.success){
+                        Swal.fire('Requested','Admin has been notified','success');
+                        btn.remove();    
+                    } else {
+                        Swal.fire('Error', json.message,'error');
+                    }
+                    });
+                }
+                });
+            });
+            });
+        </script>
+
 
     </div>
 </div>

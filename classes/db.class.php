@@ -511,7 +511,38 @@ class User {
         ]);
     }
     
-    
+    public function requestReviewDeletion($reviewId) {
+        $sql = "UPDATE ratings 
+                SET deletion_requested = 1 
+                WHERE id = :id";
+        $stmt = $this->db->connect()->prepare($sql);
+        return $stmt->execute([':id' => $reviewId]);
+    }
+
+    public function getReviewDeletionRequests() {
+        $sql = "
+          SELECT 
+            r.*,
+            u.first_name, 
+            u.last_name, 
+            p.name        AS product_name,
+            s.name        AS stall_name
+          FROM ratings r
+          JOIN users u            ON r.user_id          = u.id
+          JOIN products p         ON r.product_id       = p.id
+          JOIN order_stalls os    ON r.order_stall_id   = os.id
+          JOIN stalls s           ON os.stall_id        = s.id
+          WHERE r.deletion_requested = 1
+        ";
+        return $this->db->connect()->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function deleteRating($id) {
+        $sql = "DELETE FROM ratings WHERE id = :id";
+        $stmt = $this->db->connect()->prepare($sql);
+        return $stmt->execute([':id' => $id]);
+    }
+
     
 
     // function getStatusMessage($status) {
