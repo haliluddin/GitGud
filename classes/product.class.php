@@ -186,38 +186,49 @@ class Product {
 
     public function getPopularProducts($stall_id) {
         $db = $this->db->connect();
+    
         $avgSql = "
-            SELECT AVG(order_count) AS avg_orders FROM (
-                SELECT COUNT(oi.id) AS order_count
-                FROM order_items oi
-                WHERE oi.product_id IN (SELECT id FROM products WHERE stall_id = :stall_id)
-                GROUP BY oi.product_id
-            ) AS sub
+          SELECT AVG(popularity_score) AS avg_score
+          FROM (
+            SELECT 
+              COUNT(oi.id)                       AS order_count,
+              COALESCE(AVG(r.rating_value),0)    AS avg_rating,
+              COUNT(oi.id) * COALESCE(AVG(r.rating_value),0) AS popularity_score
+            FROM products p
+            LEFT JOIN order_items oi   ON p.id = oi.product_id
+            LEFT JOIN ratings r        ON p.id = r.product_id
+            WHERE p.stall_id = :stall_id
+            GROUP BY p.id
+          ) AS sub
         ";
         $avgStmt = $db->prepare($avgSql);
         $avgStmt->execute([':stall_id' => $stall_id]);
-        $avgResult = $avgStmt->fetch(PDO::FETCH_ASSOC);
-        $avgOrders = $avgResult ? $avgResult['avg_orders'] : 0;
+        $avgScore = (float) $avgStmt->fetchColumn() ?: 0;
     
         $sql = "
-            SELECT p.*, 
-                   c.name AS category_name, 
-                   COUNT(oi.id) AS order_count,
-                   (SELECT COALESCE(SUM(s.quantity), 0) FROM stocks s WHERE s.product_id = p.id) AS stock
-            FROM products p
-            JOIN categories c ON p.category_id = c.id
-            LEFT JOIN order_items oi ON p.id = oi.product_id
-            WHERE p.stall_id = :stall_id
-            GROUP BY p.id
-            HAVING order_count > :avg_orders
+          SELECT 
+            p.*,
+            c.name AS category_name,
+            COUNT(oi.id)                    AS order_count,
+            COALESCE(AVG(r.rating_value),0) AS avg_rating,
+            COUNT(oi.id) * COALESCE(AVG(r.rating_value),0) AS popularity_score,
+            (SELECT COALESCE(SUM(s.quantity),0) FROM stocks s WHERE s.product_id = p.id) AS stock
+          FROM products p
+          JOIN categories c      ON p.category_id = c.id
+          LEFT JOIN order_items oi ON p.id = oi.product_id
+          LEFT JOIN ratings r      ON p.id = r.product_id
+          WHERE p.stall_id = :stall_id
+          GROUP BY p.id
+          HAVING popularity_score > :avg_score
+          ORDER BY popularity_score DESC
         ";
         $stmt = $db->prepare($sql);
         $stmt->execute([
-            ':stall_id' => $stall_id,
-            ':avg_orders' => $avgOrders
+          ':stall_id' => $stall_id,
+          ':avg_score' => $avgScore
         ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }    
+    }  
 
     public function getPromoProducts($stall_id) {
         $sql = "

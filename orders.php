@@ -7,7 +7,7 @@ require_once __DIR__ . '/classes/stall.class.php';
 $stallObj = new Stall();
 
 if ($user['role'] === 'Admin' && isset($_GET['stall_id'])) {
-    $stall_id = intval($_GET['stall_id']);
+    $stall_id = intval(decrypt(urldecode($_GET['stall_id'])));
 } else {
     $stall_id = $stallObj->getStallId(
         $_SESSION['user']['id'],

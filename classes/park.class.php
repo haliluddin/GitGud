@@ -47,39 +47,59 @@ class Park {
 
     public function getPopularStalls($parkId) {
         $db = $this->db->connect();
-        
+    
         $avgSql = "
-            SELECT AVG(order_count) AS avg_orders FROM (
-                SELECT COUNT(*) AS order_count
-                FROM order_stalls
-                WHERE stall_id IN (SELECT id FROM stalls WHERE park_id = :park_id)
-                GROUP BY stall_id
-            ) AS counts
+          SELECT AVG(pop_score) AS avg_score
+          FROM (
+            SELECT 
+              os.stall_id,
+              os.order_count,
+              COALESCE(AVG(r.rating_value),0)    AS avg_rating,
+              os.order_count * COALESCE(AVG(r.rating_value),0) AS pop_score
+            FROM (
+              SELECT stall_id, COUNT(*) AS order_count
+              FROM order_stalls
+              GROUP BY stall_id
+            ) os
+            LEFT JOIN order_stalls ost ON os.stall_id = ost.stall_id
+            LEFT JOIN ratings r        ON ost.id = r.order_stall_id
+            WHERE os.stall_id IN (SELECT id FROM stalls WHERE park_id = :park_id)
+            GROUP BY os.stall_id
+          ) sub;
         ";
         $avgQ = $db->prepare($avgSql);
         $avgQ->execute([':park_id' => $parkId]);
-        $avgOrders = $avgQ->fetchColumn() ?: 0;
-
+        $avgScore = (float) $avgQ->fetchColumn() ?: 0;
+    
         $sql = "
-            SELECT s.*,
-                   GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') AS stall_categories,
-                   os.order_count
-            FROM stalls s
-            LEFT JOIN stall_categories sc ON s.id = sc.stall_id
-            LEFT JOIN stored_categories c ON sc.category_id = c.id
-            JOIN (
-                SELECT stall_id, COUNT(*) AS order_count
-                FROM order_stalls
-                GROUP BY stall_id
-            ) os ON s.id = os.stall_id
-            WHERE s.park_id = :park_id
-              AND os.order_count > :avg_orders
-            GROUP BY s.id
+          SELECT 
+            s.*,
+            GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') AS stall_categories,
+            os.order_count,
+            COALESCE(AVG(r.rating_value),0) AS avg_rating,
+            os.order_count * COALESCE(AVG(r.rating_value),0) AS popularity_score
+          FROM stalls s
+          LEFT JOIN stall_categories sc ON s.id = sc.stall_id
+          LEFT JOIN stored_categories c ON sc.category_id = c.id
+    
+          JOIN (
+            SELECT stall_id, COUNT(*) AS order_count
+            FROM order_stalls
+            GROUP BY stall_id
+          ) os ON s.id = os.stall_id
+    
+          LEFT JOIN order_stalls ost ON s.id = ost.stall_id
+          LEFT JOIN ratings r        ON ost.id = r.order_stall_id
+    
+          WHERE s.park_id = :park_id
+          GROUP BY s.id
+          HAVING popularity_score > :avg_score
+          ORDER BY popularity_score DESC
         ";
         $q = $db->prepare($sql);
         $q->execute([
-            ':park_id'    => $parkId,
-            ':avg_orders' => $avgOrders
+          ':park_id'   => $parkId,
+          ':avg_score' => $avgScore
         ]);
         return $q->fetchAll(PDO::FETCH_ASSOC);
     }

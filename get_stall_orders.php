@@ -19,9 +19,8 @@ $user = $userObj->getUser($_SESSION['user']['id']);
 
 $stallObj = new Stall();
 
-// Use the same logic as orders.php for determining stall_id
 if ($user['role'] === 'Admin' && isset($_GET['stall_id'])) {
-    $stall_id = intval($_GET['stall_id']);
+    $stall_id = intval(decrypt(urldecode($_GET['stall_id'])));
 } else {
     $stall_id = $stallObj->getStallId(
         $_SESSION['user']['id'],

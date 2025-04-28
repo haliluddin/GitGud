@@ -39,15 +39,18 @@
     $totalOrders = array_sum($ordersVals);
 ?>
 <style>
-    main{ padding: 20px 120px; }
+    .nav-main {
+        padding: 20px 120px;
+    }
     #customer { max-width: 250px; max-height: 250px; }
 </style>
 
-<main>
+<main class="nav-main">
 
-  <div class="d-flex justify-content-end mb-3">
+  <div class="d-flex justify-content-end mb-3 flex-wrap">
     <form method="get" class="d-flex gap-2">
       <input type="date" name="start" value="<?=$start_date?>" class="form-control"/>
+      <span class="mt-1">-</span>
       <input type="date" name="end"   value="<?=$end_date?>"   class="form-control"/>
       <button class="btn btn-primary">Go</button>
     </form>
@@ -92,9 +95,9 @@
     </div>
   </div>
 
-  <div class="d-flex gap-3 mb-3">
+  <div class="d-flex gap-3 mb-3 sal-tm">
 
-    <div class="bg-white border rounded-2 p-4 w-75">
+    <div class="bg-white border rounded-2 p-4 w-75 salfir-tm salin-tm">
       <div class="mb-4">
         <div class="d-flex align-items-center gap-3">
           <h4 class="m-0 fw-bold mb-1">Sales by Menu Item</h4>
@@ -121,7 +124,7 @@
       <div class="d-flex gap-3 saletabpag align-items-center justify-content-center mt-3"></div>
     </div>
 
-    <div class="bg-white border p-4 w-25 rounded-2">
+    <div class="bg-white border p-4 w-25 rounded-2 salsec-tm salin-tm">
       <h4 class="m-0 fw-bold mb-3">Live Ops Monitor</h4>
 
       <?php foreach([
@@ -143,9 +146,9 @@
     </div>
   </div>
 
-  <div class="d-flex gap-3">
+  <div class="d-flex gap-3 sal-tm">
 
-    <div class="bg-white border rounded-2 p-4 w-50">
+    <div class="bg-white border rounded-2 p-4 w-50 salin-tm">
       <div class="mb-4">
         <h4 class="m-0 fw-bold mb-1">Operations Health</h4>
         <span class="small text-muted">Overview of your stall's operational metrics, including payment method breakdown, dine-in vs take-out performance, average preparation time, and sales lost through cancellations.</span>
@@ -186,7 +189,7 @@
       </div>
     </div>
 
-    <div class="bg-white border rounded-2 p-4 w-50">
+    <div class="bg-white border rounded-2 p-4 w-50 salin-tm">
       <div class="mb-4">
         <div class="d-flex align-items-center gap-3">
           <h4 class="m-0 fw-bold mb-1">Customer Conversion</h4>
