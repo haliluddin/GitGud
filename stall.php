@@ -742,7 +742,6 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                         <?php endif; ?>
                     </div>
                     <?php foreach ($products as $product): ?>
-                        <!-- Modal for this product -->
                         <div class="modal fade menumodal" id="menumodal<?= $product['id']; ?>" tabindex="-1" aria-labelledby="modalLabel<?= $product['id']; ?>" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
                                 <form class="modal-content">
@@ -1022,8 +1021,10 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                                                 return;
                                             }
                                             
-                                            let basePriceText = priceElement.innerText;
-                                            let basePrice = parseFloat(basePriceText.replace("₱", "").trim());
+                                            let raw        = priceElement.innerText;
+                                            let numeric    = raw.replace(/[^\d.]/g, '');      // strips commas and currency symbol
+                                            let basePrice  = parseFloat(numeric) || 0;
+
                                             
                                             variationGroups.forEach(group => {
                                                 let checked = group.querySelector("input[type='radio']:checked");
@@ -1052,7 +1053,7 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                                 </form>
                             </div>
                         </div>
-                        <?php endforeach; ?>
+                    <?php endforeach; ?>
                 </section>
             <?php endforeach; ?>
         <?php endif; ?>
