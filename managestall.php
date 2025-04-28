@@ -70,35 +70,52 @@ if (isset($_POST['report_update'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grand_opening'], $_POST['park_id'])) {
     if ($_POST['grand_opening'] == 1) {
-        $success = $parkObj->deleteParkFirstOpening($_POST['park_id']);
-        
-        if ($success) {
-            $redirectUrl = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'dashboard.php';
+        $isParkEmpty = $parkObj->isParkEmpty($park_id);
+
+        if ($isParkEmpty) {
+            // Sweet alert
+            echo '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>';
+
             echo '
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             <script>
-            document.addEventListener("DOMContentLoaded", function() {
                 Swal.fire({
-                    title: "Grand Opening Complete!",
-                    html: `<div class="text-center">
-                        <i class="fa-solid fa-calendar-check text-success fa-3x mb-3"></i>
-                        <p class="fs-5">Your food park is now officially open to the public!</p>
-                        <div class="alert alert-success text-start mt-3">
-                            <i class="fa-solid fa-lightbulb me-2"></i>
-                            Visitors can now visit your park and stalls in the app.
-                        </div>
-                    </div>`,
-                    confirmButtonText: "Perfect!",
-                    confirmButtonColor: "#28a745",
-                    allowOutsideClick: false,
-                    willClose: () => {
-                        window.location.href = "' . $redirectUrl . '";
-                    }
+                    icon: "warning",
+                    title: "No Stalls Found",
+                    text: "You cannot open the park because it has no stalls. Please add stalls before opening.",
+                    confirmButtonColor: "#CD5C08"
                 });
-            });
             </script>';
         } else {
-            $opening_err = "Failed to complete the opening process. Please try again.";
+            $success = $parkObj->deleteParkFirstOpening($_POST['park_id']);
+            
+            if ($success) {
+                $redirectUrl = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'dashboard.php';
+                echo '
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire({
+                        title: "Grand Opening Complete!",
+                        html: `<div class="text-center">
+                            <i class="fa-solid fa-calendar-check text-success fa-3x mb-3"></i>
+                            <p class="fs-5">Your food park is now officially open to the public!</p>
+                            <div class="alert alert-success text-start mt-3">
+                                <i class="fa-solid fa-lightbulb me-2"></i>
+                                Visitors can now visit your park and stalls in the app.
+                            </div>
+                        </div>`,
+                        confirmButtonText: "Perfect!",
+                        confirmButtonColor: "#28a745",
+                        allowOutsideClick: false,
+                        willClose: () => {
+                            window.location.href = "' . $redirectUrl . '";
+                        }
+                    });
+                });
+                </script>';
+            } else {
+                $opening_err = "Failed to complete the opening process. Please try again.";
+            }
         }
     }
 }
@@ -217,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['grand_opening'], $_PO
                 
                 <?php
                 $isParkFirstTime = $parkObj->isParkFirstTime($park_id);
-                if ($isParkFirstTime == 0) { ?>
+                if ($isParkFirstTime === 0) { ?>
                     <button class="variation-btn addrem m-2" style="background-color: #28a745; color: white;" data-bs-toggle="modal" data-bs-target="#grandOpeningModal">Open Park First Time</button>
                 <?php } ?>
                 
