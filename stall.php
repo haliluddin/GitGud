@@ -12,6 +12,10 @@
 
     if (isset($_GET['id'])) {
         $stall_id = decrypt(urldecode($_GET['id']));
+
+        $userId = $_SESSION['user']['id'] ?? null;     
+        $stallObj->logMenuView($stall_id, $userId);
+
         $stall = $parkObj->getStall($stall_id); 
         $products = $stallObj->getProducts($stall_id);
         $categories = $productObj->getCategories($stall_id);
@@ -1154,7 +1158,7 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                                                 <div class="dropdown">
                                                     <i class="fa-solid fa-ellipsis mores" id="requestdelete" data-bs-toggle="dropdown" aria-expanded="false"></i>
                                                     <div class="dropdown-menu py-0" aria-labelledby="requestdelete">
-                                                        <a href="javascript:void(0)" class="request-delete-btn text-danger" data-review-id="<?= $rev['id'] ?>">Request for deletion</a>
+                                                        <a href="javascript:void(0)" class="request-delete-btn dropdown-item" data-review-id="<?= $rev['id'] ?>">Request for deletion</a>
                                                     </div>
                                                 </div>
                                                 <?php endif; ?>
@@ -1268,7 +1272,7 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                                             <div class="dropdown">
                                                 <i class="fa-solid fa-ellipsis mores" id="requestdelete" data-bs-toggle="dropdown" aria-expanded="false"></i>
                                                 <div class="dropdown-menu py-0" aria-labelledby="requestdelete">
-                                                    <a href="javascript:void(0)" class="request-delete-btn text-danger" data-review-id="<?= $rev['id'] ?>">Request for deletion</a>
+                                                    <a href="javascript:void(0)" class="request-delete-btn dropdown-item" data-review-id="<?= $rev['id'] ?>">Request for deletion</a>
                                                 </div>
                                             </div>
                                             <?php endif; ?>

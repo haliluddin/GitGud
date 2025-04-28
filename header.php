@@ -3,6 +3,7 @@ session_start();
 include_once 'links.php'; 
 require_once __DIR__ . '/classes/db.class.php';
 require_once __DIR__ . '/classes/park.class.php';
+require_once __DIR__ . '/classes/encdec.class.php';
 
 $user = null;
 $is_food_park_owner = false;
@@ -40,7 +41,7 @@ if (isset($_SESSION['user'])) {
         $nav_links += [
             'orders.php' => ['label' => 'Orders', 'icon' => 'fa-solid fa-receipt'],
             'managemenu.php' => ['label' => 'Manage Menu', 'icon' => 'fa-solid fa-utensils'],
-            'sales.php' => ['label' => 'Sales', 'icon' => 'fa-solid fa-chart-line'],
+            'sales.php' => ['label' => 'Report', 'icon' => 'fa-solid fa-chart-line'],
         ];
     }
 
@@ -165,9 +166,9 @@ if (isset($park_id))
             <div id="stallsModalContainer" class="modal-body">
                 <div class="row row-cols-1 row-cols-md-3 g-3">
                     <?php if(isset($allStalls) && !empty($allStalls)): ?>
-                        <?php foreach ($allStalls as $singleStall): ?>
+                        <?php foreach ($allStalls as $singleStall): ?> 
                             <div class="col stall-card">
-                                <a href="#" class="card-link text-decoration-none bg-white" data-stall-id="<?= $singleStall['id'] ?>">
+                                <a href="#" class="card-link text-decoration-none bg-white" data-stall-id="<?= urlencode( encrypt($singleStall['id']) ) ?>">
                                     <div class="card">
                                         <img src="<?= $singleStall['logo'] ?>" class="card-img-top" alt="Stall Logo">
                                         <div class="card-body">
