@@ -33,7 +33,7 @@ CREATE TABLE `business` (
   `business_phone` varchar(20) NOT NULL,
   `business_email` varchar(100) NOT NULL,
   `business_permit` varchar(255) NOT NULL,
-  `business_status` enum('Approved','Rejected','Pending Approval') NOT NULL DEFAULT 'Pending Approval',
+  `business_status` enum('Approved','Rejected','Pending Approval','On Hold') NOT NULL DEFAULT 'Pending Approval',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `business_logo` varchar(255) NOT NULL,
@@ -959,4 +959,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-28 10:57:06
+-- Dump completed on 2025-04-28 11:01:26
