@@ -449,7 +449,7 @@ class Park {
     }
     
     function searchParks($query) {
-        $stmt = $this->db->connect()->prepare("SELECT id, business_name, business_logo, street_building_house, barangay FROM business WHERE business_name LIKE ? AND business_status = 'Approved'");
+        $stmt = $this->db->connect()->prepare("SELECT id, business_name, business_logo, street_building_house, barangay, status FROM business WHERE business_name LIKE ? AND business_status = 'Approved'");
         $stmt->execute(["%$query%"]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

@@ -125,8 +125,8 @@ if (isset($_POST['search'])) {
             <div class="search-item" data-status="<?= $status ?>" data-url="<?= $parkUrl ?>">
                 <img src="<?= $park['business_logo'] ?>" class="search-logo">
                 <div class="search-info">
-                    <p class="search-name"><?= htmlspecialchars($park['business_name']) ?></p>
-                    <p class="search-location"><?= htmlspecialchars($park['street_building_house']) ?>, <?= htmlspecialchars($park['barangay']) ?>, Zamboanga City</p>
+                    <p class="search-name"><?= $park['business_name'] ?></p>
+                    <p class="search-location"><?= $park['street_building_house'] ?>, <?= $park['barangay'] ?>, Zamboanga City</p>
                     <?php if ($status === 'closed' || $status === 'unavailable') { ?>
                         <span class="search-status"><?= ucfirst($status) ?></span>
                     <?php } ?>

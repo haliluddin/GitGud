@@ -172,7 +172,7 @@
     </section>
 
 
-    <div class="disabled" <?php if(isset($park['status']) && $park['status'] === 'Unavailable') { echo 'style="pointer-events: none;"'; } ?>>
+    <div class="disabled" <?php if(isset($park['status']) && $park['status'] === 'Unavailable' && !($user && ($user['role'] === 'Admin' || $is_food_park_owner || $is_stall_owner))) { echo 'style="pointer-events: none;"'; } ?>>
         <section id="searchResultsSection" class="bg-white border rounded-2 px-5 py-4 mb-3" style="display: none; ">
             <h3 id="searchHeader" class="mb-3"></h3>
             <div id="searchResultsContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3"></div>
@@ -429,7 +429,7 @@
                             if (isset($user)) {
                                 $user_id = $user['id'];
                                 $isParkOwnerOfPark = $parkObj->isParkOwnerOfPark($user_id, $park_id);
-
+                                
                                 // Admin/Food Park Owner can access all stalls
                                 if ($user['role'] === 'Admin' || $isParkOwnerOfPark) {
                                     $canAccessStall = true;
