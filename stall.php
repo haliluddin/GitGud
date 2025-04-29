@@ -1007,48 +1007,79 @@ textarea:focus { outline: none; box-shadow: none; border: 1px solid #ccc; }
                                         
                                         function addToCart(productId) {
                                             const addToCartBtn = document.getElementById("addToCartBtn" + productId);
-                                            if (addToCartBtn.disabled) { return; }
-                                            
-                                            let quantity = parseInt(document.getElementById("quantity" + productId).innerText);
-                                            let specialInstructions = document.getElementById("specialinstructions" + productId)?.value || '';
-                                            let modal = document.getElementById("menumodal" + productId);
-                                            let variationGroups = modal.querySelectorAll(".variation-group");
-                                            let variationOptionIds = [];
-                                            let priceElement = modal.querySelector(".proprice");
-                                            
-                                            if (!priceElement) {
-                                                console.error("Price element (.proprice) not found in modal.");
+                                            if (!addToCartBtn || addToCartBtn.disabled) {
                                                 return;
                                             }
-                                            
-                                            let raw        = priceElement.innerText;
-                                            let numeric    = raw.replace(/[^\d.]/g, '');      // strips commas and currency symbol
-                                            let basePrice  = parseFloat(numeric) || 0;
 
-                                            
+                                            const quantityElem = document.getElementById("quantity" + productId);
+                                            let quantity = parseInt(quantityElem.innerText, 10) || 1;
+                                            let specialInstructions = 
+                                                document.getElementById("specialinstructions" + productId)?.value || '';
+
+                                            const modal = document.getElementById("menumodal" + productId);
+                                            const variationGroups = modal.querySelectorAll(".variation-group");
+                                            let variationOptionIds = [];
+
                                             variationGroups.forEach(group => {
-                                                let checked = group.querySelector("input[type='radio']:checked");
+                                                const checked = group.querySelector("input[type='radio']:checked");
                                                 if (checked) {
-                                                    variationOptionIds.push(checked.id.replace("variation", ""));
+                                                variationOptionIds.push(checked.id.replace("variation", ""));
                                                 }
                                             });
-                                            
-                                            let params = "product_id=" + productId + "&quantity=" + quantity + "&base_price=" + basePrice + "&request=" + encodeURIComponent(specialInstructions);
-                                            
+
+                                            const priceText = modal.querySelector(".proprice")?.innerText || "";
+                                            const numeric = priceText.replace(/[^\d.]/g, "");
+                                            const basePrice = parseFloat(numeric) || 0;
+
+                                            let params = [
+                                                "product_id=" + encodeURIComponent(productId),
+                                                "quantity="   + encodeURIComponent(quantity),
+                                                "base_price=" + encodeURIComponent(basePrice),
+                                                "request="    + encodeURIComponent(specialInstructions)
+                                            ];
                                             variationOptionIds.forEach(id => {
-                                                params += "&variation_options[]=" + id;
+                                                params.push("variation_options[]=" + encodeURIComponent(id));
                                             });
-                                            
-                                            let xhr = new XMLHttpRequest();
+                                            const body = params.join("&");
+
+                                            const xhr = new XMLHttpRequest();
                                             xhr.open("POST", "add_to_cart.php", true);
                                             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                                            xhr.onreadystatechange = function () {
-                                                if (xhr.readyState === 4 && xhr.status === 200) {
-                                                    Swal.fire({icon: 'success', title: 'Added to Cart', text: xhr.responseText, confirmButtonColor: '#CD5C08'});
+
+                                            xhr.onload = function() {
+                                                if (xhr.status === 401) {
+                                                window.location.href = 'signin.php';
+                                                }
+                                                else if (xhr.status === 200) {
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Added to Cart',
+                                                    text: xhr.responseText,
+                                                    confirmButtonColor: '#CD5C08'
+                                                });
+                                                }
+                                                else {
+                                                console.error('Add to cart failed:', xhr.status, xhr.statusText);
+                                                Swal.fire({
+                                                    icon: 'error',
+                                                    title: 'Error',
+                                                    text: 'Could not add to cart. Please try again.',
+                                                    confirmButtonColor: '#CD5C08'
+                                                });
                                                 }
                                             };
-                                            xhr.send(params);
-                                        }
+
+                                            xhr.onerror = function() {
+                                                Swal.fire({
+                                                icon: 'error',
+                                                title: 'Network Error',
+                                                text: 'Please check your connection and try again.',
+                                                confirmButtonColor: '#CD5C08'
+                                                });
+                                            };
+
+                                            xhr.send(body);
+                                            }
                                     </script>
                                 </form>
                             </div>

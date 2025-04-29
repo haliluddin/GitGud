@@ -3,6 +3,12 @@ session_start();
 require_once __DIR__ . '/classes/stall.class.php';
 require_once __DIR__ . '/classes/db.class.php';
 
+$user_id = $_SESSION['user']['id'] ?? null;
+if (!$user_id) {
+    http_response_code(401);
+    exit;  
+}
+
 $stallObj  = new Stall();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
