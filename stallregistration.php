@@ -159,7 +159,7 @@
     
 </style>
 <main class="sr-tm">
-    <img src="assets/images/rightbg.jpg" class="fixed-image">
+    <img src="assets/images/rightbg.png" class="fixed-image">
     <form action="" class="srform" method="POST" enctype="multipart/form-data">
         <div class="mb-4 border-bottom">
             <div class="d-flex gap-3 align-items-center">

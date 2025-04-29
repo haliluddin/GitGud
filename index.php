@@ -88,15 +88,15 @@
             </form>
             <div id="searchResults"></div>
         </div>
-        <img src="assets/images/first.png" class="img-tm">
+        <img src="assets/images/lols.png" class="img-tm">
     </div>
-    <br>
+    <br> 
 </section>
 
 <?php if (!($isLoggedIn && ($user['role'] == 'Admin' || $user['role'] == 'Stall Owner'))): ?>
 <section class="second">
     <div class="secondinside">
-        <img src="assets/images/owner.jpg" alt="Food Park Owner">
+        <img src="assets/images/owner.png" alt="Food Park Owner">
         <div>
             <h1>Promote Your Food Park with Us!</h1>
             <p>

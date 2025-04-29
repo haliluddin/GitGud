@@ -172,7 +172,7 @@
 </style>
 <main class="main-pr">
 
-    <img src="assets/images/background.jpg" class="fixed-image">
+    <img src="assets/images/background.png" class="fixed-image">
     
     <form action="" class="form" method="POST" enctype="multipart/form-data">
         <div class="progressbar">
