@@ -60,9 +60,11 @@ if (isset($_SESSION['user'])) {
 $cartCount  = 0;
 $notifCount = 0;
 
-if ($user) {
-    $cartCount = $parkObj->getCartItemCount($user['id']);
-    $notifCount = $parkObj->getNotificationCount($user['id']);
+if ($user && isset($park_id)) {
+    $cartCount  = $parkObj->getCartItemCountByPark($user['id'], $park_id);
+    $notifCount = $parkObj->getNotificationCountByPark($user['id'], $park_id);
+} else {
+    $cartCount = $notifCount = 0;
 }
 
 

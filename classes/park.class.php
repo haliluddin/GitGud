@@ -705,26 +705,30 @@ class Park {
         return $stmt->fetchColumn() > 0;
     }
 
-    public function getCartItemCount(int $user_id): int {
+    public function getCartItemCountByPark(int $user_id, int $park_id): int {
         $sql = "
-          SELECT COALESCE(SUM(quantity),0)
-          FROM cart
-          WHERE user_id = ?
+          SELECT COALESCE(SUM(c.quantity), 0) AS cnt
+          FROM cart c
+          JOIN products p ON c.product_id = p.id
+          JOIN stalls s   ON p.stall_id   = s.id
+          WHERE c.user_id = ?
+            AND s.park_id = ?
         ";
         $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute([$user_id]);
+        $stmt->execute([$user_id, $park_id]);
         return (int) $stmt->fetchColumn();
     }
-
-    public function getNotificationCount(int $user_id): int {
+    public function getNotificationCountByPark(int $user_id, int $park_id): int {
         $sql = "
           SELECT COUNT(*) 
-          FROM notifications
-          WHERE user_id  = ?
-            AND status   = 'Unread'
+          FROM notifications n
+          JOIN stalls s ON n.stall_id = s.id
+          WHERE n.user_id = ?
+            AND n.status = 'Unread'
+            AND s.park_id = ?
         ";
         $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute([$user_id]);
+        $stmt->execute([$user_id, $park_id]);
         return (int) $stmt->fetchColumn();
     }
     
