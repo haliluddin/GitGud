@@ -50,7 +50,12 @@
 
   <div class="d-flex justify-content-end mb-3 flex-wrap">
     <form method="get" class="d-flex gap-2">
-      <input type="hidden" name="stall_id" value="<?= $enc_stall_id ?>" />
+      <?php
+        if (isset($enc_stall_id)) { ?>
+          <input type="hidden" name="stall_id" value="<?php $enc_stall_id ?>" />
+      <?php
+        }
+      ?>
       <input type="date" name="start" value="<?=$start_date?>" class="form-control"/>
       <span class="mt-1">-</span>
       <input type="date" name="end"   value="<?=$end_date?>"   class="form-control"/>
