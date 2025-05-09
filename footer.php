@@ -33,6 +33,6 @@
     </div>
 
     <div class="site-footer__bottom">
-        <p>&copy; 2024 GitGud. All Rights Reserved.</p>
+        <p>&copy; <?php echo date("Y"); ?> GitGud. All Rights Reserved.</p>
     </div>
 </div>
