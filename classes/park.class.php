@@ -449,7 +449,7 @@ class Park {
     }
     
     function searchParks($query) {
-        $stmt = $this->db->connect()->prepare("SELECT id, business_name, business_logo, street_building_house, barangay, status FROM business WHERE business_name LIKE ? AND business_status = 'Approved'");
+        $stmt = $this->db->connect()->prepare("SELECT id, business_name, business_logo, street_building_house, barangay FROM business WHERE business_name LIKE ? AND business_status = 'Approved'");
         $stmt->execute(["%$query%"]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -657,54 +657,6 @@ class Park {
         }
     }
     
-    public function isParkFirstTime($park_id) {
-        $sql = "SELECT COUNT(*) FROM park_first_opening WHERE park_id = :park_id";
-        $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute([':park_id' => $park_id]);
-        return $stmt->fetchColumn() == 0;
-    }
-
-    public function deleteParkFirstOpening($park_id) {
-        try {
-            $stmt1 = $this->db->connect()->prepare("DELETE FROM park_first_opening WHERE park_id = ?");
-            $stmt1->execute([$park_id]);
-            
-            $stmt2 = $this->db->connect()->prepare("UPDATE business SET status = 'Available' WHERE id = ?");
-            $stmt2->execute([$park_id]);
-
-            return true;
-            
-        } catch (PDOException $e) {
-            return false;
-        }
-    }
-
-    public function isStallOwnerOfPark($userId, $parkId) {
-        $stmt = $this->db->connect()->prepare("SELECT COUNT(*) FROM stalls WHERE user_id = ? AND park_id = ?");
-        $stmt->execute([$userId, $parkId]);
-        return $stmt->fetchColumn() > 0;
-    }
-
-    public function getStallProducts($stallId) {
-        $sql = "SELECT * FROM products WHERE stall_id = :stall_id";
-        $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute([':stall_id' => $stallId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getParkStalls($parkId) {
-        $sql = "SELECT * FROM stalls WHERE park_id = :park_id";
-        $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute([':park_id' => $parkId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function isParkOwnerOfPark($userId, $parkId) {
-        $stmt = $this->db->connect()->prepare("SELECT COUNT(*) FROM business WHERE user_id = ? AND id = ?");
-        $stmt->execute([$userId, $parkId]);
-        return $stmt->fetchColumn() > 0;
-    }
-
     public function getCartItemCountByPark(int $user_id, int $park_id): int {
         $sql = "
           SELECT COALESCE(SUM(c.quantity), 0) AS cnt

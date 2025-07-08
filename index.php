@@ -88,15 +88,15 @@
             </form>
             <div id="searchResults"></div>
         </div>
-        <img src="assets/images/lols.png" class="img-tm">
+        <img src="assets/images/first.png" class="img-tm">
     </div>
-    <br> 
+    <br>
 </section>
 
 <?php if (!($isLoggedIn && ($user['role'] == 'Admin' || $user['role'] == 'Stall Owner'))): ?>
 <section class="second">
     <div class="secondinside">
-        <img src="assets/images/owner.png" alt="Food Park Owner">
+        <img src="assets/images/owner.jpg" alt="Food Park Owner">
         <div>
             <h1>Promote Your Food Park with Us!</h1>
             <p>
@@ -173,32 +173,9 @@
                 } else {
                     $status = $isOpen ? 'open' : 'closed';
                 }
-
-                $setStatus = $parkObj->getParkStalls($park['id']);
-                if (empty($setStatus)) {
-                    $status = 'unavailable';
-                }
-
                 ?>
                 <div class="col park-card border rounded p-0 mx-2" data-status="<?= $status; ?>">
-                    <?php
-                        $canEnter = false;
-                        if ($user['role'] === 'Admin') {
-                            $canEnter = true;
-                        } elseif (isset($user['id']) && $user['id'] == $park['user_id']) {
-                            $canEnter = true;
-                        } elseif (isset($user['id']) && $parkObj->isStallOwnerOfPark($user['id'], $park['id'])) {
-                            $canEnter = true;
-                        } elseif ($status !== 'unavailable') {
-                            $canEnter = true;
-                        }
-
-                        if ($canEnter) {
-                        ?>
-                            <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
-                        <?php
-                        }
-                    ?>
+                        <a href="enter_park.php?id=<?= urlencode(encrypt($park['id'])) ?>" class="card-link text-decoration-none">
                         <div class="card border-0" style="position: relative;">
                             <?php 
                             if ($status === 'closed') { 
@@ -271,7 +248,7 @@
         <?php 
             }
         ?>
-    </div>
+        </div>
     <?php 
     }
     ?>

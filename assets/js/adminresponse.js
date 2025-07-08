@@ -26,34 +26,17 @@ $(document).ready(function () {
             data: JSON.stringify({ business_id: businessId, action: action }),
             success: function (response) {
                 if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Action Complete',
-                        text: response.message,
-                        confirmButtonColor: '#CD5C08',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            location.reload(); // Reload the page after confirmation
-                        }
-                    });
+                    statusCell.html('<span class="small rounded-5 text-success border border-success p-1 border-2 fw-bold">Accepted</span>');
+                    var row = statusCell.closest('tr');
+                    row.find('.approve-btn, .deny-btn').prop('disabled', true);
+                    Swal.fire({icon: 'success', title: 'Action Complete', text: response.message, confirmButtonColor: '#CD5C08'});
+                    location.reload();
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error: ' + response.message,
-                        confirmButtonColor: '#CD5C08'
-                    });
+                    Swal.fire({icon: 'error', title: 'Error', text: 'Error: ' + response.message, confirmButtonColor: '#CD5C08'});
                 }
             },
             error: function () {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Request Error',
-                    text: 'Error processing request.',
-                    confirmButtonColor: '#CD5C08'
-                });
+                Swal.fire({icon: 'error', title: 'Request Error', text: 'Error processing request.', confirmButtonColor: '#CD5C08'});
             }
         });
         $('#approvalConfirmModal').modal('hide');
