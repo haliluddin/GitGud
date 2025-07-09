@@ -683,12 +683,5 @@ class Park {
         $stmt->execute([$user_id, $park_id]);
         return (int) $stmt->fetchColumn();
     }
-    
 
-    public function isParkEmpty(int $park_id): int {
-        $sql = "SELECT COUNT(*) FROM stalls WHERE park_id = ?";
-        $stmt = $this->db->connect()->prepare($sql);
-        $stmt->execute([$park_id]);
-        return (int) $stmt->fetchColumn() === 0;
-    }
 }

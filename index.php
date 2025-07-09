@@ -88,7 +88,7 @@
             </form>
             <div id="searchResults"></div>
         </div>
-        <img src="assets/images/first.png" class="img-tm">
+        <img src="assets/images/lols.png" class="img-tm">
     </div>
     <br>
 </section>
@@ -96,7 +96,7 @@
 <?php if (!($isLoggedIn && ($user['role'] == 'Admin' || $user['role'] == 'Stall Owner'))): ?>
 <section class="second">
     <div class="secondinside">
-        <img src="assets/images/owner.jpg" alt="Food Park Owner">
+        <img src="assets/images/owner.png" alt="Food Park Owner">
         <div>
             <h1>Promote Your Food Park with Us!</h1>
             <p>
@@ -254,9 +254,11 @@
     ?>
     <br><br><br><br><br>
 </section>
+
 <?php
 include_once 'footer.php';
 ?>
+
 <!-- The See More modal remains mostly unchanged -->
 <div class="modal fade" id="seemorepark" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -393,27 +395,26 @@ include_once 'footer.php';
         document.getElementById('reported_park').value = reportedPark ? reportedPark : '';
     });
 </script>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(document).ready(function() {
-    $("#searchInput").keyup(function() {
-        let query = $(this).val();
-        if (query.length > 0) {
-            $.ajax({
-                url: "search_parks.php",
-                method: "POST",
-                data: { search: query },
-                success: function(data) {
-                    $("#searchResults").html(data).show();
-                }
-            });
-        } else {
-            $("#searchResults").hide();
-        }
+    $(document).ready(function() {
+        $("#searchInput").keyup(function() {
+            let query = $(this).val();
+            if (query.length > 0) {
+                $.ajax({
+                    url: "search_parks.php",
+                    method: "POST",
+                    data: { search: query },
+                    success: function(data) {
+                        $("#searchResults").html(data).show();
+                    }
+                });
+            } else {
+                $("#searchResults").hide();
+            }
+        });
+        $(document).on("click", ".search-item", function() {
+            window.location.href = $(this).data("url");
+        });
     });
-    $(document).on("click", ".search-item", function() {
-        window.location.href = $(this).data("url");
-    });
-});
 </script>
